@@ -3,25 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MathGod⚡️夾錢計數小助手</title>
-
-<meta name="description" content="MathGod⚡️夾錢計數小助手 - 專為朋友聚會、旅行設計的同步分帳工具。支援多國匯率轉換，一鍵生成結算單。">
-
-<meta property="og:type" content="https://capy013.github.io/mathgod/">
-<meta property="og:url" content="https://capy013.github.io/mathgod/">
-<meta property="og:title" content="MathGod⚡️夾錢計數小助手">
-<meta property="og:description" content="旅行、食飯、夾錢唔使煩！支援即時同步功能，自動換算匯率，MathGod 幫你計到盡。">
-<meta property="og:image" content="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="MathGod⚡️夾錢計數小助手">
-<meta name="twitter:description" content="朋友聚會分帳神器：支援多幣種、雲端同步。">
-<meta name="twitter:image" content="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
-
-<meta name="theme-color" content="#0a2f23">
+    <title>MathGod 夾錢小助手</title>
     
-    <link rel="icon" href="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
-    <link rel="apple-touch-icon" href="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050505">
+    <link rel="icon" href="https://i.postimg.cc/sxvwQKGF/sync3-Gemini-Generated-Image-arwtlearwtlearwt.png">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/sxvwQKGF/sync3-Gemini-Generated-Image-arwtlearwtlearwt.png">
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,86 +19,29 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary: #10b981; 
-            --bg: #050505; 
-            --card-bg: rgba(30, 30, 30, 0.65);
-            --border: rgba(255, 255, 255, 0.1);
-        }
+        :root { --primary: #10b981; --bg: #050505; --card-bg: rgba(30, 30, 30, 0.65); --border: rgba(255, 255, 255, 0.1); }
         [v-cloak] { display: none !important; }
-        body { 
-            background-color: var(--bg); 
-            color: #fff; 
-            font-family: 'Noto Sans TC', sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-            overscroll-behavior-y: none;
-        }
-        
-        /* 高級玻璃質感 */
-        .glass { 
-            background: var(--card-bg); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px); 
-            border: 1px solid var(--border); 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); 
-        }
-        .glass-input { 
-            background: rgba(0,0,0,0.3); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            transition: all 0.3s; 
-        }
-        .glass-input:focus-within { 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); 
-            background: rgba(0,0,0,0.5); 
-        }
-        
-        /* 錯誤狀態 */
-        .input-error {
-            border-color: #ef4444 !important;
-            background: rgba(239, 68, 68, 0.1) !important;
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-        
-        /* 特效類 */
+        body { background-color: var(--bg); color: #fff; font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        .glass { background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
+        .glass-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+        .glass-input:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); background: rgba(0,0,0,0.5); }
+        .input-error { border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
         .font-num { font-family: 'JetBrains Mono', monospace; }
         .btn-press { transition: transform 0.1s; }
         .btn-press:active { transform: scale(0.96); }
-        
-        /* 底部漸層 */
-        .footer-gradient {
-            background: linear-gradient(to top, rgba(5,5,5,0.95) 10%, rgba(5,5,5,0.6) 40%, rgba(5,5,5,0) 100%);
-            pointer-events: none;
-            height: 120px;
-        }
-
-        /* 簡單過渡動畫 */
+        .footer-gradient { background: linear-gradient(to top, rgba(5,5,5,0.95) 10%, rgba(5,5,5,0.6) 40%, rgba(5,5,5,0) 100%); pointer-events: none; height: 120px; }
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
-
-        /* Toast 動畫 */
         .toast-enter-active, .toast-leave-active { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-30px) scale(0.9); }
-
-        /* Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-
         .math-check { appearance: none; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; position: relative; transition: all 0.2s; }
         .math-check:checked { background: var(--primary); border-color: var(--primary); }
         .math-check:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; font-size: 10px; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-        
-        /* Logo 樣式優化 */
-        .app-logo {
-            filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3));
-        }
+        .app-logo { filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3)); }
     </style>
 </head>
 <body>
@@ -121,7 +51,7 @@
     <transition name="fade">
         <div v-if="isLoading" class="fixed inset-0 z-[200] bg-black flex items-center justify-center">
             <div class="flex flex-col items-center">
-                <img src="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png" class="w-16 h-16 rounded-2xl mb-4 animate-pulse shadow-2xl">
+                <img src="https://i.postimg.cc/sxvwQKGF/sync3-Gemini-Generated-Image-arwtlearwtlearwt.png" class="w-16 h-16 rounded-2xl mb-4 animate-pulse shadow-2xl">
                 <p class="text-xs text-gray-500 font-bold tracking-widest uppercase">Processing...</p>
             </div>
         </div>
@@ -142,34 +72,33 @@
         
         <div class="flex justify-between items-start mb-6">
             <div class="flex items-center gap-3">
-                <button @click="showTutorial = true" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs hover:bg-white/20 transition-all">
-                    <i class="fas fa-question text-white/70"></i>
-                </button>
-                <div class="flex items-center gap-3">
-                    <img src="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png" class="h-10 w-10 rounded-xl object-contain shadow-lg border border-white/10 app-logo">
-                    <div>
-                        <h1 class="text-xl font-black italic tracking-tighter text-white leading-none">
-                            MathGod
-                        </h1>
-                        <p class="text-[9px] font-bold text-emerald-400/80 tracking-[0.1em] uppercase">
-                            {{ isEditing ? '正在修改模式' : '夾錢計數小助手' }}
-                        </p>
-                    </div>
+                <img src="https://i.postimg.cc/sxvwQKGF/sync3-Gemini-Generated-Image-arwtlearwtlearwt.png" class="h-10 w-10 rounded-xl object-contain shadow-lg border border-white/10 app-logo">
+                <div>
+                    <h1 class="text-xl font-black italic tracking-tighter text-white leading-none">MathGod</h1>
+                    <p class="text-[9px] font-bold text-emerald-400/80 tracking-[0.1em] uppercase">
+                        {{ isEditing ? '正在修改模式' : '朋友夾錢計算器' }}
+                    </p>
                 </div>
             </div>
 
-            <div v-if="roomId" class="glass px-3 py-1.5 rounded-full flex items-center gap-3 border-emerald-500/30 bg-emerald-900/20">
-                <div class="text-right">
-                    <p class="text-[8px] text-gray-400 font-bold uppercase">ONLINE</p>
-                    <p class="text-xs font-num font-bold text-emerald-400 leading-none">#{{ roomId }}</p>
+            <div class="flex items-center gap-2">
+                <button @click="showTutorial = true" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs hover:bg-white/20 transition-all">
+                    <i class="fas fa-question text-white/70"></i>
+                </button>
+
+                <div v-if="roomId" class="glass px-3 py-1.5 rounded-full flex items-center gap-3 border-emerald-500/30 bg-emerald-900/20">
+                    <div class="text-right">
+                        <p class="text-[8px] text-gray-400 font-bold uppercase">ONLINE</p>
+                        <p class="text-xs font-num font-bold text-emerald-400 leading-none">#{{ roomId }}</p>
+                    </div>
+                    <button @click="logoutRoom" class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                        <i class="fas fa-power-off text-[10px]"></i>
+                    </button>
                 </div>
-                <button @click="logoutRoom" class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
-                    <i class="fas fa-power-off text-[10px]"></i>
+                <button v-else @click="showSyncModal = true" class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 hover:border-emerald-500/50 transition-all flex items-center gap-2 btn-press">
+                    <i class="fas fa-cloud text-emerald-400"></i> 同步
                 </button>
             </div>
-            <button v-else @click="showSyncModal = true" class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 hover:border-emerald-500/50 transition-all flex items-center gap-2 btn-press">
-                <i class="fas fa-cloud text-emerald-400"></i> 同步
-            </button>
         </div>
 
         <div class="flex gap-3">
@@ -185,10 +114,9 @@
     </header>
 
     <main class="p-5 space-y-6 flex-1">
-        
         <section class="glass p-5 rounded-[2rem]">
             <div class="flex justify-between items-center mb-3">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">新增朋友</h3>
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
                 <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-400 font-num">{{ users.length }} 人</span>
             </div>
             
@@ -217,7 +145,7 @@
         <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-hidden" 
                  :class="{'opacity-50 pointer-events-none grayscale': users.length === 0, 'border-amber-500/50': isEditing}">
             
-            <div v-if="users.length === 0" class="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+            <div v-if="users.length === 0" class="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
                 <div class="bg-black/80 px-4 py-2 rounded-full text-xs font-bold text-white"><i class="fas fa-lock mr-2"></i>先加朋友解鎖</div>
             </div>
 
@@ -330,7 +258,6 @@
     </main>
 
     <div class="fixed bottom-0 left-0 right-0 footer-gradient z-40 pointer-events-none"></div>
-    
     <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
 
     <footer class="fixed bottom-6 left-0 right-0 max-w-[500px] mx-auto px-6 z-50 grid grid-cols-2 gap-4 pointer-events-none">
@@ -354,8 +281,8 @@
             <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-emerald-900/20 to-transparent pointer-events-none"></div>
             
             <div class="relative z-10 text-center mb-8">
-                <img src="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png" class="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/10 object-contain bg-black/20">
-                <h3 class="text-xl font-black">登入同步空間</h3>
+                <img src="https://i.postimg.cc/sxvwQKGF/sync3-Gemini-Generated-Image-arwtlearwtlearwt.png" class="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/10 object-contain bg-black/20">
+                <h3 class="text-xl font-black">同步控制中心</h3>
             </div>
 
             <div class="mb-6 relative group">
@@ -435,9 +362,20 @@
                         <div class="w-10 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                     </label>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <button @click="copyText" class="bg-gray-800 py-3.5 rounded-xl font-black text-xs btn-press hover:bg-gray-700">複製文字</button>
-                    <button @click="generateImage" class="bg-emerald-600 py-3.5 rounded-xl font-black text-xs btn-press shadow-lg hover:bg-emerald-500">下載圖片</button>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button @click="copyText" class="bg-gray-800 py-3 rounded-xl font-bold text-xs btn-press hover:bg-gray-700">
+                        <i class="fas fa-copy mr-1"></i> 複製文字
+                    </button>
+                    <button @click="shareViaApp('text')" class="bg-gray-700 py-3 rounded-xl font-bold text-xs btn-press hover:bg-gray-600">
+                         <i class="fas fa-share mr-1"></i> 分享文字
+                    </button>
+                    <button @click="generateImage" class="bg-emerald-800 py-3 rounded-xl font-bold text-xs btn-press hover:bg-emerald-700">
+                        <i class="fas fa-download mr-1"></i> 下載圖片
+                    </button>
+                    <button @click="shareViaApp('image')" class="bg-emerald-600 py-3 rounded-xl font-bold text-xs btn-press shadow-lg hover:bg-emerald-500">
+                        <i class="fas fa-share-nodes mr-1"></i> 分享圖片
+                    </button>
                 </div>
             </div>
             <button @click="showShareModal = false" class="w-full mt-4 py-2 text-xs font-bold text-gray-500">關閉</button>
@@ -465,6 +403,15 @@ const firebaseConfig = { apiKey: "yFDRUSUFAFnZf6AGdsEA9LxSyLcZF75oIFfib5At", dat
 try { firebase.initializeApp(firebaseConfig); } catch(e) {}
 const db = firebase.database();
 const { createApp, ref, computed, onMounted } = Vue;
+
+// Fix 6: PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.log('SW failed', err));
+    });
+}
 
 createApp({
     setup() {
@@ -598,10 +545,12 @@ createApp({
             setTimeout(() => {
                 db.ref('rooms/' + roomId.value).off();
                 roomId.value = null;
+                // Fix 5: 清空輸入的房號
+                roomInput.value = "";
                 localStorage.removeItem('mathGod_roomId');
                 resetData('all', false); 
                 setLoading(false);
-                toast("已登出房間");
+                toast("已登出並清空資料");
             }, 800);
         };
 
@@ -632,6 +581,21 @@ createApp({
             }
         };
 
+        // Fix 3: 日期替代邏輯
+        const appendDate = (e) => {
+            if (e.target.value) {
+                const dateStr = `(${e.target.value})`;
+                // 檢查是否已有括號日期格式，有則替換，無則新增
+                const regex = /\(\d{4}-\d{2}-\d{2}\)$/;
+                if (regex.test(eventName.value)) {
+                    eventName.value = eventName.value.replace(regex, dateStr);
+                } else {
+                    eventName.value = eventName.value ? `${eventName.value} ${dateStr}` : dateStr;
+                }
+                saveData();
+            }
+        };
+
         const settlements = computed(() => {
             let bal = {}; users.value.forEach(u => bal[u] = 0);
             expenses.value.forEach(e => {
@@ -648,11 +612,10 @@ createApp({
             return res;
         });
 
-        const copyText = () => {
+        const getShareText = () => {
             let msg = `夾錢通知 (Payment Notice)\n`;
             if (eventName.value) msg += `活動: ${eventName.value}\n`;
             msg += `------------------------------\n`;
-            
             msg += `請跟隨以下列表過數 (Transfer List):\n`;
             if(settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
             settlements.value.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
@@ -664,8 +627,67 @@ createApp({
                 });
             }
             msg += `\n------------------------------\nGenerated by MathGod`;
+            return msg;
+        };
 
-            navigator.clipboard.writeText(msg).then(()=>toast("已複製")).catch(()=>toast("複製失敗","error"));
+        const copyText = () => {
+            navigator.clipboard.writeText(getShareText()).then(()=>toast("已複製")).catch(()=>toast("複製失敗","error"));
+        };
+
+        // Fix 2: 系統分享功能
+        const shareViaApp = async (type) => {
+            try {
+                if (type === 'text') {
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: 'MathGod 結算',
+                            text: getShareText()
+                        });
+                    } else {
+                        copyText(); // Fallback
+                    }
+                } else if (type === 'image') {
+                    toast("正在製作圖片...");
+                    const zone = document.getElementById('capture-zone');
+                    const originalShadow = zone.style.boxShadow;
+                    zone.style.boxShadow = 'none';
+                    
+                    const canvas = await html2canvas(zone, { backgroundColor: '#e8e8e8', scale: 2, useCORS: true });
+                    zone.style.boxShadow = originalShadow;
+
+                    canvas.toBlob(async (blob) => {
+                        const file = new File([blob], "mathgod_share.png", { type: "image/png" });
+                        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: 'MathGod 結算圖'
+                            });
+                        } else {
+                            // Fallback to download
+                            const link = document.createElement('a');
+                            link.download = `MathGod_${Date.now()}.png`;
+                            link.href = canvas.toDataURL();
+                            link.click();
+                            toast("系統不支援直接圖片分享，已為你下載");
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                // User cancelled or error
+            }
+        };
+
+        const generateImage = async () => {
+            const zone = document.getElementById('capture-zone');
+            const originalShadow = zone.style.boxShadow;
+            zone.style.boxShadow = 'none';
+            try {
+                const canvas = await html2canvas(zone, { backgroundColor: '#e8e8e8', scale: 2, useCORS: true });
+                const link = document.createElement('a'); link.download = `MathGod_${Date.now()}.png`; link.href = canvas.toDataURL(); link.click();
+            } finally {
+                zone.style.boxShadow = originalShadow;
+            }
         };
 
         onMounted(() => {
@@ -689,19 +711,7 @@ createApp({
             removeExpense: (i) => { if(confirm("確定刪除紀錄？")) { expenses.value.splice(i,1); saveData(); } },
             handleCurrencyChange, toggleSelectAll: () => { form.value.involved = form.value.involved.length === users.value.length ? [] : [...users.value]; },
             toggleInvolved: (u) => { const idx = form.value.involved.indexOf(u); if(idx>-1) form.value.involved.splice(idx,1); else form.value.involved.push(u); },
-            appendDate: (e) => { if(e.target.value) { eventName.value += ` (${e.target.value})`; saveData(); } },
-            resetData, removeHistoryRoom, copyText,
-            generateImage: async () => {
-                const zone = document.getElementById('capture-zone');
-                const originalShadow = zone.style.boxShadow;
-                zone.style.boxShadow = 'none';
-                try {
-                    const canvas = await html2canvas(zone, { backgroundColor: '#e8e8e8', scale: 2, useCORS: true });
-                    const link = document.createElement('a'); link.download = `MathGod_${Date.now()}.png`; link.href = canvas.toDataURL(); link.click();
-                } finally {
-                    zone.style.boxShadow = originalShadow;
-                }
-            }
+            appendDate, resetData, removeHistoryRoom, copyText, generateImage, shareViaApp
         };
     }
 }).mount('#app');
