@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>MathGod⚡️夾錢計數小助手</title>
 
-<meta name="description" content="MathGod⚡️夾錢計數小助手 - 專為朋友聚會、旅行設計的同步分帳工具。支援多國匯率轉換，一鍵生成結算單。">
+    <meta name="description" content="MathGod⚡️夾錢計數小助手 - 專為朋友聚會、旅行設計的同步分帳工具。支援多國匯率轉換，一鍵生成結算單。">
 
-<meta property="og:type" content="https://mydown.vercel.app/">
-<meta property="og:url" content="https://mydown.vercel.app/">
-<meta property="og:title" content="MathGod⚡️夾錢計數小助手">
-<meta property="og:description" content="旅行、食飯、夾錢唔使煩！支援即時同步功能，自動換算匯率，MathGod 幫你計到盡。">
-<meta property="og:image" content="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
+    <!-- ✅ OG / Twitter Cards -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="網址">
+    <meta property="og:title" content="MathGod⚡️夾錢計數小助手">
+    <meta property="og:description" content="旅行、食飯、夾錢唔使煩！支援即時同步功能，自動換算匯率，MathGod 幫你計到盡。">
+    <meta property="og:image" content="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="MathGod⚡️夾錢計數小助手">
-<meta name="twitter:description" content="朋友聚會分帳神器：支援多幣種、雲端同步。">
-<meta name="twitter:image" content="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MathGod⚡️夾錢計數小助手">
+    <meta name="twitter:description" content="朋友聚會分帳神器：支援多幣種、雲端同步。">
+    <meta name="twitter:image" content="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
 
-<meta name="theme-color" content="#0a2f23">
-    
+    <meta name="theme-color" content="#0a2f23">
+
     <link rel="icon" href="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
     <link rel="apple-touch-icon" href="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
 
@@ -60,7 +61,7 @@
 <body>
 
 <div id="app" v-cloak class="min-h-screen flex flex-col max-w-[500px] mx-auto relative pb-32">
-    
+
     <transition name="fade">
         <div v-if="isLoading" class="fixed inset-0 z-[200] bg-black flex items-center justify-center">
             <div class="flex flex-col items-center">
@@ -72,7 +73,7 @@
 
     <div class="fixed top-8 left-0 right-0 z-[999] flex flex-col items-center pointer-events-none px-4">
         <transition-group name="toast">
-            <div v-for="t in toasts" :key="t.id" class="glass px-6 py-3 rounded-full flex items-center gap-3 mb-2 shadow-2xl pointer-events-auto border-l-4" 
+            <div v-for="t in toasts" :key="t.id" class="glass px-6 py-3 rounded-full flex items-center gap-3 mb-2 shadow-2xl pointer-events-auto border-l-4"
                  :class="t.type === 'error' ? 'border-red-500' : 'border-emerald-500'">
                 <i :class="['fas', t.type === 'error' ? 'fa-times-circle text-red-400' : 'fa-check-circle text-emerald-400']"></i>
                 <span class="text-xs font-bold">{{ t.msg }}</span>
@@ -82,7 +83,7 @@
 
     <header class="p-6 pb-8 rounded-b-[2.5rem] sticky top-0 z-40 transition-all duration-500 shadow-2xl backdrop-blur-xl border-b border-white/5"
             :class="isEditing ? 'bg-amber-950/80' : 'bg-[#0a2f23]/80'">
-        
+
         <div class="flex justify-between items-start mb-6">
             <div class="flex items-center gap-3">
                 <img src="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png" class="h-10 w-10 rounded-xl object-contain shadow-lg border border-white/10 app-logo">
@@ -119,7 +120,8 @@
                 <i class="fas fa-pen text-[10px] text-gray-500 mr-3"></i>
                 <input v-model="eventName" @change="saveData" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/20" placeholder="活動名稱 (例如: 日本 Day1)">
             </div>
-            <button onclick="document.getElementById('dateInput').showPicker()" class="w-12 glass-input rounded-2xl flex items-center justify-center hover:border-emerald-500/50 btn-press">
+            <!-- ✅ Fix: iOS 無 showPicker() 時 fallback click() -->
+            <button @click="openDatePicker" class="w-12 glass-input rounded-2xl flex items-center justify-center hover:border-emerald-500/50 btn-press">
                 <i class="fas fa-calendar-day text-emerald-400 pointer-events-none"></i>
             </button>
             <input type="date" id="dateInput" class="hidden" @change="appendDate">
@@ -132,20 +134,20 @@
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
                 <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-400 font-num">{{ users.length }} 人</span>
             </div>
-            
+
             <div class="flex gap-2 mb-4">
-                <div class="flex-1 glass-input rounded-xl flex items-center px-4 transition-all" 
+                <div class="flex-1 glass-input rounded-xl flex items-center px-4 transition-all"
                      :class="{'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]': users.length === 0}">
                     <i class="fas fa-user-plus text-xs text-gray-500 mr-2"></i>
                     <input v-model="newUser" @keyup.enter="addUser" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30" placeholder="輸入名字...">
                 </div>
                 <button @click="addUser" class="bg-emerald-600 px-5 rounded-xl font-black text-xs btn-press shadow-lg shadow-emerald-900/50">加入</button>
             </div>
-            
+
             <div class="flex flex-wrap gap-2">
                 <transition-group name="toast">
                     <div v-for="(u, i) in users" :key="u" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 group">
-                        {{ u }} 
+                        {{ u }}
                         <button @click="removeUser(i)" class="text-gray-600 hover:text-red-400 px-1"><i class="fas fa-times"></i></button>
                     </div>
                 </transition-group>
@@ -155,9 +157,9 @@
             </div>
         </section>
 
-        <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-hidden" 
+        <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-hidden"
                  :class="{'opacity-50 pointer-events-none grayscale': users.length === 0, 'border-amber-500/50': isEditing}">
-            
+
             <div v-if="users.length === 0" class="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
                 <div class="bg-black/80 px-4 py-2 rounded-full text-xs font-bold text-white"><i class="fas fa-lock mr-2"></i>先加朋友解鎖</div>
             </div>
@@ -248,7 +250,7 @@
                 <p class="text-xs">暫無消費</p>
             </div>
             <div class="space-y-3">
-                <div v-for="(exp, idx) in expenses" :key="exp.id" @click="editExpense(idx)" 
+                <div v-for="(exp, idx) in expenses" :key="exp.id" @click="editExpense(idx)"
                      class="glass p-4 rounded-2xl flex justify-between items-center border-l-[3px] transition-all active:scale-[0.99]"
                      :style="{ borderColor: isEditing && editingId === exp.id ? '#f59e0b' : '#10b981' }">
                     <div class="flex-1 overflow-hidden pr-3">
@@ -274,7 +276,7 @@
     <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
 
     <footer class="fixed bottom-6 left-0 right-0 max-w-[500px] mx-auto px-6 z-50 grid grid-cols-2 gap-4 pointer-events-none">
-        <button @click="showShareModal = true" :disabled="expenses.length === 0" 
+        <button @click="showShareModal = true" :disabled="expenses.length === 0"
                 class="pointer-events-auto bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black text-xs shadow-2xl shadow-emerald-900/40 btn-press disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2 border border-emerald-400/20 backdrop-blur-md text-white">
             <i class="fas fa-receipt"></i> 結算分享
         </button>
@@ -292,7 +294,7 @@
     <div v-if="showSyncModal" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showSyncModal = false">
         <div class="glass w-full max-w-sm p-8 rounded-[2.5rem] relative overflow-hidden animate-[fadeIn_0.3s_ease]">
             <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-emerald-900/20 to-transparent pointer-events-none"></div>
-            
+
             <div class="relative z-10 text-center mb-8">
                 <img src="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png" class="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/10 object-contain bg-black/20">
                 <h3 class="text-xl font-black">同步控制中心</h3>
@@ -307,7 +309,7 @@
                 <button @click="joinRoom(roomInput)" class="bg-emerald-600 py-3.5 rounded-xl font-black text-xs btn-press">進入房間</button>
                 <button @click="createRoom" class="bg-white/5 border border-white/10 py-3.5 rounded-xl font-black text-xs btn-press hover:bg-white/10">新開房間</button>
             </div>
-            
+
             <div v-if="recentRoomsWithNames.length > 0" class="border-t border-white/5 pt-5">
                 <p class="text-[9px] text-gray-500 font-bold uppercase mb-3 px-1">最近瀏覽</p>
                 <div class="space-y-2 max-h-40 overflow-y-auto custom-scroll pr-1">
@@ -330,7 +332,7 @@
         <div class="max-w-md mx-auto w-full my-auto">
             <div id="capture-zone" class="bg-[#e8e8e8] text-black p-6 rounded-lg shadow-2xl mb-6 relative overflow-hidden font-mono">
                 <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300 to-transparent opacity-20"></div>
-                
+
                 <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
                     <h2 class="font-black text-2xl tracking-tighter uppercase mb-1">過數通知單</h2>
                     <p v-if="eventName" class="text-sm font-bold text-gray-600">{{ eventName }}</p>
@@ -346,8 +348,8 @@
                     <div v-if="settlements.length === 0" class="text-center text-gray-400 text-xs py-2">沒有人需要夾錢</div>
                     <div v-for="s in settlements" class="flex justify-between items-center py-1 text-sm font-bold">
                         <div class="flex items-center gap-2">
-                            <span class="text-red-600">{{ s.from }}</span> 
-                            <i class="fas fa-arrow-right-long text-gray-400 mx-2"></i> 
+                            <span class="text-red-600">{{ s.from }}</span>
+                            <i class="fas fa-arrow-right-long text-gray-400 mx-2"></i>
                             <span class="text-emerald-600">{{ s.to }}</span>
                         </div>
                         <span>${{ s.amount.toFixed(1) }}</span>
@@ -367,45 +369,50 @@
                 </div>
             </div>
 
-<div class="glass p-6 rounded-[2rem] space-y-4">
-    <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-        <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" v-model="shareOptions.showList" class="sr-only peer">
-            <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-        </label>
-    </div>
-    
-    <div v-if="shareSubMenu === 'none'" class="grid grid-cols-2 gap-3">
-        <button @click="shareSubMenu = 'text'" class="bg-gray-700 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
-            <i class="fas fa-file-alt text-lg"></i> 分享文字
-        </button>
-        <button @click="shareSubMenu = 'image'" class="bg-emerald-600 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
-            <i class="fas fa-image text-lg"></i> 分享圖片
-        </button>
-    </div>
+            <div class="glass p-6 rounded-[2rem] space-y-4">
+                <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                    <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" v-model="shareOptions.showList" class="sr-only peer">
+                        <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                </div>
 
-    <div v-if="shareSubMenu === 'text'" class="space-y-3">
-        <button @click="copyText" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
-            <i class="fas fa-copy mr-2"></i> 複製文字
-        </button>
-        <button @click="shareViaApp('text')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
-            <i class="fas fa-share mr-2"></i> 分享到APP
-        </button>
-        <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
-    </div>
+                <div v-if="shareSubMenu === 'none'" class="grid grid-cols-2 gap-3">
+                    <button @click="shareSubMenu = 'text'" class="bg-gray-700 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
+                        <i class="fas fa-file-alt text-lg"></i> 分享文字
+                    </button>
+                    <button @click="shareSubMenu = 'image'" class="bg-emerald-600 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
+                        <i class="fas fa-image text-lg"></i> 分享圖片
+                    </button>
+                </div>
 
-    <div v-if="shareSubMenu === 'image'" class="space-y-3">
-        <button @click="generateImage" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
-            <i class="fas fa-download mr-2"></i> 下載圖片
-        </button>
-        <button @click="shareViaApp('image')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
-            <i class="fas fa-share-nodes mr-2"></i> 分享到APP
-        </button>
-        <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
-    </div>
-</div>
-            <button @click="showShareModal = false; shareSubMenu = 'none'" ...>關閉</button>
+                <div v-if="shareSubMenu === 'text'" class="space-y-3">
+                    <button @click="copyText" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
+                        <i class="fas fa-copy mr-2"></i> 複製文字
+                    </button>
+                    <button @click="shareViaApp('text')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
+                        <i class="fas fa-share mr-2"></i> 分享到APP
+                    </button>
+                    <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
+                </div>
+
+                <div v-if="shareSubMenu === 'image'" class="space-y-3">
+                    <button @click="generateImage" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
+                        <i class="fas fa-download mr-2"></i> 下載圖片
+                    </button>
+                    <button @click="shareViaApp('image')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
+                        <i class="fas fa-share-nodes mr-2"></i> 分享到APP
+                    </button>
+                    <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
+                </div>
+            </div>
+
+            <!-- ✅ Fix: 移除會令 Vue 爆炸嘅 '...' -->
+            <button @click="showShareModal = false; shareSubMenu = 'none'"
+                    class="w-full bg-white/10 py-3 rounded-xl text-xs font-black mt-4 border border-white/10 hover:bg-white/15 btn-press">
+                關閉
+            </button>
         </div>
     </div>
 
@@ -426,16 +433,20 @@
 </div>
 
 <script>
-const firebaseConfig = { apiKey: "yFDRUSUFAFnZf6AGdsEA9LxSyLcZF75oIFfib5At", databaseURL: "https://mathgod2-default-rtdb.asia-southeast1.firebasedatabase.app/", projectId: "mathgod2" };
+const firebaseConfig = {
+    apiKey: "yFDRUSUFAFnZf6AGdsEA9LxSyLcZF75oIFfib5At",
+    databaseURL: "https://mathgod2-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "mathgod2"
+};
 try { firebase.initializeApp(firebaseConfig); } catch(e) {}
 const db = firebase.database();
 const { createApp, ref, computed, onMounted } = Vue;
 
-// Fix 6: PWA Service Worker Registration
+// PWA Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW registered'))
+            .then(() => console.log('SW registered'))
             .catch(err => console.log('SW failed', err));
     });
 }
@@ -444,23 +455,42 @@ createApp({
     setup() {
         // State
         const isLoading = ref(false);
-        const eventName = ref(""); const users = ref([]); const expenses = ref([]); const newUser = ref("");
-        const isEditing = ref(false); const editingId = ref(null);
-       const showSyncModal = ref(false); const showShareModal = ref(false); const showResetMenu = ref(false); const showTutorial = ref(false);
-const shareSubMenu = ref('none'); 
-        const toasts = ref([]); 
-        const roomId = ref(null); const roomInput = ref(""); const recentRooms = ref([]); const roomNamesMap = ref({});
+        const eventName = ref("");
+        const users = ref([]);
+        const expenses = ref([]);
+        const newUser = ref("");
+        const isEditing = ref(false);
+        const editingId = ref(null);
+        const showSyncModal = ref(false);
+        const showShareModal = ref(false);
+        const showResetMenu = ref(false);
+        const showTutorial = ref(false);
+        const shareSubMenu = ref('none');
+        const toasts = ref([]);
+        const roomId = ref(null);
+        const roomInput = ref("");
+        const recentRooms = ref([]);
+        const roomNamesMap = ref({});
         const form = ref({ item: "", amount: null, currency: "HKD", payer: "", involved: [] });
         const errors = ref({ item: false, amount: false, payer: false, involved: false });
-        const currentRate = ref(1); const shareOptions = ref({ showList: true });
+        const currentRate = ref(1);
+        const shareOptions = ref({ showList: true });
 
         // Utils
         const toast = (msg, type='success') => {
-            const id = Date.now(); toasts.value.push({id, msg, type});
+            const id = Date.now();
+            toasts.value.push({id, msg, type});
             setTimeout(() => toasts.value = toasts.value.filter(t=>t.id!==id), 3000);
         };
-        
         const setLoading = (status) => isLoading.value = status;
+
+        // ✅ Fix: iOS/部分瀏覽器無 showPicker()
+        const openDatePicker = () => {
+            const el = document.getElementById('dateInput');
+            if(!el) return;
+            if (typeof el.showPicker === 'function') el.showPicker();
+            else el.click();
+        };
 
         // Data Logic
         const saveData = () => {
@@ -480,15 +510,21 @@ const shareSubMenu = ref('none');
             try {
                 const res = await fetch(`https://open.er-api.com/v6/latest/${form.value.currency}`);
                 const data = await res.json();
-                currentRate.value = data.rates.HKD || 1;
-            } catch (e) { toast("匯率獲取失敗", "error"); currentRate.value = 1; }
+                currentRate.value = data?.rates?.HKD || 1;
+            } catch (e) {
+                toast("匯率獲取失敗", "error");
+                currentRate.value = 1;
+            }
         };
 
         const addUser = () => {
             const n = newUser.value.trim();
             if(!n) return;
             if(users.value.includes(n)) { toast("朋友已存在", "error"); return; }
-            users.value.push(n); form.value.involved.push(n); newUser.value = ""; saveData();
+            users.value.push(n);
+            form.value.involved.push(n);
+            newUser.value = "";
+            saveData();
         };
 
         const addExpense = () => {
@@ -498,21 +534,22 @@ const shareSubMenu = ref('none');
                 payer: !form.value.payer,
                 involved: form.value.involved.length === 0
             };
-            
+
             if(Object.values(errors.value).some(v => v)) {
                 toast("請填妥紅色欄位", "error");
                 return;
             }
 
-            const exp = { 
-                id: isEditing.value ? editingId.value : Date.now(), 
-                item: form.value.item, 
-                hkd: form.value.amount * currentRate.value, 
-                payer: form.value.payer, 
-                involved: [...form.value.involved], 
-                origAmount: form.value.amount, 
-                origCurrency: form.value.currency 
+            const exp = {
+                id: isEditing.value ? editingId.value : Date.now(),
+                item: form.value.item,
+                hkd: (form.value.amount * currentRate.value) || 0,
+                payer: form.value.payer,
+                involved: [...form.value.involved],
+                origAmount: form.value.amount,
+                origCurrency: form.value.currency
             };
+
             if(isEditing.value) {
                 const i = expenses.value.findIndex(e => e.id === editingId.value);
                 if(i > -1) expenses.value[i] = exp;
@@ -521,50 +558,84 @@ const shareSubMenu = ref('none');
                 expenses.value.unshift(exp);
                 toast("已新增一筆消費");
             }
-            cancelEdit(); saveData();
+            cancelEdit();
+            saveData();
         };
 
         const editExpense = (i) => {
-            const e = expenses.value[i]; editingId.value = e.id; isEditing.value = true;
-            form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...e.involved] };
-            handleCurrencyChange(); window.scrollTo({ top: 0, behavior: 'smooth' });
+            const e = expenses.value[i];
+            editingId.value = e.id;
+            isEditing.value = true;
+            form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])] };
+            handleCurrencyChange();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         const cancelEdit = () => {
-            isEditing.value = false; editingId.value = null;
+            isEditing.value = false;
+            editingId.value = null;
             form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [...users.value] };
             currentRate.value = 1;
             errors.value = { item: false, amount: false, payer: false, involved: false };
         };
 
         // Room Logic
+        const updateHistory = (rid) => {
+            let h = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
+            h = [rid, ...h.filter(x => x !== rid)].slice(0, 10);
+            recentRooms.value = h;
+            localStorage.setItem('mathGod_history', JSON.stringify(h));
+        };
+
+        // ✅ Fix: compat 版用 once('value') 而唔係 get()
         const joinRoom = async (rid) => {
-            if(!rid) return; rid = rid.toString();
+            if(!rid) return;
+            rid = rid.toString();
+
             setLoading(true);
             try {
-                const snap = await db.ref('rooms/' + rid).get();
+                const snap = await db.ref('rooms/' + rid).once('value');
                 if(snap.exists()) {
-                    roomId.value = rid; roomInput.value = rid; localStorage.setItem('mathGod_roomId', rid);
+                    roomId.value = rid;
+                    roomInput.value = rid;
+                    localStorage.setItem('mathGod_roomId', rid);
+
                     db.ref('rooms/' + rid).off();
                     db.ref('rooms/' + rid).on('value', s => {
-                        const v = s.val(); if(v) { users.value = v.users||[]; expenses.value = v.expenses||[]; eventName.value = v.eventName||""; }
+                        const v = s.val();
+                        if(v) {
+                            users.value = v.users || [];
+                            expenses.value = v.expenses || [];
+                            eventName.value = v.eventName || "";
+                        }
                     });
-                    updateHistory(rid); showSyncModal.value = false;
+
+                    updateHistory(rid);
+                    showSyncModal.value = false;
                     setTimeout(() => { setLoading(false); toast(`成功加入房間 #${rid}`); }, 600);
-                } else { 
-                    setLoading(false); toast("房間不存在", "error"); 
+                } else {
+                    setLoading(false);
+                    toast("房間不存在", "error");
                 }
-            } catch(e) { setLoading(false); toast("連線錯誤", "error"); }
+            } catch(e) {
+                console.error(e);
+                setLoading(false);
+                toast("連線錯誤", "error");
+            }
         };
 
         const createRoom = async () => {
             setLoading(true);
             const rid = Math.floor(1000 + Math.random() * 9000).toString();
             const initialData = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value || "" };
-            try { 
-                await db.ref('rooms/' + rid).set(initialData); 
-                joinRoom(rid); 
-            } catch(e) { setLoading(false); toast("連線錯誤", "error"); }
+            try {
+                await db.ref('rooms/' + rid).set(initialData);
+                joinRoom(rid);
+            } catch(e) {
+                console.error(e);
+                setLoading(false);
+                toast("連線錯誤", "error");
+            }
         };
 
         const logoutRoom = () => {
@@ -573,47 +644,53 @@ const shareSubMenu = ref('none');
             setTimeout(() => {
                 db.ref('rooms/' + roomId.value).off();
                 roomId.value = null;
-                // Fix 5: 清空輸入的房號
                 roomInput.value = "";
                 localStorage.removeItem('mathGod_roomId');
-                resetData('all', false); 
+                resetData('all', false);
                 setLoading(false);
                 toast("已登出並清空資料");
             }, 800);
         };
 
-        const updateHistory = (rid) => {
-            let h = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
-            h = [rid, ...h.filter(x => x !== rid)].slice(0, 10);
-            recentRooms.value = h; localStorage.setItem('mathGod_history', JSON.stringify(h));
-        };
-
         const removeHistoryRoom = (rid) => {
             if(confirm("從最近紀錄中刪除此房間？")) {
                 let h = recentRooms.value.filter(x => x !== rid);
-                recentRooms.value = h; localStorage.setItem('mathGod_history', JSON.stringify(h));
-                let names = roomNamesMap.value; delete names[rid]; localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
-                roomNamesMap.value = {...names};
+                recentRooms.value = h;
+                localStorage.setItem('mathGod_history', JSON.stringify(h));
+                let names = { ...(roomNamesMap.value || {}) };
+                delete names[rid];
+                localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
+                roomNamesMap.value = names;
             }
         };
 
         const resetData = (t, ask=true) => {
             const doReset = () => {
-                if(t==='all'){users.value=[]; expenses.value=[]; eventName.value="";} else {expenses.value=[];}
-                saveData(); showResetMenu.value=false; 
+                if(t==='all'){
+                    users.value=[];
+                    expenses.value=[];
+                    eventName.value="";
+                    form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [] };
+                } else {
+                    expenses.value=[];
+                }
+                saveData();
+                showResetMenu.value=false;
             };
             if(ask) {
-                if(confirm(t==='all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) { doReset(); toast("資料已重置"); }
+                if(confirm(t==='all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) {
+                    doReset();
+                    toast("資料已重置");
+                }
             } else {
                 doReset();
             }
         };
 
-        // Fix 3: 日期替代邏輯
+        // 日期替代邏輯
         const appendDate = (e) => {
             if (e.target.value) {
                 const dateStr = `(${e.target.value})`;
-                // 檢查是否已有括號日期格式，有則替換，無則新增
                 const regex = /\(\d{4}-\d{2}-\d{2}\)$/;
                 if (regex.test(eventName.value)) {
                     eventName.value = eventName.value.replace(regex, dateStr);
@@ -625,17 +702,36 @@ const shareSubMenu = ref('none');
         };
 
         const settlements = computed(() => {
-            let bal = {}; users.value.forEach(u => bal[u] = 0);
+            let bal = {};
+            users.value.forEach(u => bal[u] = 0);
+
             expenses.value.forEach(e => {
-                if(e.involved.length>0) { bal[e.payer] += e.hkd; let s = e.hkd/e.involved.length; e.involved.forEach(u => bal[u] -= s); }
+                if(!e || !e.payer || !Array.isArray(e.involved) || e.involved.length === 0) return;
+                if(!(e.payer in bal)) return; // payer 已被刪 -> 忽略
+                const h = Number(e.hkd || 0);
+                bal[e.payer] += h;
+                let s = h / e.involved.length;
+                e.involved.forEach(u => {
+                    if(u in bal) bal[u] -= s;
+                });
             });
+
             let d=[], c=[], res=[];
-            for(let u in bal) { if(bal[u] < -0.01) d.push({n: u, a: Math.abs(bal[u])}); else if(bal[u] > 0.01) c.push({n: u, a: bal[u]}); }
-            d.sort((a,b)=>b.a-a.a); c.sort((a,b)=>b.a-a.a);
+            for(let u in bal) {
+                if(bal[u] < -0.01) d.push({n: u, a: Math.abs(bal[u])});
+                else if(bal[u] > 0.01) c.push({n: u, a: bal[u]});
+            }
+            d.sort((a,b)=>b.a-a.a);
+            c.sort((a,b)=>b.a-a.a);
+
             let i=0, j=0;
             while(i<d.length && j<c.length) {
-                let m = Math.min(d[i].a, c[j].a); res.push({from: d[i].n, to: c[j].n, amount: m});
-                d[i].a -= m; c[j].a -= m; if(d[i].a < 0.01) i++; if(c[j].a < 0.01) j++;
+                let m = Math.min(d[i].a, c[j].a);
+                res.push({from: d[i].n, to: c[j].n, amount: m});
+                d[i].a -= m;
+                c[j].a -= m;
+                if(d[i].a < 0.01) i++;
+                if(c[j].a < 0.01) j++;
             }
             return res;
         });
@@ -647,11 +743,11 @@ const shareSubMenu = ref('none');
             msg += `請跟隨以下列表過數 (Transfer List):\n`;
             if(settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
             settlements.value.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
-            
+
             if (shareOptions.value.showList) {
                 msg += `\n📋 詳細消費紀錄:\n`;
                 expenses.value.forEach((e, idx) => {
-                    msg += `${idx+1}. ${e.item} (${e.payer}付): $${e.hkd.toFixed(1)}\n`;
+                    msg += `${idx+1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
                 });
             }
             msg += `\n------------------------------\nGenerated by MathGod`;
@@ -659,39 +755,33 @@ const shareSubMenu = ref('none');
         };
 
         const copyText = () => {
-            navigator.clipboard.writeText(getShareText()).then(()=>toast("已複製")).catch(()=>toast("複製失敗","error"));
+            navigator.clipboard.writeText(getShareText())
+                .then(()=>toast("已複製"))
+                .catch(()=>toast("複製失敗","error"));
         };
 
-        // Fix 2: 系統分享功能
         const shareViaApp = async (type) => {
             try {
                 if (type === 'text') {
                     if (navigator.share) {
-                        await navigator.share({
-                            title: 'MathGod 結算',
-                            text: getShareText()
-                        });
+                        await navigator.share({ title: 'MathGod 結算', text: getShareText() });
                     } else {
-                        copyText(); // Fallback
+                        copyText();
                     }
                 } else if (type === 'image') {
                     toast("正在製作圖片...");
                     const zone = document.getElementById('capture-zone');
                     const originalShadow = zone.style.boxShadow;
                     zone.style.boxShadow = 'none';
-                    
+
                     const canvas = await html2canvas(zone, { backgroundColor: '#e8e8e8', scale: 2, useCORS: true });
                     zone.style.boxShadow = originalShadow;
 
                     canvas.toBlob(async (blob) => {
                         const file = new File([blob], "mathgod_share.png", { type: "image/png" });
                         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                            await navigator.share({
-                                files: [file],
-                                title: 'MathGod 結算圖'
-                            });
+                            await navigator.share({ files: [file], title: 'MathGod 結算圖' });
                         } else {
-                            // Fallback to download
                             const link = document.createElement('a');
                             link.download = `MathGod_${Date.now()}.png`;
                             link.href = canvas.toDataURL();
@@ -702,7 +792,6 @@ const shareSubMenu = ref('none');
                 }
             } catch (err) {
                 console.error(err);
-                // User cancelled or error
             }
         };
 
@@ -712,34 +801,98 @@ const shareSubMenu = ref('none');
             zone.style.boxShadow = 'none';
             try {
                 const canvas = await html2canvas(zone, { backgroundColor: '#e8e8e8', scale: 2, useCORS: true });
-                const link = document.createElement('a'); link.download = `MathGod_${Date.now()}.png`; link.href = canvas.toDataURL(); link.click();
+                const link = document.createElement('a');
+                link.download = `MathGod_${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
             } finally {
                 zone.style.boxShadow = originalShadow;
             }
         };
 
+        // ✅ Fix: 刪朋友同時清理 form/expenses，避免 settlement NaN/怪帳
+        const removeUser = (i) => {
+            const name = users.value[i];
+            if(!name) return;
+
+            if(!confirm("確定刪除此人？（會同時移除相關消費關聯）")) return;
+
+            users.value.splice(i, 1);
+
+            // 表單清理
+            form.value.involved = (form.value.involved || []).filter(u => u !== name);
+            if (form.value.payer === name) form.value.payer = "";
+
+            // 消費清理
+            expenses.value = (expenses.value || [])
+                .map(e => ({
+                    ...e,
+                    payer: e.payer === name ? "" : e.payer,
+                    involved: (e.involved || []).filter(u => u !== name),
+                    hkd: Number(e.hkd || 0),
+                }))
+                .filter(e => e.payer && Array.isArray(e.involved) && e.involved.length > 0);
+
+            // 如果刪完 users 變 0，順便 reset 表單 involved
+            if (users.value.length === 0) {
+                form.value.involved = [];
+                form.value.payer = "";
+            }
+
+            saveData();
+            toast("已刪除朋友並清理相關紀錄");
+        };
+
+        const removeExpense = (i) => {
+            if(confirm("確定刪除紀錄？")) {
+                expenses.value.splice(i,1);
+                saveData();
+            }
+        };
+
+        const toggleSelectAll = () => {
+            form.value.involved = (form.value.involved.length === users.value.length) ? [] : [...users.value];
+        };
+
+        const toggleInvolved = (u) => {
+            const idx = form.value.involved.indexOf(u);
+            if(idx>-1) form.value.involved.splice(idx,1);
+            else form.value.involved.push(u);
+        };
+
         onMounted(() => {
             const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
-            if(local.users) { users.value = local.users; expenses.value = local.expenses || []; eventName.value = local.eventName || ""; }
+            if(local.users) {
+                users.value = local.users;
+                expenses.value = local.expenses || [];
+                eventName.value = local.eventName || "";
+            }
+            // 預設 involved 等於所有 users
+            form.value.involved = [...users.value];
+
             recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
             roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
-            const savedRoom = localStorage.getItem('mathGod_roomId'); if(savedRoom) joinRoom(savedRoom);
+            const savedRoom = localStorage.getItem('mathGod_roomId');
+            if(savedRoom) joinRoom(savedRoom);
         });
 
         return {
             isLoading,
             shareSubMenu,
-            eventName, users, expenses, newUser, form, isEditing, editingId, 
+            eventName, users, expenses, newUser, form, isEditing, editingId,
             showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
             roomId, roomInput, currentRate, shareOptions, errors,
+            openDatePicker,
             recentRoomsWithNames: computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))),
-            totalSpent: computed(() => expenses.value.reduce((s, e) => s + (e.hkd || 0), 0)),
+            totalSpent: computed(() => expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)),
             settlements,
             addUser, addExpense, saveData, joinRoom, createRoom, logoutRoom,
-            editExpense, cancelEdit, removeUser: (i) => { if(confirm("確定刪除此人？")) { users.value.splice(i,1); saveData(); } },
-            removeExpense: (i) => { if(confirm("確定刪除紀錄？")) { expenses.value.splice(i,1); saveData(); } },
-            handleCurrencyChange, toggleSelectAll: () => { form.value.involved = form.value.involved.length === users.value.length ? [] : [...users.value]; },
-            toggleInvolved: (u) => { const idx = form.value.involved.indexOf(u); if(idx>-1) form.value.involved.splice(idx,1); else form.value.involved.push(u); },
+            editExpense, cancelEdit,
+            removeUser,
+            removeExpense,
+            handleCurrencyChange,
+            toggleSelectAll,
+            toggleInvolved,
             appendDate, resetData, removeHistoryRoom, copyText, generateImage, shareViaApp
         };
     }
