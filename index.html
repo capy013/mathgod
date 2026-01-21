@@ -354,31 +354,45 @@
                 </div>
             </div>
 
-            <div class="glass p-6 rounded-[2rem] space-y-4">
-                <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                    <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" v-model="shareOptions.showList" class="sr-only peer">
-                        <div class="w-10 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                    </label>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <button @click="copyText" class="bg-gray-800 py-3 rounded-xl font-bold text-xs btn-press hover:bg-gray-700">
-                        <i class="fas fa-copy mr-1"></i> 複製文字
-                    </button>
-                    <button @click="shareViaApp('text')" class="bg-gray-700 py-3 rounded-xl font-bold text-xs btn-press hover:bg-gray-600">
-                         <i class="fas fa-share mr-1"></i> 分享文字
-                    </button>
-                    <button @click="generateImage" class="bg-emerald-800 py-3 rounded-xl font-bold text-xs btn-press hover:bg-emerald-700">
-                        <i class="fas fa-download mr-1"></i> 下載圖片
-                    </button>
-                    <button @click="shareViaApp('image')" class="bg-emerald-600 py-3 rounded-xl font-bold text-xs btn-press shadow-lg hover:bg-emerald-500">
-                        <i class="fas fa-share-nodes mr-1"></i> 分享圖片
-                    </button>
-                </div>
-            </div>
-            <button @click="showShareModal = false" class="w-full mt-4 py-2 text-xs font-bold text-gray-500">關閉</button>
+<div class="glass p-6 rounded-[2rem] space-y-4">
+    <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+        <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" v-model="shareOptions.showList" class="sr-only peer">
+            <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
+    </div>
+    
+    <div v-if="shareSubMenu === 'none'" class="grid grid-cols-2 gap-3">
+        <button @click="shareSubMenu = 'text'" class="bg-gray-700 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
+            <i class="fas fa-file-alt text-lg"></i> 分享文字
+        </button>
+        <button @click="shareSubMenu = 'image'" class="bg-emerald-600 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
+            <i class="fas fa-image text-lg"></i> 分享圖片
+        </button>
+    </div>
+
+    <div v-if="shareSubMenu === 'text'" class="space-y-3">
+        <button @click="copyText" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
+            <i class="fas fa-copy mr-2"></i> 複製文字
+        </button>
+        <button @click="shareViaApp('text')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
+            <i class="fas fa-share mr-2"></i> 分享到APP
+        </button>
+        <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
+    </div>
+
+    <div v-if="shareSubMenu === 'image'" class="space-y-3">
+        <button @click="generateImage" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
+            <i class="fas fa-download mr-2"></i> 下載圖片
+        </button>
+        <button @click="shareViaApp('image')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
+            <i class="fas fa-share-nodes mr-2"></i> 分享到APP
+        </button>
+        <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
+    </div>
+</div>
+            <button @click="showShareModal = false; shareSubMenu = 'none'" ...>關閉</button>
         </div>
     </div>
 
@@ -419,7 +433,8 @@ createApp({
         const isLoading = ref(false);
         const eventName = ref(""); const users = ref([]); const expenses = ref([]); const newUser = ref("");
         const isEditing = ref(false); const editingId = ref(null);
-        const showSyncModal = ref(false); const showShareModal = ref(false); const showResetMenu = ref(false); const showTutorial = ref(false);
+       const showSyncModal = ref(false); const showShareModal = ref(false); const showResetMenu = ref(false); const showTutorial = ref(false);
+const shareSubMenu = ref('none'); 
         const toasts = ref([]); 
         const roomId = ref(null); const roomInput = ref(""); const recentRooms = ref([]); const roomNamesMap = ref({});
         const form = ref({ item: "", amount: null, currency: "HKD", payer: "", involved: [] });
@@ -700,6 +715,7 @@ createApp({
 
         return {
             isLoading,
+            shareSubMenu,
             eventName, users, expenses, newUser, form, isEditing, editingId, 
             showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
             roomId, roomInput, currentRate, shareOptions, errors,
