@@ -207,11 +207,18 @@
               <span class="text-xs font-black text-gray-500 mr-2">$</span>
               <input v-model.number="form.amount" @input="errors.amount = false" type="number" inputmode="decimal" class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10" placeholder="0.0">
             </div>
-            <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1">
-              <span class="text-[9px] font-bold text-emerald-400 font-num">
-                Rate: {{currentRate.toFixed(3)}} ≈ HKD ${{ (form.amount * currentRate || 0).toFixed(1) }}
-              </span>
-            </div>
+            <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
+  <div>
+    <span class="text-[9px] font-bold text-emerald-400 font-num">
+      Rate: {{currentRate.toFixed(3)}} ≈ HKD ${{ (form.amount * currentRate || 0).toFixed(1) }}
+    </span>
+  </div>
+
+  <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
+    最後更新時間：{{ formatTs(rateUpdatedAt) }}
+  </div>
+</div>
+
           </div>
         </div>
 
@@ -488,8 +495,13 @@
       const roomNamesMap = ref({});
       const form = ref({ item: "", amount: null, currency: "HKD", payer: "", involved: [] });
       const errors = ref({ item: false, amount: false, payer: false, involved: false });
-      const currentRate = ref(1);
-      const shareOptions = ref({ showList: true });
+     const currentRate = ref(1);
+const shareOptions = ref({ showList: true });
+
+// ✅ 新增：匯率快取（各幣種 -> HKD）+ 最後更新時間
+const ratesHKD = ref({ HKD: 1 });
+const rateUpdatedAt = ref(null);
+
 
       const toast = (msg, type='success') => {
         const id = Date.now();
@@ -518,44 +530,92 @@
           roomNamesMap.value = names;
         }
       };
+      // ===== 匯率策略：一次更新全部幣種 -> HKD（有 TTL + 離線快取） =====
+const SUPPORTED_CURRENCIES = ["HKD","CNY","JPY","TWD","THB","KRW","USD","EUR","GBP"];
+const RATES_CACHE_KEY = "mathGod_rates_to_HKD_v1";
+const RATES_TTL_MS = 6 * 60 * 60 * 1000; // 6 小時
 
-      // ✅ Offline-friendly 匯率：online 更新 + cache；offline 用 cache
-      const handleCurrencyChange = async () => {
-        if(form.value.currency === 'HKD') { currentRate.value = 1; return; }
+const loadRatesCache = () => {
+  const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+  if (cached?.rates && cached?.updatedAt) {
+    ratesHKD.value = cached.rates;
+    rateUpdatedAt.value = cached.updatedAt;
+  }
+};
 
-        const cacheKey = `mathGod_rate_${form.value.currency}_to_HKD`;
-        const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+const saveRatesCache = (rates, updatedAt) => {
+  localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ rates, updatedAt }));
+  ratesHKD.value = rates;
+  rateUpdatedAt.value = updatedAt;
+};
 
-        // Offline: use cached
-        if (!navigator.onLine) {
-          if (cached?.rate) {
-            currentRate.value = cached.rate;
-            toast(`離線模式：使用上次匯率 (${cached.rate.toFixed(3)})`);
-            return;
-          }
-          toast("離線且未有匯率快取", "error");
-          currentRate.value = 1;
-          return;
-        }
+// format「最後更新時間：YYYY-MM-DD HH:mm」
+const formatTs = (ts) => {
+  const d = new Date(ts);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
-        // Online: fetch & cache
-        try {
-          const res = await fetch(`https://open.er-api.com/v6/latest/${form.value.currency}`);
-          const data = await res.json();
-          const rate = data?.rates?.HKD || 1;
-          currentRate.value = rate;
+// 背景更新匯率（online 先做；受 TTL 控制避免太頻繁）
+const refreshRatesSilently = async (force = false) => {
+  if (!navigator.onLine) return;
 
-          localStorage.setItem(cacheKey, JSON.stringify({ rate, ts: Date.now() }));
-        } catch (e) {
-          if (cached?.rate) {
-            currentRate.value = cached.rate;
-            toast("匯率獲取失敗：改用上次匯率", "error");
-            return;
-          }
-          toast("匯率獲取失敗", "error");
-          currentRate.value = 1;
-        }
-      };
+  const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+  const freshEnough = cached?.updatedAt && (Date.now() - cached.updatedAt < RATES_TTL_MS);
+  if (!force && freshEnough) return;
+
+  try {
+    // 用 USD 做 base，一次拎晒所有 rates，再轉成「各幣種 -> HKD」
+    const res = await fetch(`https://open.er-api.com/v6/latest/USD`, { cache: "no-store" });
+    const data = await res.json();
+    const r = data?.rates;
+
+    if (!r?.HKD) return;
+
+    // 由 USD base 轉成「1 XXX = ? HKD」
+    // 已知：1 USD = r[XXX] XXX；1 USD = r[HKD] HKD
+    // => 1 XXX = r[HKD] / r[XXX] HKD
+    const toHKD = { HKD: 1 };
+    SUPPORTED_CURRENCIES.forEach(code => {
+      if (code === "HKD") return;
+      if (r[code]) toHKD[code] = r.HKD / r[code];
+    });
+
+    saveRatesCache(toHKD, Date.now());
+  } catch (e) {
+    // 失敗唔覆蓋舊快取（保持可用）
+  }
+};
+
+
+      // ✅ 更好的匯率：用快取即刻回應 + 背景更新（TTL 控制）+ 離線可用
+const handleCurrencyChange = async () => {
+  // HKD 直接 1
+  if (form.value.currency === 'HKD') {
+    currentRate.value = 1;
+    return;
+  }
+
+  // 先用快取（即刻有 rate，不阻塞 UI）
+  const cachedRate = ratesHKD.value?.[form.value.currency];
+  if (cachedRate) currentRate.value = cachedRate;
+
+  // 用家轉幣種時都再試一次背景更新（online 才會做，TTL 會擋住太密）
+  await refreshRatesSilently(false);
+
+  // 更新後再取一次（成功更新就會更準）
+  const newRate = ratesHKD.value?.[form.value.currency];
+  if (newRate) {
+    currentRate.value = newRate;
+  } else {
+    // 如果完全冇快取（例如第一次就離線），保持 1 避免 NaN
+    currentRate.value = 1;
+    if (!navigator.onLine) {
+      toast("離線且未有匯率快取（可先上線開一次App）", "error");
+    }
+  }
+};
+
 
       const addUser = () => {
         const n = newUser.value.trim();
@@ -895,6 +955,9 @@
       };
 
       onMounted(() => {
+        loadRatesCache();
+refreshRatesSilently(false);
+
         const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
         if(local.users) {
           users.value = local.users;
@@ -925,6 +988,10 @@
         eventName, users, expenses, newUser, form, isEditing, editingId,
         showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
         roomId, roomInput, currentRate, shareOptions, errors,
+
+        rateUpdatedAt,
+formatTs,
+
         openDatePicker,
         recentRoomsWithNames: computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))),
         totalSpent: computed(() => expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)),
