@@ -1,0 +1,16 @@
+{
+  "name": "MathGod 夾錢計數小助手",
+  "short_name": "MathGod",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#0a2f23",
+  "icons": [
+    {
+      "src": "https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
