@@ -470,7 +470,8 @@
   // ✅ PWA Service Worker Registration（sw.js 需同層）
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
+      navigator.serviceWorker.register('./sw.js', { scope: '/mathgod/' })
+
         .then(() => console.log('SW registered'))
         .catch(err => console.log('SW failed', err));
     });
