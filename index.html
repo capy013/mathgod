@@ -960,7 +960,12 @@
       };
 
       onMounted(() => {
-        const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
+  // ✅ 匯率：先讀快取，再背景更新一次
+  loadRatesCache();
+  refreshRatesSilently(false);
+  if (form.value.currency !== "HKD") handleCurrencyChange();
+
+  const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
         if(local.users) {
           users.value = local.users;
           expenses.value = local.expenses || [];
@@ -995,24 +1000,30 @@ if (savedRoom && navigator.onLine) {
       });
 
       return {
-        isLoading,
-        shareSubMenu,
-        eventName, users, expenses, newUser, form, isEditing, editingId,
-        showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
-        roomId, roomInput, currentRate, shareOptions, errors,
-        openDatePicker,
-        recentRoomsWithNames: computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))),
-        totalSpent: computed(() => expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)),
-        settlements,
-        addUser, addExpense, saveData, joinRoom, createRoom, logoutRoom,
-        editExpense, cancelEdit,
-        removeUser,
-        removeExpense,
-        handleCurrencyChange,
-        toggleSelectAll,
-        toggleInvolved,
-        appendDate, resetData, removeHistoryRoom, copyText, generateImage, shareViaApp
-      };
+  isLoading,
+  shareSubMenu,
+  eventName, users, expenses, newUser, form, isEditing, editingId,
+  showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
+  roomId, roomInput, currentRate, shareOptions, errors,
+
+  // ✅ 補回：比 UI 用「最後更新時間」
+  rateUpdatedAt,
+  formatTs,
+
+  openDatePicker,
+  recentRoomsWithNames: computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))),
+  totalSpent: computed(() => expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)),
+  settlements,
+  addUser, addExpense, saveData, joinRoom, createRoom, logoutRoom,
+  editExpense, cancelEdit,
+  removeUser,
+  removeExpense,
+  handleCurrencyChange,
+  toggleSelectAll,
+  toggleInvolved,
+  appendDate, resetData, removeHistoryRoom, copyText, generateImage, shareViaApp
+};
+
     }
   }).mount('#app');
 </script>
