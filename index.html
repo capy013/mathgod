@@ -69,7 +69,7 @@
     <div v-if="isLoading" class="fixed inset-0 z-[200] bg-black flex items-center justify-center">
       <div class="flex flex-col items-center">
         <img src="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png" class="w-16 h-16 rounded-2xl mb-4 animate-pulse shadow-2xl">
-        <p class="text-xs text-gray-500 font-bold tracking-widest uppercase">Processing...</p>
+        <p class="text-xs text-gray-500 font-bold tracking-widest uppercase">Loading...</p>
       </div>
     </div>
   </transition>
@@ -682,14 +682,20 @@
         localStorage.setItem('mathGod_history', JSON.stringify(h));
       };
 
-      // ✅ compat 版 joinRoom：用 once('value')（避免 get() 唔存在）
-      const joinRoom = async (rid) => {
-        if(!rid) return;
-        rid = rid.toString();
+    const joinRoom = async (rid) => {
+  // ✅ Offline：唔嘗試 Firebase，直接用本地資料
+  if (!navigator.onLine) {
+    toast("離線模式，無法連線房間（已使用本地資料）", "error");
+    isLoading.value = false;   // 確保唔會卡住 Processing
+    return;
+  }
 
-        setLoading(true);
+  if(!rid) return;
+  rid = rid.toString();
+
+  setLoading(true);
         try {
-          const snap = await db.ref('rooms/' + rid).once('value');
+  const snap = await db.ref('rooms/' + rid).once('value');
           if(snap.exists()) {
             roomId.value = rid;
             roomInput.value = rid;
@@ -715,10 +721,11 @@
             toast("房間不存在", "error");
           }
         } catch(e) {
-          console.error(e);
-          setLoading(false);
-          toast("連線錯誤", "error");
-        }
+  console.error(e);
+  toast("連線錯誤", "error");
+} finally {
+  setLoading(false);
+}
       };
 
       const createRoom = async () => {
@@ -964,8 +971,18 @@
         recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
         roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
 
-        const savedRoom = localStorage.getItem('mathGod_roomId');
-        if(savedRoom) joinRoom(savedRoom);
+       const savedRoom = localStorage.getItem('mathGod_roomId');
+
+if (savedRoom && navigator.onLine) {
+  joinRoom(savedRoom);
+} else {
+  // ✅ Offline fallback：直接用 local data
+  isLoading.value = false;
+  if (!navigator.onLine) {
+    toast("離線模式（使用本地資料）", "error");
+  }
+}
+
 
         // ✅ Online/offline 提示
         const onOnline = () => toast("已連線（Online）");
