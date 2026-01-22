@@ -1,21 +1,19 @@
-// sw.js (robust offline for CDN-heavy single-page index.html)
-const VERSION = "mathgod-v1.2.0";
+// sw.js (GitHub Pages project-safe)
+const VERSION = "mathgod-ghp-v1.0.0";
 const CORE_CACHE = `core-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
-// ✅ 只 cache 本域必要檔案，避免 install 因 404/跨域資源而 fail
-const CORE_ASSETS = [
-  "/",                       // 重要：支援從「已安裝」入口打開
-  "/index.html",
-  "/manifest.webmanifest",
-];
+// ✅ 會自動偵測 base path，例如 /mathgod/
+const BASE = self.location.pathname.replace(/sw\.js$/, ""); // "/mathgod/" 或 "/mathgod/sub/"
+const INDEX = BASE + "index.html";
+const MANIFEST = BASE + "manifest.webmanifest";
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CORE_CACHE);
 
-    // ✅ 保險做法：逐個加，唔會因為某個檔出事就整個 SW 裝唔到
-    for (const url of CORE_ASSETS) {
+    // ✅ 逐個 cache，避免 addAll 因單一失敗令 install 死
+    for (const url of [BASE, INDEX, MANIFEST]) {
       try { await cache.add(url); } catch (_) {}
     }
 
@@ -37,28 +35,26 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
-  // ✅ 1) 導航（打開 App / reload）：network-first，離線 fallback index.html
+  // ✅ 導航請求：network-first；離線 fallback 到 cache 的 index.html
   if (req.mode === "navigate") {
     event.respondWith((async () => {
       try {
         const fresh = await fetch(req);
 
-        // 更新 core cache：保持 index.html 最新
+        // keep index fresh
         const cache = await caches.open(CORE_CACHE);
-        cache.put("/index.html", fresh.clone());
+        cache.put(INDEX, fresh.clone());
 
         return fresh;
       } catch {
         const cache = await caches.open(CORE_CACHE);
-        return (await cache.match("/index.html")) || Response.error();
+        return (await cache.match(INDEX)) || (await cache.match(BASE)) || Response.error();
       }
     })());
     return;
   }
 
   const url = new URL(req.url);
-
-  // ✅ 2) CDN / script / style / font / image：stale-while-revalidate
   const isStaticLike =
     ["script", "style", "font", "image"].includes(req.destination) ||
     url.origin !== self.location.origin;
@@ -68,7 +64,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ✅ 3) 其他：cache-first
   event.respondWith(cacheFirst(req));
 });
 
