@@ -7,7 +7,7 @@
 
   <meta name="description" content="MathGod⚡️夾錢計數小助手 - 專為朋友聚會、旅行設計的同步分帳工具。支援多國匯率轉換，一鍵生成結算單。">
 
-  <!-- ✅ OG / Twitter Cards -->
+
   <meta property="og:type" content="website">
   <meta property="og:url" content="網址">
   <meta property="og:title" content="MathGod⚡️夾錢計數小助手">
@@ -24,7 +24,7 @@
   <link rel="icon" href="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
   <link rel="apple-touch-icon" href="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
 
-  <!-- ✅ PWA manifest（你要另存 manifest.webmanifest 同層） -->
+
   <link rel="manifest" href="./manifest.webmanifest">
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -93,7 +93,7 @@
         <div>
           <h1 class="text-xl font-black italic tracking-tighter text-white leading-none">MathGod</h1>
           <p class="text-[9px] font-bold text-emerald-400/80 tracking-[0.1em] uppercase">
-            {{ isEditing ? '正在修改模式' : '朋友夾錢計算器' }}
+            {{ isEditing ? '修改進行中…' : '朋友夾錢計算器' }}
           </p>
         </div>
       </div>
@@ -134,7 +134,7 @@
 
   <main class="p-5 space-y-6 flex-1">
 
-    <!-- STEP 1 -->
+
     <section class="glass p-5 rounded-[2rem]">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
@@ -163,7 +163,7 @@
       </div>
     </section>
 
-    <!-- STEP 2 -->
+
     <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-hidden"
              :class="{'opacity-50 pointer-events-none grayscale': users.length === 0, 'border-amber-500/50': isEditing}">
 
@@ -215,7 +215,7 @@
   </div>
 
   <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
-    最後更新時間：{{ formatTs(rateUpdatedAt) }}
+    updated on: {{ formatTs(rateUpdatedAt) }}
   </div>
 </div>
 
@@ -259,7 +259,7 @@
       </div>
     </section>
 
-    <!-- 最近紀錄 -->
+
     <section class="pb-10">
       <h3 class="text-[10px] font-bold text-gray-500 ml-2 mb-3 uppercase tracking-widest">最近紀錄</h3>
       <div v-if="expenses.length === 0" class="text-center py-6 opacity-30">
@@ -317,7 +317,7 @@
 
       <div class="relative z-10 text-center mb-8">
         <img src="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png" class="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/10 object-contain bg-black/20">
-        <h3 class="text-xl font-black">同步控制中心</h3>
+        <h3 class="text-xl font-black">登入同步房間</h3>
       </div>
 
       <div class="mb-6 relative group">
@@ -349,7 +349,7 @@
     </div>
   </div>
 
-  <!-- Share Modal -->
+
   <div v-if="showShareModal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col p-4 overflow-y-auto" @click.self="showShareModal = false">
     <div class="max-w-md mx-auto w-full my-auto">
 
@@ -438,7 +438,7 @@
     </div>
   </div>
 
-  <!-- Tutorial -->
+
   <div v-if="showTutorial" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md flex items-center justify-center p-6" @click.self="showTutorial = false">
     <div class="glass max-w-sm w-full p-6 rounded-[2rem] text-center">
       <h3 class="text-lg font-black text-emerald-400 mb-4">使用教學</h3>
@@ -465,7 +465,7 @@
   const db = firebase.database();
   const { createApp, ref, computed, onMounted } = Vue;
 
-  // ✅ PWA Service Worker Registration（你要同層放 sw.js）
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
@@ -498,7 +498,7 @@
      const currentRate = ref(1);
 const shareOptions = ref({ showList: true });
 
-// ✅ 新增：匯率快取（各幣種 -> HKD）+ 最後更新時間
+
 const ratesHKD = ref({ HKD: 1 });
 const rateUpdatedAt = ref(null);
 
@@ -510,7 +510,7 @@ const rateUpdatedAt = ref(null);
       };
       const setLoading = (status) => isLoading.value = status;
 
-      // ✅ iOS/部分瀏覽器無 showPicker()
+
       const openDatePicker = () => {
         const el = document.getElementById('dateInput');
         if(!el) return;
@@ -530,7 +530,7 @@ const rateUpdatedAt = ref(null);
           roomNamesMap.value = names;
         }
       };
-      // ===== 匯率策略：一次更新全部幣種 -> HKD（有 TTL + 離線快取） =====
+
 const SUPPORTED_CURRENCIES = ["HKD","CNY","JPY","TWD","THB","KRW","USD","EUR","GBP"];
 const RATES_CACHE_KEY = "mathGod_rates_to_HKD_v1";
 const RATES_TTL_MS = 6 * 60 * 60 * 1000; // 6 小時
@@ -549,14 +549,14 @@ const saveRatesCache = (rates, updatedAt) => {
   rateUpdatedAt.value = updatedAt;
 };
 
-// format「最後更新時間：YYYY-MM-DD HH:mm」
+
 const formatTs = (ts) => {
   const d = new Date(ts);
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-// 背景更新匯率（online 先做；受 TTL 控制避免太頻繁）
+
 const refreshRatesSilently = async (force = false) => {
   if (!navigator.onLine) return;
 
@@ -565,16 +565,14 @@ const refreshRatesSilently = async (force = false) => {
   if (!force && freshEnough) return;
 
   try {
-    // 用 USD 做 base，一次拎晒所有 rates，再轉成「各幣種 -> HKD」
+
     const res = await fetch(`https://open.er-api.com/v6/latest/USD`, { cache: "no-store" });
     const data = await res.json();
     const r = data?.rates;
 
     if (!r?.HKD) return;
 
-    // 由 USD base 轉成「1 XXX = ? HKD」
-    // 已知：1 USD = r[XXX] XXX；1 USD = r[HKD] HKD
-    // => 1 XXX = r[HKD] / r[XXX] HKD
+
     const toHKD = { HKD: 1 };
     SUPPORTED_CURRENCIES.forEach(code => {
       if (code === "HKD") return;
@@ -583,32 +581,32 @@ const refreshRatesSilently = async (force = false) => {
 
     saveRatesCache(toHKD, Date.now());
   } catch (e) {
-    // 失敗唔覆蓋舊快取（保持可用）
+
   }
 };
 
 
-      // ✅ 更好的匯率：用快取即刻回應 + 背景更新（TTL 控制）+ 離線可用
+
 const handleCurrencyChange = async () => {
-  // HKD 直接 1
+
   if (form.value.currency === 'HKD') {
     currentRate.value = 1;
     return;
   }
 
-  // 先用快取（即刻有 rate，不阻塞 UI）
+
   const cachedRate = ratesHKD.value?.[form.value.currency];
   if (cachedRate) currentRate.value = cachedRate;
 
-  // 用家轉幣種時都再試一次背景更新（online 才會做，TTL 會擋住太密）
+ 
   await refreshRatesSilently(false);
 
-  // 更新後再取一次（成功更新就會更準）
+
   const newRate = ratesHKD.value?.[form.value.currency];
   if (newRate) {
     currentRate.value = newRate;
   } else {
-    // 如果完全冇快取（例如第一次就離線），保持 1 避免 NaN
+    
     currentRate.value = 1;
     if (!navigator.onLine) {
       toast("離線且未有匯率快取（可先上線開一次App）", "error");
@@ -686,7 +684,7 @@ const handleCurrencyChange = async () => {
         localStorage.setItem('mathGod_history', JSON.stringify(h));
       };
 
-      // ✅ Firebase compat joinRoom：用 once('value')
+      
       const joinRoom = async (rid) => {
         if(!rid) return;
         rid = rid.toString();
@@ -747,7 +745,7 @@ const handleCurrencyChange = async () => {
           localStorage.removeItem('mathGod_roomId');
           resetData('all', false);
           setLoading(false);
-          toast("已登出並清空資料");
+          toast("已登出房間");
         }, 800);
       };
 
@@ -972,13 +970,13 @@ refreshRatesSilently(false);
         const savedRoom = localStorage.getItem('mathGod_roomId');
         if(savedRoom) joinRoom(savedRoom);
 
-        // ✅ Online/offline 提示
+       
         const onOnline = () => toast("已連線（Online）");
         const onOffline = () => toast("離線模式（Offline）", "error");
         window.addEventListener('online', onOnline);
         window.addEventListener('offline', onOffline);
 
-        // 初始狀態提示（可選）
+       
         if (!navigator.onLine) toast("離線模式（Offline）", "error");
       });
 
