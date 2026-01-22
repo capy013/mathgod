@@ -1,78 +1,71 @@
-
-const VERSION = "mathgod-v1.0.0";
-const APP_SHELL_CACHE = `app-shell-${VERSION}`;
+// sw.js (GitHub Pages project-safe)
+const VERSION = "mathgod-ghp-v1.1.0";
+const CORE_CACHE = `core-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
-
-const APP_SHELL = [
-  "./",                
-  "./index.html",      
-  "./manifest.webmanifest",
-  "https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png",
-];
+// ✅ 自動偵測 base path，例如 /mathgod/
+const BASE = self.location.pathname.replace(/sw\.js$/, ""); // "/mathgod/"
+const INDEX = BASE + "index.html";
+const MANIFEST = BASE + "manifest.webmanifest";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(APP_SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL))
-  );
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CORE_CACHE);
+
+    // ✅ 逐個 cache，避免 addAll 因單一失敗令 SW install 失敗
+    for (const url of [BASE, INDEX, MANIFEST]) {
+      try { await cache.add(url); } catch (_) {}
+    }
+
+    self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(
-      keys.map((k) => {
-        if (![APP_SHELL_CACHE, RUNTIME_CACHE].includes(k)) return caches.delete(k);
-      })
-    );
+    await Promise.all(keys.map((k) => {
+      if (![CORE_CACHE, RUNTIME_CACHE].includes(k)) return caches.delete(k);
+    }));
     await self.clients.claim();
   })());
 });
 
-
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  const url = new URL(req.url);
-
-
   if (req.method !== "GET") return;
 
-
-  if (req.mode === "navigate" || req.destination === "document") {
-    event.respondWith(networkFirst(req, APP_SHELL_CACHE));
+  // ✅ App 打開/Reload：network-first；失敗就用 cache 的 /mathgod/index.html
+  if (req.mode === "navigate") {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(CORE_CACHE);
+        cache.put(INDEX, fresh.clone());
+        return fresh;
+      } catch {
+        const cache = await caches.open(CORE_CACHE);
+        return (await cache.match(INDEX)) || (await cache.match(BASE)) || Response.error();
+      }
+    })());
     return;
   }
 
+  const url = new URL(req.url);
+  const isStaticLike =
+    ["script", "style", "font", "image"].includes(req.destination) ||
+    url.origin !== self.location.origin;
 
-  if (
-    req.destination === "script" ||
-    req.destination === "style" ||
-    req.destination === "image" ||
-    url.origin !== self.location.origin 
-  ) {
-    event.respondWith(staleWhileRevalidate(req, RUNTIME_CACHE));
+  if (isStaticLike) {
+    event.respondWith(staleWhileRevalidate(req));
     return;
   }
 
-
-  event.respondWith(cacheFirst(req, RUNTIME_CACHE));
+  event.respondWith(cacheFirst(req));
 });
 
-async function networkFirst(req, cacheName) {
-  const cache = await caches.open(cacheName);
-  try {
-    const fresh = await fetch(req);
-    cache.put(req, fresh.clone());
-    return fresh;
-  } catch {
-    const cached = await cache.match(req);
-    return cached || caches.match("./index.html");
-  }
-}
-
-async function staleWhileRevalidate(req, cacheName) {
-  const cache = await caches.open(cacheName);
+async function staleWhileRevalidate(req) {
+  const cache = await caches.open(RUNTIME_CACHE);
   const cached = await cache.match(req);
 
   const fetchPromise = fetch(req).then((fresh) => {
@@ -83,10 +76,11 @@ async function staleWhileRevalidate(req, cacheName) {
   return cached || fetchPromise;
 }
 
-async function cacheFirst(req, cacheName) {
-  const cache = await caches.open(cacheName);
+async function cacheFirst(req) {
+  const cache = await caches.open(RUNTIME_CACHE);
   const cached = await cache.match(req);
   if (cached) return cached;
+
   const fresh = await fetch(req);
   cache.put(req, fresh.clone());
   return fresh;
