@@ -1,5 +1,5 @@
 // sw.js (GitHub Pages project-safe)
-const VERSION = "mathgod-ghp-v1.1.0";
+const VERSION = "mathgod-ghp-v2.0.0";
 const CORE_CACHE = `core-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
@@ -12,7 +12,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CORE_CACHE);
 
-    // ✅ 逐個 cache，避免 addAll 因單一失敗令 SW install 失敗
+    // ✅ 逐個 cache：避免 addAll 因單一失敗令 SW install 整體失敗
     for (const url of [BASE, INDEX, MANIFEST]) {
       try { await cache.add(url); } catch (_) {}
     }
@@ -35,7 +35,7 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
-  // ✅ App 打開/Reload：network-first；失敗就用 cache 的 /mathgod/index.html
+  // ✅ 安裝版打開 / reload：network-first；offline 一定 fallback 去 /mathgod/index.html
   if (req.mode === "navigate") {
     event.respondWith((async () => {
       try {
@@ -56,11 +56,13 @@ self.addEventListener("fetch", (event) => {
     ["script", "style", "font", "image"].includes(req.destination) ||
     url.origin !== self.location.origin;
 
+  // ✅ CDN/Vue/Tailwind/Firebase：stale-while-revalidate（第一次 online 打開後會 cache 住，之後 offline 都用到）
   if (isStaticLike) {
     event.respondWith(staleWhileRevalidate(req));
     return;
   }
 
+  // 其他：cache-first
   event.respondWith(cacheFirst(req));
 });
 
