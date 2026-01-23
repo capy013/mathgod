@@ -163,7 +163,7 @@
     <div class="flex gap-3">
       <div class="flex-1 glass-input rounded-2xl flex items-center px-4 relative">
         <i class="fas fa-pen text-[10px] text-gray-500 mr-3"></i>
-        <input v-model="eventName" @change="saveData" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/20" placeholder="活動名稱 (例如: 日本 Day1)">
+        <input v-model="eventName" @input="saveData" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/20" placeholder="活動名稱 (例如: 日本 Day1)">
       </div>
 
       <button @click="openDatePicker" class="w-12 glass-input rounded-2xl flex items-center justify-center hover:border-emerald-500/50 btn-press">
