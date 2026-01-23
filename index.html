@@ -119,13 +119,16 @@
 
         <button
   v-else
-  @click="isOnline ? (showSyncModal = true) : toast('請先連線再開啟同步', 'error')"
-  class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press
-         opacity-100"
-  :class="!isOnline ? 'opacity-40 grayscale cursor-not-allowed' : 'hover:border-emerald-500/50'">
-  <i class="fas fa-cloud" :class="isOnline ? 'text-emerald-400' : 'text-gray-500'"></i>
-  同步
+  @click="isOnline ? (showSyncModal = true) : toast('目前離線，未能同步', 'error')"
+  class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press"
+  :class="isOnline ? 'hover:border-emerald-500/50' : 'opacity-40 grayscale'">
+
+  <i :class="['fas', isOnline ? 'fa-cloud' : 'fa-wifi']"
+     :class="isOnline ? 'text-emerald-400' : 'text-gray-500'"></i>
+
+  <span>{{ isOnline ? '同步' : '離線中' }}</span>
 </button>
+
 
 
       </div>
