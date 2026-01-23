@@ -9,7 +9,7 @@
 
   <!-- ✅ OG / Twitter Cards -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="網址">
+  <meta property="og:url" content="https://capy013.github.io/mathgod/">
   <meta property="og:title" content="MathGod⚡️夾錢計數小助手">
   <meta property="og:description" content="旅行、食飯、夾錢唔使煩！支援即時同步功能，自動換算匯率，MathGod 幫你計到盡。">
   <meta property="og:image" content="https://gcdnb.pbrd.co/images/WfgYQo77g3a6.png">
@@ -117,9 +117,17 @@
           </button>
         </div>
 
-        <button v-else @click="showSyncModal = true" class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 hover:border-emerald-500/50 transition-all flex items-center gap-2 btn-press">
-          <i class="fas fa-cloud text-emerald-400"></i> 同步
-        </button>
+        <button
+  v-else
+  @click="isOnline ? (showSyncModal = true) : toast('請先連線再開啟同步', 'error')"
+  class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press
+         opacity-100"
+  :class="!isOnline ? 'opacity-40 grayscale cursor-not-allowed' : 'hover:border-emerald-500/50'">
+  <i class="fas fa-cloud" :class="isOnline ? 'text-emerald-400' : 'text-gray-500'"></i>
+  同步
+</button>
+
+
       </div>
     </div>
 
@@ -498,6 +506,7 @@
       const shareSubMenu = ref('none');
       const toasts = ref([]);
       const roomId = ref(null);
+      const isOnline = ref(navigator.onLine);
       const roomInput = ref("");
       const recentRooms = ref([]);
       const roomNamesMap = ref({});
@@ -638,21 +647,22 @@
           toast("請填妥紅色欄位", "error");
           return;
         }
-        // ❌ 防止 0 或負數入帳
-if (Number(form.value.amount) <= 0) {
+   const amt = Number(form.value.amount);
+if (!Number.isFinite(amt) || amt <= 0) {
   errors.value.amount = true;
   toast("金額必須大於 0", "error");
   return;
 }
 
 
+
         const exp = {
           id: isEditing.value ? editingId.value : Date.now(),
           item: form.value.item,
-          hkd: (form.value.amount * currentRate.value) || 0,
+         hkd: (amt * currentRate.value) || 0,
           payer: form.value.payer,
           involved: [...form.value.involved],
-          origAmount: form.value.amount,
+          origAmount: amt,
           origCurrency: form.value.currency
         };
 
@@ -694,10 +704,12 @@ if (Number(form.value.amount) <= 0) {
       };
       // ✅ 生成房間分享連結（?room=1234）
 const getRoomLink = (rid) => {
-  const url = new URL(window.location.href);
+  const base = window.location.origin + window.location.pathname;
+  const url = new URL(base);
   url.searchParams.set("room", rid);
   return url.toString();
 };
+
 
 
 // ✅ 一鍵複製房間連結
@@ -721,54 +733,62 @@ const copyRoomLink = async () => {
   // ✅ Offline：唔嘗試 Firebase，直接用本地資料
   if (!navigator.onLine) {
     toast("離線模式，無法連線房間（已使用本地資料）", "error");
-    isLoading.value = false;   // 確保唔會卡住 Processing
+    setLoading(false);
     return;
   }
 
-  if(!rid) return;
+  if (!rid) return;
   rid = rid.toString();
 
   setLoading(true);
-        try {
-  const snap = await db.ref('rooms/' + rid).once('value');
-          if(snap.exists()) {
-            roomId.value = rid;
-            roomInput.value = rid;
-            localStorage.setItem('mathGod_roomId', rid);
 
-            db.ref('rooms/' + rid).off();
-            db.ref('rooms/' + rid).on('value', s => {
-              const v = s.val();
-              if(v) {
-                users.value = v.users || [];
-                expenses.value = v.expenses || [];
-                eventName.value = v.eventName || "";
-                // 確保 involved 跟 users 變化（避免同步後表單空）
-                if (!isEditing.value) form.value.involved = [...users.value];
-              }
-            });
+  // ✅ 用嚟控制 finally 唔好搶先關 loading（保留 600ms smooth）
+  let handled = false;
 
-            updateHistory(rid);
-            showSyncModal.value = false;
-            setTimeout(() => {
-  setLoading(false);
-  toast(`成功加入房間 #${rid}`);
+  try {
+    const snap = await db.ref('rooms/' + rid).once('value');
 
-  // ✅ 成功入房後先清走 ?room=xxxx
-  history.replaceState(null, "", window.location.pathname);
-}, 600);
+    if (snap.exists()) {
+      roomId.value = rid;
+      roomInput.value = rid;
+      localStorage.setItem('mathGod_roomId', rid);
 
-          } else {
-            setLoading(false);
-            toast("房間不存在", "error");
-          }
-        } catch(e) {
-  console.error(e);
-  toast("連線錯誤", "error");
-} finally {
-  setLoading(false);
-}
-      };
+      db.ref('rooms/' + rid).off();
+      db.ref('rooms/' + rid).on('value', s => {
+        const v = s.val();
+        if (v) {
+          users.value = v.users || [];
+          expenses.value = v.expenses || [];
+          eventName.value = v.eventName || "";
+          if (!isEditing.value) form.value.involved = [...users.value];
+        }
+      });
+
+      updateHistory(rid);
+      showSyncModal.value = false;
+
+      handled = true;
+      setTimeout(() => {
+        setLoading(false);
+        toast(`成功加入房間 #${rid}`);
+
+        // ✅ 成功入房後先清走 ?room=xxxx
+        history.replaceState(null, "", window.location.pathname);
+      }, 600);
+
+    } else {
+      toast("房間不存在", "error");
+    }
+
+  } catch (e) {
+    console.error(e);
+    toast("連線錯誤", "error");
+  } finally {
+    // ✅ 只有未成功 handle（例如失敗/不存在房間）先即刻關 loading
+    if (!handled) setLoading(false);
+  }
+};
+
 
       const createRoom = async () => {
         setLoading(true);
@@ -1039,24 +1059,31 @@ if (savedRoom && navigator.onLine) {
 } else {
   // ✅ Offline fallback：直接用 local data
   isLoading.value = false;
-  if (!navigator.onLine) {
-    toast("離線模式（使用本地資料）", "error");
-  }
+  
 }
 
 
-        // ✅ Online/offline 提示
-        const onOnline = () => toast("已連線（Online）");
-        const onOffline = () => toast("離線模式（Offline）", "error");
+       const onOnline = () => {
+  isOnline.value = true;
+  toast("已連線（Online）");
+};
+
+const onOffline = () => {
+  isOnline.value = false;
+  toast("離線模式（Offline）", "error");
+};
+
         window.addEventListener('online', onOnline);
         window.addEventListener('offline', onOffline);
+        if (!navigator.onLine) onOffline();
 
-        // 初始狀態提示（可選）
-        if (!navigator.onLine) toast("離線模式（Offline）", "error");
+
+      
       });
 
       return {
   isLoading,
+  isOnline,      
   shareSubMenu,
   eventName, users, expenses, newUser, form, isEditing, editingId,
   showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
