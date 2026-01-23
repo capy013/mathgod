@@ -108,6 +108,10 @@
             <p class="text-[8px] text-gray-400 font-bold uppercase">ONLINE</p>
             <p class="text-xs font-num font-bold text-emerald-400 leading-none">#{{ roomId }}</p>
           </div>
+          <button @click="copyRoomLink" class="w-6 h-6 rounded-full bg-white/10 text-white/70 flex items-center justify-center hover:bg-white/20 transition-all">
+  <i class="fas fa-link text-[10px]"></i>
+</button>
+
           <button @click="logoutRoom" class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
             <i class="fas fa-power-off text-[10px]"></i>
           </button>
@@ -681,6 +685,31 @@
         recentRooms.value = h;
         localStorage.setItem('mathGod_history', JSON.stringify(h));
       };
+      // ✅ 生成房間分享連結（?room=1234）
+const getRoomLink = (rid) => {
+  // GitHub Pages /mathgod/ 會自動保留 path
+  const base = window.location.origin + window.location.pathname;
+  const url = new URL(base);
+  url.searchParams.set("room", rid);
+  return url.toString();
+};
+
+// ✅ 一鍵複製房間連結
+const copyRoomLink = async () => {
+  if (!roomId.value) {
+    toast("未連線房間", "error");
+    return;
+  }
+  const link = getRoomLink(roomId.value);
+  try {
+    await navigator.clipboard.writeText(link);
+    toast("已複製房間連結");
+  } catch (e) {
+    // fallback：如果 clipboard 唔支援，就彈 prompt 比人手複製
+    window.prompt("複製此連結分享比朋友：", link);
+  }
+};
+
 
     const joinRoom = async (rid) => {
   // ✅ Offline：唔嘗試 Firebase，直接用本地資料
@@ -965,6 +994,22 @@
   refreshRatesSilently(false);
   if (form.value.currency !== "HKD") handleCurrencyChange();
 
+        // ✅ URL join：如果有人開 https://.../mathgod/?room=1234 就自動入房
+const roomFromUrl = new URLSearchParams(window.location.search).get("room");
+if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
+  if (navigator.onLine) {
+    joinRoom(roomFromUrl);
+
+    // ✅ 入房後清走 URL 上面 ?room=xxxx（避免下次再開又強制 join）
+    history.replaceState(null, "", window.location.pathname);
+  } else {
+    toast("偵測到房間連結，但你而家離線，未能加入", "error");
+    isLoading.value = false;
+  }
+  return; // ✅ 有 room link 就唔再做 savedRoom auto-join，避免撞
+}
+
+
   const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
         if(local.users) {
           users.value = local.users;
@@ -1002,7 +1047,7 @@ if (savedRoom && navigator.onLine) {
       return {
   isLoading,
   shareSubMenu,
-  eventName, users, expenses, newUser, form, isEditing, editingId,
+  copyRoomLink, eventName, users, expenses, newUser, form, isEditing, editingId,
   showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
   roomId, roomInput, currentRate, shareOptions, errors,
 
