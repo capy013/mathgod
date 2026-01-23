@@ -687,12 +687,11 @@
       };
       // ✅ 生成房間分享連結（?room=1234）
 const getRoomLink = (rid) => {
-  // GitHub Pages /mathgod/ 會自動保留 path
-  const base = window.location.origin + window.location.pathname;
-  const url = new URL(base);
+  const url = new URL(window.location.href);
   url.searchParams.set("room", rid);
   return url.toString();
 };
+
 
 // ✅ 一鍵複製房間連結
 const copyRoomLink = async () => {
@@ -744,7 +743,14 @@ const copyRoomLink = async () => {
 
             updateHistory(rid);
             showSyncModal.value = false;
-            setTimeout(() => { setLoading(false); toast(`成功加入房間 #${rid}`); }, 600);
+            setTimeout(() => {
+  setLoading(false);
+  toast(`成功加入房間 #${rid}`);
+
+  // ✅ 成功入房後先清走 ?room=xxxx
+  history.replaceState(null, "", window.location.pathname);
+}, 600);
+
           } else {
             setLoading(false);
             toast("房間不存在", "error");
@@ -1000,8 +1006,6 @@ if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
   if (navigator.onLine) {
     joinRoom(roomFromUrl);
 
-    // ✅ 入房後清走 URL 上面 ?room=xxxx（避免下次再開又強制 join）
-    history.replaceState(null, "", window.location.pathname);
   } else {
     toast("偵測到房間連結，但你而家離線，未能加入", "error");
     isLoading.value = false;
@@ -1047,13 +1051,15 @@ if (savedRoom && navigator.onLine) {
       return {
   isLoading,
   shareSubMenu,
-  copyRoomLink, eventName, users, expenses, newUser, form, isEditing, editingId,
+  eventName, users, expenses, newUser, form, isEditing, editingId,
   showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
   roomId, roomInput, currentRate, shareOptions, errors,
 
-  // ✅ 補回：比 UI 用「最後更新時間」
+  copyRoomLink,
+
   rateUpdatedAt,
   formatTs,
+
 
   openDatePicker,
   recentRoomsWithNames: computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))),
