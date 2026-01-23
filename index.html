@@ -972,11 +972,26 @@ setTimeout(() => {
           } else if (type === 'image') {
             toast("正在製作圖片...");
             const zone = document.getElementById('capture-zone');
-            const originalShadow = zone.style.boxShadow;
-            zone.style.boxShadow = 'none';
 
-            const canvas = await html2canvas(zone, { backgroundColor: '#e8e8e8', scale: 2, useCORS: true });
-            zone.style.boxShadow = originalShadow;
+const originalShadow = zone.style.boxShadow;
+const originalPaddingBottom = zone.style.paddingBottom;
+const originalTransform = zone.style.transform;
+
+zone.style.boxShadow = 'none';
+zone.style.paddingBottom = '16px';      
+zone.style.transform = 'translateZ(0)';  
+
+const canvas = await html2canvas(zone, {
+  backgroundColor: '#e8e8e8',
+  scale: 2,
+  useCORS: true
+});
+
+// 還原
+zone.style.boxShadow = originalShadow;
+zone.style.paddingBottom = originalPaddingBottom;
+zone.style.transform = originalTransform;
+
 
             canvas.toBlob(async (blob) => {
               const file = new File([blob], "mathgod_share.png", { type: "image/png" });
@@ -996,20 +1011,34 @@ setTimeout(() => {
         }
       };
 
-      const generateImage = async () => {
-        const zone = document.getElementById('capture-zone');
-        const originalShadow = zone.style.boxShadow;
-        zone.style.boxShadow = 'none';
-        try {
-          const canvas = await html2canvas(zone, { backgroundColor: '#e8e8e8', scale: 2, useCORS: true });
-          const link = document.createElement('a');
-          link.download = `MathGod_${Date.now()}.png`;
-          link.href = canvas.toDataURL();
-          link.click();
-        } finally {
-          zone.style.boxShadow = originalShadow;
-        }
-      };
+  const generateImage = async () => {
+  const zone = document.getElementById('capture-zone');
+
+  const originalShadow = zone.style.boxShadow;
+  const originalPaddingBottom = zone.style.paddingBottom;
+  const originalTransform = zone.style.transform;
+
+  zone.style.boxShadow = 'none';
+  zone.style.paddingBottom = '16px';        // ⭐ 墊底
+  zone.style.transform = 'translateZ(0)';   // ⭐ 穩定渲染
+
+  try {
+    const canvas = await html2canvas(zone, {
+      backgroundColor: '#e8e8e8',
+      scale: 2,
+      useCORS: true
+    });
+
+    const link = document.createElement('a');
+    link.download = `MathGod_${Date.now()}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+  } finally {
+    zone.style.boxShadow = originalShadow;
+    zone.style.paddingBottom = originalPaddingBottom;
+    zone.style.transform = originalTransform;
+  }
+};
 
       const removeUser = (i) => {
         const name = users.value[i];
