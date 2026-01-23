@@ -638,6 +638,13 @@
           toast("請填妥紅色欄位", "error");
           return;
         }
+        // ❌ 防止 0 或負數入帳
+if (Number(form.value.amount) <= 0) {
+  errors.value.amount = true;
+  toast("金額必須大於 0", "error");
+  return;
+}
+
 
         const exp = {
           id: isEditing.value ? editingId.value : Date.now(),
