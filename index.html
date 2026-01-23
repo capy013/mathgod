@@ -7,7 +7,7 @@
 
   <meta name="description" content="MathGod⚡️夾錢計數小助手 - 專為朋友聚會、旅行設計的同步分帳工具。支援多國匯率轉換，一鍵生成結算單。">
 
-  <!-- ✅ OG / Twitter Cards -->
+
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://capy013.github.io/mathgod/">
   <meta property="og:title" content="MathGod⚡️夾錢計數小助手">
@@ -740,7 +740,7 @@ const getRoomLink = (rid) => {
 
 
 
-// ✅ 一鍵複製房間連結
+
 const copyRoomLink = async () => {
   if (!roomId.value) {
     toast("未連線房間", "error");
@@ -751,14 +751,16 @@ const copyRoomLink = async () => {
     await navigator.clipboard.writeText(link);
     toast("已複製房間連結");
   } catch (e) {
-    // fallback：如果 clipboard 唔支援，就彈 prompt 比人手複製
+   
     window.prompt("複製此連結分享比朋友：", link);
   }
 };
 
 
-    const joinRoom = async (rid) => {
-  // ✅ Offline：唔嘗試 Firebase，直接用本地資料
+    const joinRoom = async (rid, options = {}) => {
+  const { silent = false } = options;
+
+ 
   if (!navigator.onLine) {
     toast("離線模式，無法連線房間（已使用本地資料）", "error");
     isSyncing.value = false;
@@ -798,9 +800,14 @@ const copyRoomLink = async () => {
       handled = true;
       setTimeout(() => {
   isSyncing.value = false;
-  toast(`成功加入房間 #${rid}`);
+
+  if (!silent) {
+    toast(`成功加入房間 #${rid}`);
+  }
+
   history.replaceState(null, "", window.location.pathname);
 }, 600);
+
 
 
     } else {
@@ -1083,8 +1090,9 @@ if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
        const savedRoom = localStorage.getItem('mathGod_roomId');
 
 if (savedRoom && navigator.onLine) {
-  joinRoom(savedRoom);
-  toast(`已回到上次房間 #${savedRoom}`);
+  joinRoom(savedRoom, { silent: true });
+toast(`已回到上次房間 #${savedRoom}`);
+
 } else {
 
   isLoading.value = false;
