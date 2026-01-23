@@ -752,6 +752,16 @@ const getRoomLink = (rid) => {
   return url.toString();
 };
 
+const getRoomInviteText = (rid) => {
+  const link = getRoomLink(rid);
+
+  return `我用 ⚡️MathGod 開咗間房～
+用嚟記低消費，最後自動計數每人要畀幾錢！
+${name ? `活動：${name}\n` : ""}
+
+可以撳呢條link入房mark數👇
+${link}`.trim();
+};
 
 
 
@@ -760,15 +770,18 @@ const copyRoomLink = async () => {
     toast("未連線房間", "error");
     return;
   }
-  const link = getRoomLink(roomId.value);
+
+  const text = getRoomInviteText(roomId.value);
+
   try {
-    await navigator.clipboard.writeText(link);
-    toast("已複製房間連結");
+    await navigator.clipboard.writeText(text);
+    toast("已複製邀請訊息");
   } catch (e) {
-   
-    window.prompt("複製此連結分享比朋友：", link);
+  
+    window.prompt("複製以下訊息分享比朋友：", text);
   }
 };
+
 
 
     const joinRoom = async (rid, options = {}) => {
