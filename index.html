@@ -756,11 +756,10 @@ const getRoomInviteText = (rid) => {
   const link = getRoomLink(rid);
   const name = (eventName.value || "").trim();
 
-  return `我用 ⚡️MathGod 開咗間房～
+   return `我用 ⚡️MathGod 開咗間房～
 用嚟記低大家消費，最後會自動計數每人要畀幾錢！
 
-${name ? `活動：${name}\n` : ""}
-可以撳條link入房mark數👇
+${name ? `活動：${name}\n` : ""}可以撳條link入房mark數👇
 ${link}`.trim();
 };
 
