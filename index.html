@@ -1065,7 +1065,7 @@ if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
     toast("偵測到房間連結，但你現正離線，未能加入", "error");
     isLoading.value = false;
   }
-  return; // ✅ 有 room link 就唔再做 savedRoom auto-join，避免撞
+  return; // 
 }
 
 
@@ -1084,8 +1084,9 @@ if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
 
 if (savedRoom && navigator.onLine) {
   joinRoom(savedRoom);
+  toast(`已回到上次房間 #${savedRoom}`);
 } else {
-  // ✅ Offline fallback：直接用 local data
+
   isLoading.value = false;
   
 }
