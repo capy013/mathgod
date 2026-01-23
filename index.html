@@ -114,7 +114,11 @@
 
         <div v-if="roomId" class="glass px-3 py-1.5 rounded-full flex items-center gap-3 border-emerald-500/30 bg-emerald-900/20">
           <div class="text-right">
-            <p class="text-[8px] text-gray-400 font-bold uppercase">ONLINE</p>
+            <p class="text-[8px] font-bold uppercase"
+   :class="isOnline ? 'text-emerald-400' : 'text-gray-400'">
+  {{ isOnline ? 'ONLINE' : 'OFFLINE' }}
+</p>
+
             <p class="text-xs font-num font-bold text-emerald-400 leading-none">#{{ roomId }}</p>
           </div>
           <button @click="copyRoomLink" class="w-6 h-6 rounded-full bg-white/10 text-white/70 flex items-center justify-center hover:bg-white/20 transition-all">
