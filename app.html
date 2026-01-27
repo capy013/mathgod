@@ -294,63 +294,57 @@
           </div>
 
           <div class="col-span-9 sm:col-span-8 glass-input rounded-2xl flex flex-col justify-center pl-4 pr-1 py-2" :class="{'input-error': errors.amount}">
-            <div class="relative flex items-center gap-2">
-  <span class="text-xs font-black text-gray-500">$</span>
+            <div class="relative flex items-center w-full">
+  <!-- $：固定寬 -->
+  <span class="text-xs font-black text-gray-500 w-5 shrink-0 text-center">$</span>
 
-  <!-- input -->
- <input
-  v-model="form.amount"
-  type="text"
-  inputmode="decimal"
-  pattern="[0-9.]*"
-  @input="sanitizeAmount(); errors.amount = false"
-  :class="[
-    'w-full min-w-0 bg-transparent text-center font-num font-black outline-none placeholder-white/10 amount-fit',
-    amountFontClass
-  ]"
-/>
+  <!-- 可置中區：由 $ 到直線之前 -->
+  <div class="flex-1 min-w-0">
+    <input
+      v-model="form.amount"
+      type="text"
+      inputmode="decimal"
+      pattern="[0-9.]*"
+      @input="sanitizeAmount(); errors.amount = false"
+      :class="[
+        'w-full bg-transparent text-center font-num font-black outline-none placeholder-white/10 amount-fit',
+        amountFontClass
+      ]"
+      placeholder="0.0"
+    />
+  </div>
 
+  <!-- 工具區：固定寬（X + 直線 + 計數機）-->
+  <div class="flex items-center justify-end gap-2 w-[88px] shrink-0 pl-2">
+    <!-- clear X -->
+    <button
+      v-if="form.amount"
+      type="button"
+      class="clear-btn"
+      @click.stop.prevent="form.amount=''"
+      aria-label="清除金額"
+      title="清除"
+    >
+      <i class="fas fa-times"></i>
+    </button>
 
+    <!-- divider -->
+    <span class="h-6 w-px bg-white/10"></span>
 
-<!-- right tools slot -->
-<div class="absolute right-1 inset-y-0 flex items-center gap-1">
-  
-  <!-- clear X -->
-  <button
-    v-if="form.amount"
-    type="button"
-    class="clear-btn"
-    @click.stop.prevent="form.amount=''"
-    aria-label="清除金額"
-    title="清除"
-  >
-    <i class="fas fa-times"></i>
-  </button>
-
-  <!-- divider -->
-  <span class="h-6 w-px bg-white/10"></span>
-
-  <!-- calculator -->
-  <button
-  type="button"
-  @click.stop.prevent="openKeypad()"
-  class="w-9 h-9 flex items-center justify-center rounded-full
-         hover:bg-emerald-500/10 active:bg-emerald-500/20"
-  title="開啟計數機"
-  aria-label="開啟計數機"
->
-  <i class="fas fa-calculator text-[13px] text-emerald-400"></i>
-</button>
-
-
+    <!-- calculator -->
+    <button
+      type="button"
+      @click.stop.prevent="openKeypad()"
+      class="w-9 h-9 flex items-center justify-center rounded-full
+             hover:bg-emerald-500/10 active:bg-emerald-500/20"
+      title="開啟計數機"
+      aria-label="開啟計數機"
+    >
+      <i class="fas fa-calculator text-[13px] text-emerald-400"></i>
+    </button>
+  </div>
 </div>
 
-
- 
-
-
-
-</div>
 
             <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
               <div>
