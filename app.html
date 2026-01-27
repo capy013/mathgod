@@ -874,6 +874,9 @@ const onEsc = (e) => {
     closeKeypad();
   }
 };
+      const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
+const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
+
 
       const keypadExpr = ref("");
       const keypadHint = ref("");
@@ -1546,9 +1549,14 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
    
       // ====== onMounted ======
 onMounted(() => {
-  // ESC handler（保險：先 remove 再 add）
+  // handlers
   window.removeEventListener("keydown", onEsc);
+  window.removeEventListener("online", onOnline);
+  window.removeEventListener("offline", onOffline);
+
   window.addEventListener("keydown", onEsc);
+  window.addEventListener("online", onOnline);
+  window.addEventListener("offline", onOffline);
 
   loadRatesCache();
   refreshRatesSilently(false);
@@ -1582,14 +1590,15 @@ onMounted(() => {
     }
   }
 
-  const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
-  const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
-
-  window.addEventListener('online', onOnline);
-  window.addEventListener('offline', onOffline);
   if (!navigator.onLine) onOffline();
 });
 
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", onEsc);
+  window.removeEventListener("online", onOnline);
+  window.removeEventListener("offline", onOffline);
+});
 
       // ====== return ======
       return {
