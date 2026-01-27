@@ -199,7 +199,7 @@
     </section>
 
     <!-- STEP 2 -->
-    <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-hidden"
+    <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-visible"
              :class="{'opacity-50 pointer-events-none grayscale': users.length === 0, 'border-amber-500/50': isEditing}">
 
       <div v-if="users.length === 0" class="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
@@ -244,10 +244,10 @@
 
   <!-- input -->
   <input
-    v-model.number="form.amount"
-    type="number"
-    inputmode="decimal"
-    step="0.01"
+     v-model.number="form.amount"
+  type="text"
+  inputmode="decimal"
+  pattern="[0-9.]*"
     @input="errors.amount = false"
     class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10 pr-14"
     placeholder="0.0"
@@ -256,94 +256,19 @@
   <!-- subtle divider (between amount and icon) -->
   <span class="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 h-6 w-px bg-white/10"></span>
 
-  <!-- calculator icon (iOS-style, green) -->
+
   <button
-    type="button"
-    @click.stop.prevent="openKeypad()"
-    class="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10 active:bg-emerald-500/20"
-    title="開啟計數機"
-    aria-label="開啟計數機"
-  >
+  type="button"
+  @click.stop.prevent="openKeypad()"
+  class="absolute right-1 inset-y-0 my-auto w-10 h-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10 active:bg-emerald-500/20"
+  title="開啟計數機"
+  aria-label="開啟計數機"
+>
+
     <i class="fas fa-calculator text-[14px] text-emerald-400"></i>
   </button>
 
-  <!-- Keypad Popover (Scheme 2) -->
-<div
-  v-if="showKeypad"
-  class="absolute right-0 top-full mt-2 z-[120] w-[280px] max-w-[90vw] glass rounded-2xl p-3"
-  @click.stop
->
-  <div class="flex items-center justify-between mb-2">
-    <div class="text-[10px] font-black text-gray-300">輸入金額（可計數）</div>
-    <button
-      type="button"
-      class="w-8 h-8 rounded-full bg-white/10 text-gray-300"
-      @click="closeKeypad(true)"
-      aria-label="關閉"
-      title="關閉"
-    >
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
 
-  <!-- display -->
-  <div class="glass-input rounded-2xl px-3 py-2 mb-2">
-    <div class="text-[9px] font-bold text-gray-500 mb-1">Expression</div>
-    <div class="font-num font-black text-xl text-right break-all text-white">
-      {{ keypadExpr || '0' }}
-    </div>
-
-    <div class="mt-2 flex items-center justify-between">
-      <div class="text-[9px] font-bold text-gray-500">Result</div>
-      <div class="font-num font-black text-sm text-right text-gray-300">
-        {{ amountPreviewText }}
-      </div>
-    </div>
-
-    <div v-if="keypadHint" class="text-[9px] font-bold text-red-400 mt-1 text-right">
-      {{ keypadHint }}
-    </div>
-  </div>
-
-  <!-- keys -->
-  <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
-    <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
-
-    <button
-      class="bg-white/10 rounded-xl py-3 btn-press"
-      @mousedown.prevent="startBackspaceHold()"
-      @mouseup.prevent="stopBackspaceHold()"
-      @mouseleave.prevent="stopBackspaceHold()"
-      @touchstart.prevent="startBackspaceHold()"
-      @touchend.prevent="stopBackspaceHold()"
-      @touchcancel.prevent="stopBackspaceHold()"
-    >⌫</button>
-
-    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
-    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
-
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
-    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
-
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
-    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('+')">＋</button>
-
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
-
-    <button class="bg-emerald-600 rounded-xl py-3 btn-press row-span-2" @click="kp('=')">
-      =<div class="text-[9px] font-bold opacity-80 mt-1">OK</div>
-    </button>
-
-    <button class="bg-white/5 rounded-xl py-3 btn-press col-span-2" @click="kp('0')">0</button>
-    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
-  </div>
-</div>
 
 </div>
 
@@ -429,12 +354,98 @@
       </div>
     </section>
   </main>
-  <!-- click-away layer for popover keypad -->
-<div
-  v-if="showKeypad"
-  class="fixed inset-0 z-[110] bg-transparent"
-  @click="closeKeypad(true)"
-></div>
+<!-- ===== Floating Draggable Calculator (Top Layer) ===== -->
+<div v-if="showKeypad" class="fixed inset-0 z-[999]">
+  <!-- click-away overlay -->
+  <div class="absolute inset-0 bg-black/40" @click="closeKeypad(true)"></div>
+
+  <!-- draggable panel -->
+  <div
+  class="absolute glass rounded-2xl w-[320px] max-w-[92vw] p-4 shadow-2xl"
+  :style="{ left: calcPos.x + 'px', top: calcPos.y + 'px' }"
+  @click.stop
+  @touchmove.prevent
+>
+
+    <!-- header (drag handle) -->
+    <div
+      class="flex items-center justify-between mb-3 cursor-move select-none"
+      @mousedown.prevent="startDrag"
+      @touchstart.prevent="startDrag"
+    >
+      <div class="text-xs font-black text-gray-200">輸入金額（可計數）</div>
+
+      <button
+        type="button"
+        class="w-9 h-9 rounded-full bg-white/10 text-gray-200 flex items-center justify-center hover:bg-white/15"
+        @click="closeKeypad(true)"
+        aria-label="關閉"
+        title="關閉"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- display -->
+    <div class="glass-input rounded-2xl px-3 py-3 mb-3">
+      <div class="text-[10px] font-bold text-gray-500 mb-1">Expression</div>
+      <div class="font-num font-black text-2xl text-right break-all text-white">
+        {{ keypadExpr || '0' }}
+      </div>
+
+      <div class="mt-2 flex items-center justify-between">
+        <div class="text-[10px] font-bold text-gray-500">Result</div>
+        <div class="font-num font-black text-lg text-right text-gray-300">
+          {{ amountPreviewText }}
+        </div>
+      </div>
+
+      <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
+        {{ keypadHint }}
+      </div>
+    </div>
+
+    <!-- keys -->
+    <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
+      <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
+
+      <button
+        class="bg-white/10 rounded-xl py-3 btn-press"
+        @mousedown.prevent="startBackspaceHold()"
+        @mouseup.prevent="stopBackspaceHold()"
+        @mouseleave.prevent="stopBackspaceHold()"
+        @touchstart.prevent="startBackspaceHold()"
+        @touchend.prevent="stopBackspaceHold()"
+        @touchcancel.prevent="stopBackspaceHold()"
+      >⌫</button>
+
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('+')">＋</button>
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
+
+      <button class="bg-emerald-600 rounded-xl py-3 btn-press row-span-2" @click="kp('=')">
+        =<div class="text-[9px] font-bold opacity-80 mt-1">OK</div>
+      </button>
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press col-span-2" @click="kp('0')">0</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
+    </div>
+  </div>
+</div>
+
 
   <div class="fixed bottom-0 left-0 right-0 footer-gradient z-40 pointer-events-none"></div>
   <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
@@ -773,27 +784,81 @@
       const showKeypad = ref(false);
       const keypadExpr = ref("");
       const keypadHint = ref("");
+      const calcPos = ref({ x: 20, y: 220 });
+let dragging = false;
+let dragOffset = { x: 0, y: 0 };
+
 
       const openKeypad = () => {
-        if (showKeypad.value) return; // avoid double pushState
-        errors.value.amount = false;
-        keypadHint.value = "";
+  if (showKeypad.value) return;
 
-        const base = form.value.amount;
-        keypadExpr.value = (base === null || base === undefined || base === "") ? "" : String(base);
+  errors.value.amount = false;
+  keypadHint.value = "";
 
-        showKeypad.value = true;
-        history.pushState({ keypad: true }, "");
-      };
+  const base = form.value.amount;
+  keypadExpr.value = (base === null || base === undefined || base === "") ? "" : String(base);
 
-      const closeKeypad = (fromUser = false) => {
-        showKeypad.value = false;
-        keypadHint.value = "";
-        stopBackspaceHold();
-        if (fromUser) {
-          if (history.state && history.state.keypad) history.back();
-        }
-      };
+  // open in center
+  calcPos.value = {
+    x: Math.max(8, Math.round(window.innerWidth / 2 - 160)),
+    y: Math.max(8, Math.round(window.innerHeight / 2 - 260))
+  };
+
+  showKeypad.value = true;
+};
+
+
+
+      const startDrag = (e) => {
+  dragging = true;
+
+  const p = e.touches ? e.touches[0] : e;
+  dragOffset.x = p.clientX - calcPos.value.x;
+  dragOffset.y = p.clientY - calcPos.value.y;
+
+  const move = (ev) => {
+    if (!dragging) return;
+    const m = ev.touches ? ev.touches[0] : ev;
+
+    // keep inside viewport a bit
+    const w = 320; // panel approx width
+    const h = 520; // rough height, ok to be approximate
+    const maxX = Math.max(0, window.innerWidth - 40);
+    const maxY = Math.max(0, window.innerHeight - 40);
+
+    let nx = m.clientX - dragOffset.x;
+    let ny = m.clientY - dragOffset.y;
+
+    nx = Math.min(Math.max(8, nx), maxX);
+    ny = Math.min(Math.max(8, ny), maxY);
+
+    calcPos.value = { x: nx, y: ny };
+  };
+
+  const end = () => {
+    dragging = false;
+    window.removeEventListener('mousemove', move);
+    window.removeEventListener('mouseup', end);
+    window.removeEventListener('touchmove', move);
+    window.removeEventListener('touchend', end);
+    window.removeEventListener('touchcancel', end);
+  };
+
+  window.addEventListener('mousemove', move, { passive: false });
+  window.addEventListener('mouseup', end);
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('touchend', end);
+  window.addEventListener('touchcancel', end);
+};
+
+
+      const closeKeypad = () => {
+  showKeypad.value = false;
+  keypadHint.value = "";
+  stopBackspaceHold();
+  document.body.style.overflow = ''; // ✅ 解鎖 scroll
+};
+
 
       // only allow: digits + - * / .
       const evalExpr = (expr) => {
@@ -1369,15 +1434,6 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         refreshRatesSilently(false);
         if (form.value.currency !== "HKD") handleCurrencyChange();
 
-        // back button closes keypad
-        window.addEventListener("popstate", () => {
-          if (showKeypad.value) {
-            showKeypad.value = false;
-            keypadHint.value = "";
-            stopBackspaceHold();
-          }
-        });
-
         // ESC closes keypad
         window.addEventListener("keydown", (e) => {
           if (!showKeypad.value) return;
@@ -1457,6 +1513,10 @@ if (savedRoom && navigator.onLine) {
         resetData, removeHistoryRoom,
         copyRoomLink,
         copyText, shareViaApp, generateImage,
+
+        calcPos,
+startDrag,
+
       };
     }
   }).mount('#app');
