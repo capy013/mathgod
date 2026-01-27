@@ -430,8 +430,8 @@
 <div
   class="absolute inset-0 bg-black/40"
   @pointerdown.prevent="closeKeypad()"
-  @click.prevent="closeKeypad()"
 ></div>
+
 
 
 
@@ -451,18 +451,18 @@
 >
   <div class="text-xs font-black text-gray-200">輸入金額（可計數）</div>
 
-<button
+  <button
   type="button"
   class="w-9 h-9 rounded-full bg-red-500/20 text-red-400
          flex items-center justify-center
          hover:bg-red-500 hover:text-white transition-all"
   @pointerdown.prevent.stop="closeKeypad()"
-  @click.prevent.stop="closeKeypad()"
   aria-label="關閉"
   title="關閉"
 >
   <i class="fas fa-times"></i>
 </button>
+
 
 </div>
 
@@ -712,7 +712,8 @@
   try { firebase.initializeApp(firebaseConfig); } catch(e) {}
   const db = firebase.database();
 
-  const { createApp, ref, computed, onMounted } = Vue;
+  const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -866,6 +867,14 @@
 
             // ====== keypad ======
       const showKeypad = ref(false);
+
+      // ESC key handler（named function）
+const onEsc = (e) => {
+  if (showKeypad.value && e.key === "Escape") {
+    closeKeypad();
+  }
+};
+
       const keypadExpr = ref("");
       const keypadHint = ref("");
       const calcPos = ref({ x: 20, y: 220 });
@@ -908,8 +917,12 @@ showKeypad.value = true;
 
     const m = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
 
-    const maxX = Math.max(0, window.innerWidth - 40);
-    const maxY = Math.max(0, window.innerHeight - 40);
+ const panelW = 320;
+const panelH = 420;
+
+const maxX = window.innerWidth - panelW - 8;
+const maxY = window.innerHeight - panelH - 8;
+
 
     let nx = m.clientX - dragOffset.x;
     let ny = m.clientY - dragOffset.y;
@@ -1530,55 +1543,53 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)
       );
 
+   
       // ====== onMounted ======
-      onMounted(() => {
-        loadRatesCache();
-        refreshRatesSilently(false);
-        if (form.value.currency !== "HKD") handleCurrencyChange();
+onMounted(() => {
+  // ESC handler（保險：先 remove 再 add）
+  window.removeEventListener("keydown", onEsc);
+  window.addEventListener("keydown", onEsc);
 
-        // ESC closes keypad
-        window.addEventListener("keydown", (e) => {
-          if (!showKeypad.value) return;
-          if (e.key === "Escape") closeKeypad();
+  loadRatesCache();
+  refreshRatesSilently(false);
 
-        });
+  if (form.value.currency !== "HKD") handleCurrencyChange();
 
-        // load local
-        const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
-        if (local.users) {
-          users.value = local.users;
-          expenses.value = local.expenses || [];
-          eventName.value = local.eventName || "";
-        }
-        form.value.involved = [...users.value];
+  // load local
+  const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
+  if (local.users) {
+    users.value = local.users;
+    expenses.value = local.expenses || [];
+    eventName.value = local.eventName || "";
+  }
+  form.value.involved = [...users.value];
 
-        // history
-        recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
-        roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
+  // history
+  recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
+  roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
 
-        // URL room auto-join
-        const roomFromUrl = new URLSearchParams(window.location.search).get("room");
-        if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
-          if (navigator.onLine) joinRoom(roomFromUrl);
-          else { toast("偵測到房間連結，但你現正離線，未能加入", "error"); isLoading.value = false; }
-        } else {
-          // auto rejoin last room
-          const savedRoom = localStorage.getItem('mathGod_roomId');
-if (savedRoom && navigator.onLine) {
-  joinRoom(savedRoom, { silent: true, showRejoinToast: true });
-} else {
-  isLoading.value = false;
-}
+  // URL room auto-join
+  const roomFromUrl = new URLSearchParams(window.location.search).get("room");
+  if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
+    if (navigator.onLine) joinRoom(roomFromUrl);
+    else toast("偵測到房間連結，但你現正離線", "error");
+  } else {
+    const savedRoom = localStorage.getItem('mathGod_roomId');
+    if (savedRoom && navigator.onLine) {
+      joinRoom(savedRoom, { silent: true, showRejoinToast: true });
+    } else {
+      isLoading.value = false;
+    }
+  }
 
-        }
+  const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
+  const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
 
-        const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
-        const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
+  window.addEventListener('online', onOnline);
+  window.addEventListener('offline', onOffline);
+  if (!navigator.onLine) onOffline();
+});
 
-        window.addEventListener('online', onOnline);
-        window.addEventListener('offline', onOffline);
-        if (!navigator.onLine) onOffline();
-      });
 
       // ====== return ======
       return {
