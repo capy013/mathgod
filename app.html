@@ -253,19 +253,99 @@
     placeholder="0.0"
   />
 
-  <!-- calculator icon (iOS-style: floating on the right, does NOT take layout space) -->
+  <!-- subtle divider (between amount and icon) -->
+  <span class="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 h-6 w-px bg-white/10"></span>
+
+  <!-- calculator icon (iOS-style, green) -->
   <button
     type="button"
     @click.stop.prevent="openKeypad()"
-    class="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center btn-press rounded-full hover:bg-emerald-500/10 active:bg-emerald-500/20"
+    class="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10 active:bg-emerald-500/20"
     title="開啟計數機"
     aria-label="開啟計數機"
   >
     <i class="fas fa-calculator text-[14px] text-emerald-400"></i>
   </button>
+
+  <!-- Keypad Popover (Scheme 2) -->
+<div
+  v-if="showKeypad"
+  class="absolute right-0 top-full mt-2 z-[120] w-[280px] max-w-[90vw] glass rounded-2xl p-3"
+  @click.stop
+>
+  <div class="flex items-center justify-between mb-2">
+    <div class="text-[10px] font-black text-gray-300">輸入金額（可計數）</div>
+    <button
+      type="button"
+      class="w-8 h-8 rounded-full bg-white/10 text-gray-300"
+      @click="closeKeypad(true)"
+      aria-label="關閉"
+      title="關閉"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- display -->
+  <div class="glass-input rounded-2xl px-3 py-2 mb-2">
+    <div class="text-[9px] font-bold text-gray-500 mb-1">Expression</div>
+    <div class="font-num font-black text-xl text-right break-all text-white">
+      {{ keypadExpr || '0' }}
+    </div>
+
+    <div class="mt-2 flex items-center justify-between">
+      <div class="text-[9px] font-bold text-gray-500">Result</div>
+      <div class="font-num font-black text-sm text-right text-gray-300">
+        {{ amountPreviewText }}
+      </div>
+    </div>
+
+    <div v-if="keypadHint" class="text-[9px] font-bold text-red-400 mt-1 text-right">
+      {{ keypadHint }}
+    </div>
+  </div>
+
+  <!-- keys -->
+  <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
+    <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
+
+    <button
+      class="bg-white/10 rounded-xl py-3 btn-press"
+      @mousedown.prevent="startBackspaceHold()"
+      @mouseup.prevent="stopBackspaceHold()"
+      @mouseleave.prevent="stopBackspaceHold()"
+      @touchstart.prevent="startBackspaceHold()"
+      @touchend.prevent="stopBackspaceHold()"
+      @touchcancel.prevent="stopBackspaceHold()"
+    >⌫</button>
+
+    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
+    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
+
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
+    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
+
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
+    <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('+')">＋</button>
+
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
+
+    <button class="bg-emerald-600 rounded-xl py-3 btn-press row-span-2" @click="kp('=')">
+      =<div class="text-[9px] font-bold opacity-80 mt-1">OK</div>
+    </button>
+
+    <button class="bg-white/5 rounded-xl py-3 btn-press col-span-2" @click="kp('0')">0</button>
+    <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
+  </div>
 </div>
 
-
+</div>
 
             <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
               <div>
@@ -349,82 +429,12 @@
       </div>
     </section>
   </main>
-
-  <!-- ====== Keypad / Calculator ====== -->
-  <transition name="fade">
-    <div
-      v-if="showKeypad"
-      class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end"
-      @click.self="closeKeypad(true)"
-    >
-      <div class="w-full max-w-[500px] mx-auto glass rounded-t-[2rem] p-4 pb-6">
-        <div class="flex items-center justify-between mb-3">
-          <div class="text-xs font-black text-gray-300">輸入金額（可計數）</div>
-          <button class="w-8 h-8 rounded-full bg-white/10 text-gray-300" @click="closeKeypad(true)">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-
-        <!-- display -->
-        <div class="glass-input rounded-2xl px-4 py-3 mb-3">
-          <div class="text-[10px] font-bold text-gray-500 mb-1">Expression</div>
-          <div class="font-num font-black text-2xl text-right break-all text-white">
-            {{ keypadExpr || '0' }}
-          </div>
-
-          <div class="mt-2 flex items-center justify-between">
-            <div class="text-[10px] font-bold text-gray-500">Result</div>
-            <div class="font-num font-black text-lg text-right text-gray-300">
-              {{ amountPreviewText }}
-            </div>
-          </div>
-
-          <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
-                      {{ keypadHint }}
-          </div>
-        </div>
-
-        <!-- keys -->
-        <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
-          <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
-
-          <button
-            class="bg-white/10 rounded-xl py-3 btn-press"
-            @mousedown.prevent="startBackspaceHold()"
-            @mouseup.prevent="stopBackspaceHold()"
-            @mouseleave.prevent="stopBackspaceHold()"
-            @touchstart.prevent="startBackspaceHold()"
-            @touchend.prevent="stopBackspaceHold()"
-            @touchcancel.prevent="stopBackspaceHold()"
-          >⌫</button>
-
-          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
-          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
-
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
-          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
-
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
-          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('+')">＋</button>
-
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
-
-          <button class="bg-emerald-600 rounded-xl py-3 btn-press row-span-2" @click="kp('=')">
-            =<div class="text-[9px] font-bold opacity-80 mt-1">OK</div>
-          </button>
-
-          <button class="bg-white/5 rounded-xl py-3 btn-press col-span-2" @click="kp('0')">0</button>
-          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
-        </div>
-      </div>
-    </div>
-  </transition>
+  <!-- click-away layer for popover keypad -->
+<div
+  v-if="showKeypad"
+  class="fixed inset-0 z-[110] bg-transparent"
+  @click="closeKeypad(true)"
+></div>
 
   <div class="fixed bottom-0 left-0 right-0 footer-gradient z-40 pointer-events-none"></div>
   <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
