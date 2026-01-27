@@ -7,7 +7,6 @@
 
   <meta name="description" content="MathGod⚡️夾錢計數小助手 - 專為朋友聚會、旅行設計的同步分帳工具。支援多國匯率轉換，一鍵生成結算單。">
 
-
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://capy013.github.io/mathgod/">
   <meta property="og:title" content="MathGod⚡️夾錢計數小助手">
@@ -23,7 +22,6 @@
 
   <link rel="icon" href="https://gcdnb.pbrd.co/images/0IwB6gU2P6xo.png">
   <link rel="apple-touch-icon" href="https://gcdnb.pbrd.co/images/0IwB6gU2P6xo.png">
-
 
   <link rel="manifest" href="./manifest.webmanifest">
 
@@ -59,33 +57,22 @@
     .math-check:checked { background: var(--primary); border-color: var(--primary); }
     .math-check:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; font-size: 10px; left: 50%; top: 50%; transform: translate(-50%, -50%); }
     .app-logo { filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3)); }
-   
-@keyframes lightningBar {
-  0%   { transform: translateX(-120%); }
-  100% { transform: translateX(420%); }
-}
-.animate-lightning-bar {
-  animation: lightningBar 1s infinite linear;
-}
 
-.capture-mode .truncate {
-  overflow: visible !important;
-  text-overflow: clip !important;
-}
+    @keyframes lightningBar {
+      0%   { transform: translateX(-120%); }
+      100% { transform: translateX(420%); }
+    }
+    .animate-lightning-bar { animation: lightningBar 1s infinite linear; }
 
-
-.capture-mode .capture-row,
-.capture-mode .capture-row span {
-  line-height: 1.6 !important;
-  padding-bottom: 2px !important;
-}
-
+    .capture-mode .truncate { overflow: visible !important; text-overflow: clip !important; }
+    .capture-mode .capture-row, .capture-mode .capture-row span { line-height: 1.6 !important; padding-bottom: 2px !important; }
   </style>
 </head>
 
 <body>
 <div id="app" v-cloak class="min-h-screen flex flex-col max-w-[500px] mx-auto relative pb-32">
 
+  <!-- Loading -->
   <transition name="fade">
     <div v-if="isLoading" class="fixed inset-0 z-[200] bg-black flex items-center justify-center">
       <div class="flex flex-col items-center">
@@ -95,6 +82,7 @@
     </div>
   </transition>
 
+  <!-- Toasts -->
   <div class="fixed top-8 left-0 right-0 z-[999] flex flex-col items-center pointer-events-none px-4">
     <transition-group name="toast">
       <div v-for="t in toasts" :key="t.id" class="glass px-6 py-3 rounded-full flex items-center gap-3 mb-2 shadow-2xl pointer-events-auto border-l-4"
@@ -105,6 +93,7 @@
     </transition-group>
   </div>
 
+  <!-- Header -->
   <header class="p-6 pb-8 rounded-b-[2.5rem] sticky top-0 z-40 transition-all duration-500 shadow-2xl backdrop-blur-xl border-b border-white/5"
           :class="isEditing ? 'bg-amber-950/80' : 'bg-[#0a2f23]/80'">
 
@@ -126,37 +115,27 @@
 
         <div v-if="roomId" class="glass px-3 py-1.5 rounded-full flex items-center gap-3 border-emerald-500/30 bg-emerald-900/20">
           <div class="text-right">
-            <p class="text-[8px] font-bold uppercase"
-   :class="isOnline ? 'text-emerald-400' : 'text-gray-400'">
-  {{ isOnline ? 'ONLINE' : 'OFFLINE' }}
-</p>
-
+            <p class="text-[8px] font-bold uppercase" :class="isOnline ? 'text-emerald-400' : 'text-gray-400'">
+              {{ isOnline ? 'ONLINE' : 'OFFLINE' }}
+            </p>
             <p class="text-xs font-num font-bold text-emerald-400 leading-none">#{{ roomId }}</p>
           </div>
           <button @click="copyRoomLink" class="w-6 h-6 rounded-full bg-white/10 text-white/70 flex items-center justify-center hover:bg-white/20 transition-all">
-  <i class="fas fa-link text-[10px]"></i>
-</button>
-
+            <i class="fas fa-link text-[10px]"></i>
+          </button>
           <button @click="logoutRoom" class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
             <i class="fas fa-power-off text-[10px]"></i>
           </button>
         </div>
 
         <button
-  v-else
-  @click="isOnline ? (showSyncModal = true) : toast('目前離線，未能同步', 'error')"
-  class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press"
-  :class="isOnline ? 'hover:border-emerald-500/50' : 'opacity-40 grayscale'">
-
- <i :class="['fas', isOnline ? 'fa-cloud' : 'fa-wifi', isOnline ? 'text-emerald-400' : 'text-gray-500']"></i>
-
-
-
-  <span>{{ isOnline ? '同步MODE' : '離線中' }}</span>
-</button>
-
-
-
+          v-else
+          @click="isOnline ? (showSyncModal = true) : toast('目前離線，未能同步', 'error')"
+          class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press"
+          :class="isOnline ? 'hover:border-emerald-500/50' : 'opacity-40 grayscale'">
+          <i :class="['fas', isOnline ? 'fa-cloud' : 'fa-wifi', isOnline ? 'text-emerald-400' : 'text-gray-500']"></i>
+          <span>{{ isOnline ? '同步MODE' : '離線中' }}</span>
+        </button>
       </div>
     </div>
 
@@ -171,21 +150,19 @@
       </button>
       <input type="date" id="dateInput" class="hidden" @change="appendDate">
     </div>
-   
-<div v-if="isSyncing" class="mt-3">
-  <div class="h-1 w-full overflow-hidden rounded-full bg-white/10">
-    <div class="h-full w-1/3 bg-emerald-400 animate-lightning-bar"></div>
-  </div>
-  <div class="mt-1 text-[9px] font-bold text-gray-400 tracking-widest uppercase">
-    ⚡️ Loading...
-  </div>
-</div>
 
+    <div v-if="isSyncing" class="mt-3">
+      <div class="h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div class="h-full w-1/3 bg-emerald-400 animate-lightning-bar"></div>
+      </div>
+      <div class="mt-1 text-[9px] font-bold text-gray-400 tracking-widest uppercase">⚡️ Loading...</div>
+    </div>
   </header>
 
+  <!-- Main -->
   <main class="p-5 space-y-6 flex-1">
 
- 
+    <!-- STEP 1 -->
     <section class="glass p-5 rounded-[2rem]">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
@@ -214,10 +191,9 @@
       </div>
     </section>
 
-  
+    <!-- STEP 2 -->
     <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-hidden"
              :class="{'opacity-50 pointer-events-none grayscale': users.length === 0, 'border-amber-500/50': isEditing}">
-
       <div v-if="users.length === 0" class="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
         <div class="bg-black/80 px-4 py-2 rounded-full text-xs font-bold text-white"><i class="fas fa-lock mr-2"></i>加入朋友後解鎖</div>
       </div>
@@ -253,36 +229,45 @@
             <i class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-gray-500"></i>
           </div>
 
-          <div class="col-span-8 glass-input rounded-2xl flex flex-col justify-center px-4 py-2" :class="{'input-error': errors.amount}">
-            <div class="flex items-center">
-              <span class="text-xs font-black text-gray-500 mr-2">$</span>
-              <input
-  v-model="amountDisplay"
-  @focus.prevent="openKeypad()"
-  @click.prevent="openKeypad()"
-  readonly
-  inputmode="none"
-  type="text"
-  @input="errors.amount = false"
-  class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10"
-  placeholder="0.0"
-/>
+          <!-- Amount -->
+          <!-- Amount -->
+<div class="col-span-8 glass-input rounded-2xl flex flex-col justify-center px-4 py-2" :class="{'input-error': errors.amount}">
+  <div class="flex items-center">
+    <span class="text-xs font-black text-gray-500 mr-2">$</span>
 
-            </div>
+    <input
+      v-model.number="form.amount"
+      type="number"
+      inputmode="decimal"
+      step="0.01"
+      @input="errors.amount = false"
+      class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10"
+      placeholder="0.0"
+    />
 
-           
-            <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
-              <div>
-                <span class="text-[9px] font-bold text-emerald-400 font-num">
-                  Rate: {{currentRate.toFixed(3)}} ≈ HKD ${{ ((Number(amountDisplay) || 0) * currentRate).toFixed(1) }}
+    <!-- 計數機 icon：撳先開 keypad -->
+    <button
+      type="button"
+      @click="openKeypad()"
+      class="ml-2 w-9 h-9 rounded-xl bg-white/10 text-gray-300 flex items-center justify-center hover:bg-white/20 transition-all btn-press"
+      title="開啟計數機"
+    >
+      <i class="fas fa-calculator text-[12px]"></i>
+    </button>
+  </div>
 
-                </span>
-              </div>
-              <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
-                最後更新時間：{{ formatTs(rateUpdatedAt) }}
-              </div>
-            </div>
-          </div>
+  <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
+    <div>
+      <span class="text-[9px] font-bold text-emerald-400 font-num">
+        Rate: {{currentRate.toFixed(3)}} ≈ HKD ${{ ((amountPreview || 0) * currentRate).toFixed(1) }}
+      </span>
+    </div>
+    <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
+      最後更新時間：{{ formatTs(rateUpdatedAt) }}
+    </div>
+  </div>
+</div>
+
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -322,7 +307,7 @@
       </div>
     </section>
 
-   
+    <!-- Recent -->
     <section class="pb-10">
       <h3 class="text-[10px] font-bold text-gray-500 ml-2 mb-3 uppercase tracking-widest">最近紀錄</h3>
 
@@ -354,67 +339,87 @@
       </div>
     </section>
   </main>
-   <!-- ====== Keypad / Calculator ====== -->
-<transition name="fade">
-  <div
-    v-if="showKeypad"
-    class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end"
-    @click.self="closeKeypad()"
-  >
-    <div class="w-full max-w-[500px] mx-auto glass rounded-t-[2rem] p-4 pb-6">
-      <div class="flex items-center justify-between mb-3">
-        <div class="text-xs font-black text-gray-300">輸入金額（可計數）</div>
-        <button class="w-8 h-8 rounded-full bg-white/10 text-gray-300" @click="closeKeypad()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
 
-      <!-- 顯示屏 -->
-      <div class="glass-input rounded-2xl px-4 py-3 mb-3">
-        <div class="text-[10px] font-bold text-gray-500 mb-1">Expression</div>
-        <div class="font-num font-black text-2xl text-right break-all">
-          {{ keypadExpr || '0' }}
+  <!-- ====== Keypad / Calculator (basic 4 ops) ====== -->
+  <transition name="fade">
+    <div
+      v-if="showKeypad"
+      class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end"
+      @click.self="closeKeypad(true)"
+    >
+      <div class="w-full max-w-[500px] mx-auto glass rounded-t-[2rem] p-4 pb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-xs font-black text-gray-300">輸入金額（可計數）</div>
+          <button class="w-8 h-8 rounded-full bg-white/10 text-gray-300" @click="closeKeypad(true)">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-        <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
-          {{ keypadHint }}
+
+        <!-- display -->
+        <div class="glass-input rounded-2xl px-4 py-3 mb-3">
+          <div class="text-[10px] font-bold text-gray-500 mb-1">Expression</div>
+          <div class="font-num font-black text-2xl text-right break-all">
+            {{ keypadExpr || '0' }}
+          </div>
+
+          <div class="mt-2 flex items-center justify-between">
+            <div class="text-[10px] font-bold text-gray-500">Result</div>
+            <div class="font-num font-black text-lg text-right">
+              {{ amountPreviewText }}
+            </div>
+          </div>
+
+          <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
+            {{ keypadHint }}
+          </div>
         </div>
-      </div>
 
-      <!-- 按鍵 -->
-      <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('⌫')">⌫</button>
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('(')">(</button>
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp(')')">)</button>
+        <!-- keys -->
+        <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
+          <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
 
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
+          <button
+            class="bg-white/10 rounded-xl py-3 btn-press"
+            @mousedown.prevent="startBackspaceHold()"
+            @mouseup.prevent="stopBackspaceHold()"
+            @mouseleave.prevent="stopBackspaceHold()"
+            @touchstart.prevent="startBackspaceHold()"
+            @touchend.prevent="stopBackspaceHold()"
+            @touchcancel.prevent="stopBackspaceHold()"
+          >⌫</button>
 
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
+          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
+          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
 
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
+          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
 
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('0')">0</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
-        <button class="bg-emerald-600 rounded-xl py-3 btn-press col-span-2" @click="kp('=')">= / OK</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
+          <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('+')">＋</button>
 
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press col-span-4" @click="kp('+')">＋</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
+
+          <button class="bg-emerald-600 rounded-xl py-3 btn-press row-span-2" @click="kp('=')">
+            =<div class="text-[9px] font-bold opacity-80 mt-1">OK</div>
+          </button>
+
+          <button class="bg-white/5 rounded-xl py-3 btn-press col-span-2" @click="kp('0')">0</button>
+          <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
+        </div>
       </div>
     </div>
-  </div>
-</transition>
+  </transition>
 
   <div class="fixed bottom-0 left-0 right-0 footer-gradient z-40 pointer-events-none"></div>
   <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
 
+  <!-- Footer -->
   <footer class="fixed bottom-6 left-0 right-0 max-w-[500px] mx-auto px-6 z-50 grid grid-cols-2 gap-4 pointer-events-none">
     <button @click="showShareModal = true" :disabled="expenses.length === 0"
             class="pointer-events-auto bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black text-xs shadow-2xl shadow-emerald-900/40 btn-press disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2 border border-emerald-400/20 backdrop-blur-md text-white">
@@ -432,7 +437,7 @@
     </div>
   </footer>
 
- 
+  <!-- Sync Modal -->
   <div v-if="showSyncModal" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showSyncModal = false">
     <div class="glass w-full max-w-sm p-8 rounded-[2.5rem] relative overflow-hidden animate-[fadeIn_0.3s_ease]">
       <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-emerald-900/20 to-transparent pointer-events-none"></div>
@@ -471,12 +476,10 @@
     </div>
   </div>
 
- 
+  <!-- Share Modal -->
   <div v-if="showShareModal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col p-4 overflow-y-auto" @click.self="showShareModal = false">
     <div class="max-w-md mx-auto w-full my-auto">
-
-     <div id="capture-zone" class="bg-[#e8e8e8] text-black p-6 rounded-lg shadow-2xl mb-6 relative font-mono">
-
+      <div id="capture-zone" class="bg-[#e8e8e8] text-black p-6 rounded-lg shadow-2xl mb-6 relative font-mono">
         <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300 to-transparent opacity-20"></div>
 
         <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
@@ -562,7 +565,7 @@
     </div>
   </div>
 
-  
+  <!-- Tutorial -->
   <div v-if="showTutorial" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md flex items-center justify-center p-6" @click.self="showTutorial = false">
     <div class="glass max-w-sm w-full p-6 rounded-[2rem] text-center">
       <h3 class="text-lg font-black text-emerald-400 mb-4">使用教學</h3>
@@ -579,436 +582,86 @@
 
 </div>
 
+<!-- ===================== PART 2: From joinRoom() onwards to end of file ===================== -->
 <script>
-  const firebaseConfig = {
-    apiKey: "yFDRUSUFAFnZf6AGdsEA9LxSyLcZF75oIFfib5At",
-    databaseURL: "https://mathgod2-default-rtdb.asia-southeast1.firebasedatabase.app/",
-    projectId: "mathgod2"
-  };
-  try { firebase.initializeApp(firebaseConfig); } catch(e) {}
-  const db = firebase.database();
-  const { createApp, ref, computed, onMounted } = Vue;
+  // （你前面 PART 1 已經有 firebaseConfig / createApp / setup() 大部份）
+  // 由你卡住的 joinRoom 這裡開始，以下一路補到最尾。
 
-  
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: '/mathgod/' })
+      const joinRoom = async (rid, options = {}) => {
+        const { silent = false } = options;
 
-        .then(() => console.log('SW registered'))
-        .catch(err => console.log('SW failed', err));
-    });
-  }
-
-  createApp({
-    setup() {
-     
-      const isLoading = ref(false);
-      const isSyncing = ref(false);
-      const eventName = ref("");
-      const users = ref([]);
-      const expenses = ref([]);
-      const newUser = ref("");
-      const isEditing = ref(false);
-      const editingId = ref(null);
-      const showSyncModal = ref(false);
-      const showShareModal = ref(false);
-      const showResetMenu = ref(false);
-      const showTutorial = ref(false);
-      const shareSubMenu = ref('none');
-      const toasts = ref([]);
-      const roomId = ref(null);
-      const isOnline = ref(navigator.onLine);
-      const roomInput = ref("");
-      const recentRooms = ref([]);
-      const roomNamesMap = ref({});
-      const form = ref({ item: "", amount: null, currency: "HKD", payer: "", involved: [] });
-      const errors = ref({ item: false, amount: false, payer: false, involved: false });
-// ====== Keypad state ======
-const showKeypad = ref(false);
-const keypadExpr = ref("");
-const keypadHint = ref("");
-
-// 用字串顯示（keypad 可打 1+2*3），最後按 OK 才寫入 form.amount（數字）
-const amountDisplay = computed({
-  get() {
-    if (showKeypad.value) return keypadExpr.value;
-    const v = form.value.amount;
-    if (v === null || v === undefined || v === "") return "";
-    return String(v);
-  },
-  set(v) {
-    keypadExpr.value = String(v ?? "");
-  }
-});
-
-const openKeypad = () => {
-  keypadHint.value = "";
-  const base = form.value.amount;
-  keypadExpr.value = (base === null || base === undefined || base === "") ? "" : String(base);
-  showKeypad.value = true;
-};
-
-const closeKeypad = () => {
-  showKeypad.value = false;
-  keypadHint.value = "";
-};
-
-const evalExpr = (expr) => {
-  const cleaned = (expr || "").replace(/\s+/g, "");
-  if (!cleaned) return null;
-
-  // 只允許：數字 + - * / . ( )
-  if (!/^[0-9+\-*/().]+$/.test(cleaned)) throw new Error("只可輸入數字同 +−×÷() .");
-
-  // 計算
-  // eslint-disable-next-line no-new-func
-  const v = Function(`"use strict"; return (${cleaned});`)();
-  if (!Number.isFinite(v)) throw new Error("計算結果無效");
-  return v;
-};
-
-const kp = (key) => {
-  keypadHint.value = "";
-
-  if (key === "C") { keypadExpr.value = ""; return; }
-  if (key === "⌫") { keypadExpr.value = keypadExpr.value.slice(0, -1); return; }
-
-  if (key === "=") {
-    try {
-      const v = evalExpr(keypadExpr.value);
-      if (v === null) {
-        form.value.amount = null;
-        closeKeypad();
-        return;
-      }
-      const rounded = Math.round(v * 100) / 100;
-      form.value.amount = rounded; // ✅ 寫入數字，唔會影響你 addExpense() 檢查 :contentReference[oaicite:7]{index=7}
-      closeKeypad();
-    } catch (e) {
-      keypadHint.value = e?.message || "計算錯誤";
-    }
-    return;
-  }
-
-  keypadExpr.value += key;
-};
-
-    
-      const ratesHKD = ref({ HKD: 1 });
-      const rateUpdatedAt = ref(null);
-      const currentRate = ref(1);
-
-      const shareOptions = ref({ showList: true });
-
-      
-      const toast = (msg, type='success') => {
-        const id = Date.now();
-        toasts.value.push({id, msg, type});
-        setTimeout(() => toasts.value = toasts.value.filter(t=>t.id!==id), 3000);
-      };
-      const setLoading = (status) => isLoading.value = status;
-
-      const pad2 = (n) => String(n).padStart(2, "0");
-      const formatTs = (ts) => {
-        const d = new Date(ts);
-        return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-      };
-
-  
-      const openDatePicker = () => {
-        const el = document.getElementById('dateInput');
-        if(!el) return;
-        if (typeof el.showPicker === 'function') el.showPicker();
-        else el.click();
-      };
-
-     
-      const saveData = () => {
-        const data = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value };
-        localStorage.setItem('mathGod_localData', JSON.stringify(data));
-        if (roomId.value) {
-          db.ref('rooms/' + roomId.value).set(data).catch(()=>toast("同步失敗，已存本地", "error"));
-          let names = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
-          names[roomId.value] = eventName.value || '未命名活動';
-          localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
-          roomNamesMap.value = names;
+        if (!navigator.onLine) {
+          toast("離線模式，無法連線房間（已使用本地資料）", "error");
+          isSyncing.value = false;
+          return;
         }
-      };
 
-      
-      const SUPPORTED = ["HKD","CNY","JPY","TWD","THB","KRW","USD","EUR","GBP"];
-      const RATES_CACHE_KEY = "mathGod_rates_to_HKD_v1";
-      const RATES_TTL_MS = 6 * 60 * 60 * 1000; 
+        if (!rid) return;
+        rid = rid.toString();
 
-      const loadRatesCache = () => {
-        const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
-        if (cached?.rates && cached?.updatedAt) {
-          ratesHKD.value = cached.rates;
-          rateUpdatedAt.value = cached.updatedAt;
-        }
-      };
-
-      const saveRatesCache = (rates, updatedAt) => {
-        localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ rates, updatedAt }));
-        ratesHKD.value = rates;
-        rateUpdatedAt.value = updatedAt;
-      };
-
-      
-      const refreshRatesSilently = async (force=false) => {
-        if (!navigator.onLine) return;
-
-        const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
-        const freshEnough = cached?.updatedAt && (Date.now() - cached.updatedAt < RATES_TTL_MS);
-        if (!force && freshEnough) return;
+        isSyncing.value = true;
+        let handled = false;
 
         try {
-          const res = await fetch(`https://open.er-api.com/v6/latest/USD`, { cache: "no-store" });
-          const data = await res.json();
-          const r = data?.rates;
-          if (!r?.HKD) return;
+          const snap = await db.ref('rooms/' + rid).once('value');
 
-          
-          const toHKD = { HKD: 1 };
-          SUPPORTED.forEach(code => {
-            if (code === "HKD") return;
-            if (r[code]) toHKD[code] = r.HKD / r[code];
-          });
+          if (snap.exists()) {
+            roomId.value = rid;
+            roomInput.value = rid;
+            localStorage.setItem('mathGod_roomId', rid);
 
-          saveRatesCache(toHKD, Date.now());
+            // 清掉舊 listener 再 on
+            db.ref('rooms/' + rid).off();
+            db.ref('rooms/' + rid).on('value', s => {
+              const v = s.val();
+              if (v) {
+                users.value = v.users || [];
+                expenses.value = v.expenses || [];
+                eventName.value = v.eventName || "";
+                if (!isEditing.value) form.value.involved = [...users.value];
+              }
+            });
+
+            updateHistory(rid);
+            showSyncModal.value = false;
+
+            handled = true;
+            setTimeout(() => {
+              isSyncing.value = false;
+              if (!silent) toast(`成功加入房間 #${rid}`);
+              history.replaceState(null, "", window.location.pathname);
+            }, 600);
+
+          } else {
+            toast("房間不存在", "error");
+          }
         } catch (e) {
-         
+          console.error(e);
+          toast("連線錯誤", "error");
+        } finally {
+          if (!handled) isSyncing.value = false;
         }
       };
-
-      
-      const handleCurrencyChange = async () => {
-        if (form.value.currency === "HKD") {
-          currentRate.value = 1;
-          return;
-        }
-
-        
-        const cachedRate = ratesHKD.value?.[form.value.currency];
-        currentRate.value = cachedRate || 1;
-
-        
-        await refreshRatesSilently(false);
-
-       
-        const newRate = ratesHKD.value?.[form.value.currency];
-        if (newRate) currentRate.value = newRate;
-
-        
-        if (!navigator.onLine && !newRate) {
-          toast("離線且未有匯率快取（可先上線開一次App）", "error");
-        }
-      };
-
-      const addUser = () => {
-        const n = newUser.value.trim();
-        if(!n) return;
-        if(users.value.includes(n)) { toast("朋友已存在", "error"); return; }
-        users.value.push(n);
-        form.value.involved.push(n);
-        newUser.value = "";
-        saveData();
-      };
-
-      const addExpense = () => {
-        if (showKeypad.value) closeKeypad();
-
-        errors.value = {
-          item: !form.value.item,
-          amount: !form.value.amount,
-          payer: !form.value.payer,
-          involved: form.value.involved.length === 0
-        };
-
-        if(Object.values(errors.value).some(v => v)) {
-          toast("請填妥紅色欄位", "error");
-          return;
-        }
-   const amt = Number(form.value.amount);
-if (!Number.isFinite(amt) || amt <= 0) {
-  errors.value.amount = true;
-  toast("金額必須大於 0", "error");
-  return;
-}
-
-
-
-        const exp = {
-          id: isEditing.value ? editingId.value : Date.now(),
-          item: form.value.item,
-         hkd: (amt * currentRate.value) || 0,
-          payer: form.value.payer,
-          involved: [...form.value.involved],
-          origAmount: amt,
-          origCurrency: form.value.currency
-        };
-
-        if(isEditing.value) {
-          const i = expenses.value.findIndex(e => e.id === editingId.value);
-          if(i > -1) expenses.value[i] = exp;
-          toast("修改成功");
-        } else {
-          expenses.value.unshift(exp);
-          toast("已新增一筆消費");
-        }
-        cancelEdit();
-        saveData();
-      };
-
-      const editExpense = (i) => {
-        const e = expenses.value[i];
-        editingId.value = e.id;
-        isEditing.value = true;
-        form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])] };
-        handleCurrencyChange();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      };
-
-      const cancelEdit = () => {
-        isEditing.value = false;
-        editingId.value = null;
-        form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [...users.value] };
-        currentRate.value = 1;
-        errors.value = { item: false, amount: false, payer: false, involved: false };
-      };
-
-    
-      const updateHistory = (rid) => {
-        let h = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
-        h = [rid, ...h.filter(x => x !== rid)].slice(0, 10);
-        recentRooms.value = h;
-        localStorage.setItem('mathGod_history', JSON.stringify(h));
-      };
-   
-const getRoomLink = (rid) => {
-  const base = window.location.origin + window.location.pathname;
-  const url = new URL(base);
-  url.searchParams.set("room", rid);
-  return url.toString();
-};
-
-const getRoomInviteText = (rid) => {
-  const link = getRoomLink(rid);
-  const name = (eventName.value || "").trim();
-
-   return `我開咗個記數頁面！🧮
-幫手記低大家消費，最後自動計數每人要畀幾錢！
-
-${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
-⚡️ ${link}`.trim();
-};
-
-
-const copyRoomLink = async () => {
-  if (!roomId.value) {
-    toast("未連線房間", "error");
-    return;
-  }
-
-  const text = getRoomInviteText(roomId.value);
-
-  try {
-    await navigator.clipboard.writeText(text);
-    toast("已複製邀請訊息");
-  } catch (e) {
-  
-    window.prompt("複製以下訊息分享比朋友：", text);
-  }
-};
-
-
-
-    const joinRoom = async (rid, options = {}) => {
-  const { silent = false } = options;
-
- 
-  if (!navigator.onLine) {
-    toast("離線模式，無法連線房間（已使用本地資料）", "error");
-    isSyncing.value = false;
-    return;
-  }
-
-  if (!rid) return;
-  rid = rid.toString();
-
-  isSyncing.value = true;
-
-  
-  let handled = false;
-
-  try {
-    const snap = await db.ref('rooms/' + rid).once('value');
-
-    if (snap.exists()) {
-      roomId.value = rid;
-      roomInput.value = rid;
-      localStorage.setItem('mathGod_roomId', rid);
-
-      db.ref('rooms/' + rid).off();
-      db.ref('rooms/' + rid).on('value', s => {
-        const v = s.val();
-        if (v) {
-          users.value = v.users || [];
-          expenses.value = v.expenses || [];
-          eventName.value = v.eventName || "";
-          if (!isEditing.value) form.value.involved = [...users.value];
-        }
-      });
-
-      updateHistory(rid);
-      showSyncModal.value = false;
-
-      handled = true;
-      setTimeout(() => {
-  isSyncing.value = false;
-
-  if (!silent) {
-    toast(`成功加入房間 #${rid}`);
-  }
-
-  history.replaceState(null, "", window.location.pathname);
-}, 600);
-
-
-
-    } else {
-      toast("房間不存在", "error");
-    }
-
-  } catch (e) {
-    console.error(e);
-    toast("連線錯誤", "error");
-  } finally {
-   
-    if (!handled) isSyncing.value = false;
-  }
-};
-
 
       const createRoom = async () => {
-      
         const rid = Math.floor(1000 + Math.random() * 9000).toString();
         const initialData = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value || "" };
+
         try {
           await db.ref('rooms/' + rid).set(initialData);
           joinRoom(rid);
-        } catch(e) {
-  console.error(e);
-  isSyncing.value = false; 
-  toast("連線錯誤", "error");
-}
-
+        } catch (e) {
+          console.error(e);
+          isSyncing.value = false;
+          toast("連線錯誤", "error");
+        }
       };
 
       const logoutRoom = () => {
-        if(!roomId.value) return;
+        if (!roomId.value) return;
         isSyncing.value = true;
-setTimeout(() => {
+
+        setTimeout(() => {
           db.ref('rooms/' + roomId.value).off();
           roomId.value = null;
           roomInput.value = "";
@@ -1020,10 +673,11 @@ setTimeout(() => {
       };
 
       const removeHistoryRoom = (rid) => {
-        if(confirm("從最近紀錄中刪除此房間？")) {
+        if (confirm("從最近紀錄中刪除此房間？")) {
           let h = recentRooms.value.filter(x => x !== rid);
           recentRooms.value = h;
           localStorage.setItem('mathGod_history', JSON.stringify(h));
+
           let names = { ...(roomNamesMap.value || {}) };
           delete names[rid];
           localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
@@ -1031,21 +685,22 @@ setTimeout(() => {
         }
       };
 
-      const resetData = (t, ask=true) => {
+      const resetData = (t, ask = true) => {
         const doReset = () => {
-          if(t==='all'){
-            users.value=[];
-            expenses.value=[];
-            eventName.value="";
+          if (t === 'all') {
+            users.value = [];
+            expenses.value = [];
+            eventName.value = "";
             form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [] };
           } else {
-            expenses.value=[];
+            expenses.value = [];
           }
           saveData();
-          showResetMenu.value=false;
+          showResetMenu.value = false;
         };
-        if(ask) {
-          if(confirm(t==='all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) {
+
+        if (ask) {
+          if (confirm(t === 'all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) {
             doReset();
             toast("資料已重置");
           }
@@ -1067,53 +722,58 @@ setTimeout(() => {
         }
       };
 
+      // ====== settlements ======
       const settlements = computed(() => {
         let bal = {};
         users.value.forEach(u => bal[u] = 0);
 
         expenses.value.forEach(e => {
-          if(!e || !e.payer || !Array.isArray(e.involved) || e.involved.length === 0) return;
-          if(!(e.payer in bal)) return; // payer 已被刪 -> 忽略
+          if (!e || !e.payer || !Array.isArray(e.involved) || e.involved.length === 0) return;
+          if (!(e.payer in bal)) return;
+
           const h = Number(e.hkd || 0);
           bal[e.payer] += h;
+
           const s = h / e.involved.length;
           e.involved.forEach(u => {
-            if(u in bal) bal[u] -= s;
+            if (u in bal) bal[u] -= s;
           });
         });
 
-        let d=[], c=[], res=[];
-        for(let u in bal) {
-          if(bal[u] < -0.01) d.push({n: u, a: Math.abs(bal[u])});
-          else if(bal[u] > 0.01) c.push({n: u, a: bal[u]});
+        let d = [], c = [], res = [];
+        for (let u in bal) {
+          if (bal[u] < -0.01) d.push({ n: u, a: Math.abs(bal[u]) });
+          else if (bal[u] > 0.01) c.push({ n: u, a: bal[u] });
         }
-        d.sort((a,b)=>b.a-a.a);
-        c.sort((a,b)=>b.a-a.a);
 
-        let i=0, j=0;
-        while(i<d.length && j<c.length) {
+        d.sort((a, b) => b.a - a.a);
+        c.sort((a, b) => b.a - a.a);
+
+        let i = 0, j = 0;
+        while (i < d.length && j < c.length) {
           let m = Math.min(d[i].a, c[j].a);
-          res.push({from: d[i].n, to: c[j].n, amount: m});
+          res.push({ from: d[i].n, to: c[j].n, amount: m });
           d[i].a -= m;
           c[j].a -= m;
-          if(d[i].a < 0.01) i++;
-          if(c[j].a < 0.01) j++;
+          if (d[i].a < 0.01) i++;
+          if (c[j].a < 0.01) j++;
         }
         return res;
       });
 
+      // ====== Share ======
       const getShareText = () => {
         let msg = `夾錢通知 (Payment Notice)\n`;
         if (eventName.value) msg += `活動: ${eventName.value}\n`;
         msg += `------------------------------\n`;
         msg += `請跟隨以下列表過數 (Transfer List):\n`;
-        if(settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
+        if (settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
         settlements.value.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
 
         if (shareOptions.value.showList) {
           msg += `\n📋 詳細消費紀錄:\n`;
           expenses.value.forEach((e, idx) => {
-            msg += `${idx+1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+            msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
           });
         }
         msg += `\n------------------------------\nGenerated by ⚡️MathGod`;
@@ -1122,108 +782,105 @@ setTimeout(() => {
 
       const copyText = () => {
         navigator.clipboard.writeText(getShareText())
-          .then(()=>toast("已複製"))
-          .catch(()=>toast("複製失敗","error"));
+          .then(() => toast("已複製"))
+          .catch(() => toast("複製失敗", "error"));
       };
 
       const shareViaApp = async (type) => {
-  try {
-    if (type === 'text') {
-      if (navigator.share) {
-        await navigator.share({ title: 'MathGod 結算', text: getShareText() });
-      } else {
-        copyText();
-      }
-      return;
-    }
+        try {
+          if (type === 'text') {
+            if (navigator.share) {
+              await navigator.share({ title: 'MathGod 結算', text: getShareText() });
+            } else {
+              copyText();
+            }
+            return;
+          }
 
-    if (type === 'image') {
-      toast("正在製作圖片...");
-      const zone = document.getElementById('capture-zone');
-      if (!zone) return;
+          if (type === 'image') {
+            toast("正在製作圖片...");
+            const zone = document.getElementById('capture-zone');
+            if (!zone) return;
 
-      const originalShadow = zone.style.boxShadow;
-      const originalPaddingBottom = zone.style.paddingBottom;
-      const originalTransform = zone.style.transform;
+            const originalShadow = zone.style.boxShadow;
+            const originalPaddingBottom = zone.style.paddingBottom;
+            const originalTransform = zone.style.transform;
 
-      zone.classList.add('capture-mode');
-      zone.style.boxShadow = 'none';
-      zone.style.paddingBottom = '16px';
-      zone.style.transform = 'translateZ(0)';
+            zone.classList.add('capture-mode');
+            zone.style.boxShadow = 'none';
+            zone.style.paddingBottom = '16px';
+            zone.style.transform = 'translateZ(0)';
 
-      const canvas = await html2canvas(zone, {
-        backgroundColor: '#e8e8e8',
-        scale: 2,
-        useCORS: true
-      });
+            const canvas = await html2canvas(zone, {
+              backgroundColor: '#e8e8e8',
+              scale: 2,
+              useCORS: true
+            });
 
-      canvas.toBlob(async (blob) => {
-       
-        zone.classList.remove('capture-mode');
-        zone.style.boxShadow = originalShadow;
-        zone.style.paddingBottom = originalPaddingBottom;
-        zone.style.transform = originalTransform;
+            canvas.toBlob(async (blob) => {
+              zone.classList.remove('capture-mode');
+              zone.style.boxShadow = originalShadow;
+              zone.style.paddingBottom = originalPaddingBottom;
+              zone.style.transform = originalTransform;
 
-        const file = new File([blob], "mathgod_share.png", { type: "image/png" });
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'MathGod 結算圖' });
-        } else {
+              const file = new File([blob], "mathgod_share.png", { type: "image/png" });
+              if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'MathGod 結算圖' });
+              } else {
+                const link = document.createElement('a');
+                link.download = `MathGod_${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                toast("系統不支援直接圖片分享，已為你下載");
+              }
+            });
+
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          toast("分享失敗", "error");
+        }
+      };
+
+      const generateImage = async () => {
+        const zone = document.getElementById('capture-zone');
+        if (!zone) return;
+
+        const originalShadow = zone.style.boxShadow;
+        const originalPaddingBottom = zone.style.paddingBottom;
+        const originalTransform = zone.style.transform;
+
+        zone.classList.add('capture-mode');
+        zone.style.boxShadow = 'none';
+        zone.style.paddingBottom = '16px';
+        zone.style.transform = 'translateZ(0)';
+
+        try {
+          const canvas = await html2canvas(zone, {
+            backgroundColor: '#e8e8e8',
+            scale: 2,
+            useCORS: true
+          });
+
           const link = document.createElement('a');
           link.download = `MathGod_${Date.now()}.png`;
           link.href = canvas.toDataURL();
           link.click();
-          toast("系統不支援直接圖片分享，已為你下載");
+        } finally {
+          zone.classList.remove('capture-mode');
+          zone.style.boxShadow = originalShadow;
+          zone.style.paddingBottom = originalPaddingBottom;
+          zone.style.transform = originalTransform;
         }
-      });
+      };
 
-      return;
-    }
-  } catch (err) {
-    console.error(err);
-    toast("分享失敗", "error");
-  }
-};
-
-
-  const generateImage = async () => {
-  const zone = document.getElementById('capture-zone');
-  if (!zone) return;
-
-  const originalShadow = zone.style.boxShadow;
-  const originalPaddingBottom = zone.style.paddingBottom;
-  const originalTransform = zone.style.transform;
-
-  zone.classList.add('capture-mode');
-  zone.style.boxShadow = 'none';
-  zone.style.paddingBottom = '16px';
-  zone.style.transform = 'translateZ(0)';
-
-  try {
-    const canvas = await html2canvas(zone, {
-      backgroundColor: '#e8e8e8',
-      scale: 2,
-      useCORS: true
-    });
-
-    const link = document.createElement('a');
-    link.download = `MathGod_${Date.now()}.png`;
-    link.href = canvas.toDataURL();
-    link.click();
-  } finally {
-    zone.classList.remove('capture-mode');
-    zone.style.boxShadow = originalShadow;
-    zone.style.paddingBottom = originalPaddingBottom;
-    zone.style.transform = originalTransform;
-  }
-};
-
-
-
+      // ====== Remove / toggle ======
       const removeUser = (i) => {
         const name = users.value[i];
-        if(!name) return;
+        if (!name) return;
 
-        if(!confirm("確定刪除此人？（會同時移除相關消費關聯）")) return;
+        if (!confirm("確定刪除此人？（會同時移除相關消費關聯）")) return;
 
         users.value.splice(i, 1);
 
@@ -1249,8 +906,8 @@ setTimeout(() => {
       };
 
       const removeExpense = (i) => {
-        if(confirm("確定刪除紀錄？")) {
-          expenses.value.splice(i,1);
+        if (confirm("確定刪除紀錄？")) {
+          expenses.value.splice(i, 1);
           saveData();
         }
       };
@@ -1261,118 +918,156 @@ setTimeout(() => {
 
       const toggleInvolved = (u) => {
         const idx = form.value.involved.indexOf(u);
-        if(idx>-1) form.value.involved.splice(idx,1);
+        if (idx > -1) form.value.involved.splice(idx, 1);
         else form.value.involved.push(u);
       };
 
+      // ====== onMounted ======
       onMounted(() => {
-  
-  loadRatesCache();
-  refreshRatesSilently(false);
-  if (form.value.currency !== "HKD") handleCurrencyChange();
+        // rates
+        loadRatesCache();
+        refreshRatesSilently(false);
+        if (form.value.currency !== "HKD") handleCurrencyChange();
 
-      
-const roomFromUrl = new URLSearchParams(window.location.search).get("room");
-if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
-  if (navigator.onLine) {
-    joinRoom(roomFromUrl);
+        // 手機返回鍵關 keypad（popstate）
+        window.addEventListener("popstate", () => {
+          if (showKeypad.value) {
+            showKeypad.value = false;
+            keypadHint.value = "";
+            stopBackspaceHold();
+          }
+        });
 
-  } else {
-    toast("偵測到房間連結，但你現正離線，未能加入", "error");
-    isLoading.value = false;
-  }
-  return; // 
-}
+        // ESC 關 keypad
+        window.addEventListener("keydown", (e) => {
+          if (!showKeypad.value) return;
+          if (e.key === "Escape") closeKeypad(true);
+        });
 
+        // URL room auto-join
+        const roomFromUrl = new URLSearchParams(window.location.search).get("room");
+        if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
+          if (navigator.onLine) {
+            joinRoom(roomFromUrl);
+          } else {
+            toast("偵測到房間連結，但你現正離線，未能加入", "error");
+            isLoading.value = false;
+          }
+          return;
+        }
 
-  const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
-        if(local.users) {
+        // load local
+        const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
+        if (local.users) {
           users.value = local.users;
           expenses.value = local.expenses || [];
           eventName.value = local.eventName || "";
         }
         form.value.involved = [...users.value];
 
+        // history
         recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
         roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
 
-       const savedRoom = localStorage.getItem('mathGod_roomId');
+        // auto rejoin last room
+        const savedRoom = localStorage.getItem('mathGod_roomId');
+        if (savedRoom && navigator.onLine) {
+          joinRoom(savedRoom, { silent: true });
+          toast(`已回到上次房間 #${savedRoom}`);
+        } else {
+          isLoading.value = false;
+        }
 
-if (savedRoom && navigator.onLine) {
-  joinRoom(savedRoom, { silent: true });
-toast(`已回到上次房間 #${savedRoom}`);
-
-} else {
-
-  isLoading.value = false;
-  
-}
-
-
-       const onOnline = () => {
-  isOnline.value = true;
-  toast("已連線（Online）");
-};
-
-const onOffline = () => {
-  isOnline.value = false;
-  toast("離線模式（Offline）", "error");
-};
+        const onOnline = () => {
+          isOnline.value = true;
+          toast("已連線（Online）");
+        };
+        const onOffline = () => {
+          isOnline.value = false;
+          toast("離線模式（Offline）", "error");
+        };
 
         window.addEventListener('online', onOnline);
         window.addEventListener('offline', onOffline);
         if (!navigator.onLine) onOffline();
-
-
-      
       });
 
+      // ====== computed for footer ======
+      const recentRoomsWithNames = computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' })));
+      const totalSpent = computed(() => expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0));
+
+      // ====== return ======
       return {
-  isLoading,
-  isSyncing,
-  isOnline,      
-  shareSubMenu,
-  eventName, users, expenses, newUser, form, isEditing, editingId,
-  showSyncModal, showShareModal, showResetMenu, showTutorial, toasts,
-  roomId, roomInput, currentRate, shareOptions, errors,
+        // state
+        isLoading,
+        isSyncing,
+        isOnline,
+        shareSubMenu,
+        eventName,
+        users,
+        expenses,
+        newUser,
+        form,
+        isEditing,
+        editingId,
+        showSyncModal,
+        showShareModal,
+        showResetMenu,
+        showTutorial,
+        toasts,
+        roomId,
+        roomInput,
+        currentRate,
+        shareOptions,
+        errors,
 
-  copyRoomLink,
+        // keypad
+        showKeypad,
+        keypadExpr,
+        keypadHint,
+       
+        amountPreview,
+        amountPreviewText,
+        openKeypad,
+        closeKeypad,
+        kp,
+        startBackspaceHold,
+        stopBackspaceHold,
 
-  rateUpdatedAt,
-  formatTs,
+        // misc
+        rateUpdatedAt,
+        formatTs,
+        openDatePicker,
 
+        // computed
+        recentRoomsWithNames,
+        totalSpent,
+        settlements,
 
-  openDatePicker,
-  recentRoomsWithNames: computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))),
-  totalSpent: computed(() => expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)),
-  settlements,
-  addUser, addExpense, saveData, joinRoom, createRoom, logoutRoom,
-  editExpense, cancelEdit,
-  removeUser,
-  removeExpense,
-  handleCurrencyChange,
-  toggleSelectAll,
-  toggleInvolved,
-  appendDate, resetData, removeHistoryRoom, copyText, generateImage, shareViaApp,
-          showKeypad,
-keypadExpr,
-keypadHint,
-amountDisplay,
-openKeypad,
-closeKeypad,
-kp,
-
-};
-
+        // actions
+        addUser,
+        addExpense,
+        saveData,
+        joinRoom,
+        createRoom,
+        logoutRoom,
+        editExpense,
+        cancelEdit,
+        removeUser,
+        removeExpense,
+        handleCurrencyChange,
+        toggleSelectAll,
+        toggleInvolved,
+        appendDate,
+        resetData,
+        removeHistoryRoom,
+        copyText,
+        generateImage,
+        shareViaApp,
+        copyRoomLink,
+      };
     }
   }).mount('#app');
-   
-
 </script>
 </body>
 </html>
-
-
-
-
-
