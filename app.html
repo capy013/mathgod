@@ -304,7 +304,7 @@
   inputmode="decimal"
   pattern="[0-9.]*"
   @input="sanitizeAmount(); errors.amount = false"
-  :class="['w-full min-w-0 bg-transparent text-right font-num font-black outline-none placeholder-white/10 pr-20 amount-fit', amountFontClass]"
+  :class="['w-full min-w-0 bg-transparent text-right font-num font-black outline-none placeholder-white/10 pr-16 amount-fit', amountFontClass]"
   placeholder="0.0"
 />
 
@@ -910,6 +910,9 @@ const amountFontClass = computed(() => {
 
             // ====== keypad ======
       const showKeypad = ref(false);
+const onEsc = (e) => {
+  if (showKeypad.value && e.key === "Escape") closeKeypad();
+};
 
 const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
 const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
@@ -1011,10 +1014,6 @@ const maxY = window.innerHeight - panelH - 8;
   stopBackspaceHold();
   document.body.style.overflow = '';
 };
-const onEsc = (e) => {
-  if (showKeypad.value && e.key === "Escape") closeKeypad();
-};
-
 
 
       // only allow: digits + - * / .
@@ -1222,7 +1221,7 @@ toast("已新增一筆消費");
       const cancelEdit = () => {
         isEditing.value = false;
         editingId.value = null;
-        form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [...users.value] };
+        form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [...users.value] };
         currentRate.value = 1;
         errors.value = { item: false, amount: false, payer: false, involved: false };
       };
@@ -1441,7 +1440,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
             users.value = [];
             expenses.value = [];
             eventName.value = "";
-            form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [] };
+            form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [] };
           } else {
             expenses.value = [];
           }
