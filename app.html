@@ -88,8 +88,8 @@
 }
     /* unified clear button */
 .clear-btn{
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -98,11 +98,19 @@
   color: rgba(255,255,255,0.55);
   transition: all .15s ease;
 }
+
 .clear-btn:hover{
   background: rgba(255,255,255,0.10);
   color: rgba(255,255,255,0.90);
 }
 .clear-btn i{ font-size: 11px; line-height: 1; }
+
+
+.amount-fit{
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
 
 
   </style>
@@ -290,15 +298,16 @@
   <span class="text-xs font-black text-gray-500">$</span>
 
   <!-- input -->
-  <input
-  v-model.number="form.amount"
+ <input
+  v-model="form.amount"
   type="text"
   inputmode="decimal"
   pattern="[0-9.]*"
-  @input="errors.amount = false"
-  :class="['w-full min-w-0 bg-transparent text-right font-num font-black outline-none placeholder-white/10 pr-24', amountFontClass]"
+  @input="sanitizeAmount(); errors.amount = false"
+  :class="['w-full min-w-0 bg-transparent text-right font-num font-black outline-none placeholder-white/10 pr-20 amount-fit', amountFontClass]"
   placeholder="0.0"
 />
+
 
 
 <!-- right tools slot -->
@@ -321,15 +330,16 @@
 
   <!-- calculator -->
   <button
-    type="button"
-    @click.stop.prevent="openKeypad()"
-    class="w-10 h-10 flex items-center justify-center rounded-full
-           hover:bg-emerald-500/10 active:bg-emerald-500/20"
-    title="開啟計數機"
-    aria-label="開啟計數機"
-  >
-    <i class="fas fa-calculator text-[14px] text-emerald-400"></i>
-  </button>
+  type="button"
+  @click.stop.prevent="openKeypad()"
+  class="w-9 h-9 flex items-center justify-center rounded-full
+         hover:bg-emerald-500/10 active:bg-emerald-500/20"
+  title="開啟計數機"
+  aria-label="開啟計數機"
+>
+  <i class="fas fa-calculator text-[13px] text-emerald-400"></i>
+</button>
+
 
 </div>
 
@@ -382,7 +392,7 @@
         <button @click="addExpense" class="w-full py-4 rounded-2xl font-black text-sm shadow-xl btn-press flex items-center justify-center gap-2 transition-all"
                 :class="isEditing ? 'bg-amber-600 shadow-amber-900/40' : 'bg-emerald-600 shadow-emerald-900/40'">
           <i :class="['fas', isEditing ? 'fa-save' : 'fa-plus']"></i>
-          <span>{{ isEditing ? '儲存修改' : '確認入帳' }}</span>
+          <span>{{ isEditing ? '儲存修改' : '確認入數' }}</span>
           <span v-if="form.amount" class="font-num bg-black/20 px-2 rounded ml-1 text-xs">
             HKD ${{ ((Number(form.amount || 0) * currentRate) || 0).toFixed(1) }}
           </span>
@@ -765,15 +775,16 @@
         return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
       };
 const amountFontClass = computed(() => {
-  const s = String(form.value.amount ?? "");
+  const s = String(form.value.amount ?? "").replace(/[^\d.]/g, "");
   const len = s.replace(".", "").length;
 
-  if (len <= 5) return "text-2xl";
-  if (len <= 7) return "text-xl";
-  if (len <= 9) return "text-lg";
-  if (len <= 11) return "text-base";
-  return "text-sm";
+  if (len <= 5) return "text-2xl";      // 12345
+  if (len <= 6) return "text-xl";       // 123456
+  if (len <= 8) return "text-lg";       // 12345678
+  if (len <= 10) return "text-base";    // 1234567890
+  return "text-sm";                     // 11+ digits
 });
+
 
       const openDatePicker = () => {
   const el = document.getElementById('dateInput');
