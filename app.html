@@ -291,14 +291,15 @@
 
   <!-- input -->
   <input
-     v-model.number="form.amount"
+  v-model.number="form.amount"
   type="text"
   inputmode="decimal"
   pattern="[0-9.]*"
-    @input="errors.amount = false"
-    class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10 pr-28"
-    placeholder="0.0"
-  />
+  @input="errors.amount = false"
+  :class="['w-full min-w-0 bg-transparent text-right font-num font-black outline-none placeholder-white/10 pr-24', amountFontClass]"
+  placeholder="0.0"
+/>
+
 
 <!-- right tools slot -->
 <div class="absolute right-1 inset-y-0 flex items-center gap-1">
@@ -763,6 +764,16 @@
         const d = new Date(ts);
         return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
       };
+const amountFontClass = computed(() => {
+  const s = String(form.value.amount ?? "");
+  const len = s.replace(".", "").length;
+
+  if (len <= 5) return "text-2xl";
+  if (len <= 7) return "text-xl";
+  if (len <= 9) return "text-lg";
+  if (len <= 11) return "text-base";
+  return "text-sm";
+});
 
       const openDatePicker = () => {
   const el = document.getElementById('dateInput');
@@ -1634,8 +1645,9 @@ onUnmounted(() => {
         copyText, shareViaApp, generateImage,
 
         calcPos,
-startDrag,
-lastAddedId,
+        startDrag,
+        lastAddedId,
+        amountFontClass,
         
       };
     }
