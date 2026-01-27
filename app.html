@@ -304,8 +304,10 @@
   inputmode="decimal"
   pattern="[0-9.]*"
   @input="sanitizeAmount(); errors.amount = false"
-  :class="['w-full min-w-0 bg-transparent text-right font-num font-black outline-none placeholder-white/10 pr-16 amount-fit', amountFontClass]"
-  placeholder="0.0"
+  :class="[
+    'w-full min-w-0 bg-transparent text-center font-num font-black outline-none placeholder-white/10 amount-fit',
+    amountFontClass
+  ]"
 />
 
 
