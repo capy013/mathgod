@@ -868,15 +868,11 @@
             // ====== keypad ======
       const showKeypad = ref(false);
 
-      // ESC key handler（named function）
-const onEsc = (e) => {
-  if (showKeypad.value && e.key === "Escape") {
-    closeKeypad();
-  }
-};
-      const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
+const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
 const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
 
+
+  
 
       const keypadExpr = ref("");
       const keypadHint = ref("");
@@ -971,6 +967,9 @@ const maxY = window.innerHeight - panelH - 8;
   keypadHint.value = "";
   stopBackspaceHold();
   document.body.style.overflow = '';
+};
+const onEsc = (e) => {
+  if (showKeypad.value && e.key === "Escape") closeKeypad();
 };
 
 
@@ -1546,9 +1545,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)
       );
 
-   
-      // ====== onMounted ======
-onMounted(() => {
+   onMounted(() => {
   // handlers
   window.removeEventListener("keydown", onEsc);
   window.removeEventListener("online", onOnline);
@@ -1592,7 +1589,6 @@ onMounted(() => {
 
   if (!navigator.onLine) onOffline();
 });
-
 
 onUnmounted(() => {
   window.removeEventListener("keydown", onEsc);
