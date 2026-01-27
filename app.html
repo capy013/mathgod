@@ -746,13 +746,20 @@
       const keypadExpr = ref("");
       const keypadHint = ref("");
 
-      const openKeypad = () => {
-        keypadHint.value = "";
-        const base = form.value.amount;
-        keypadExpr.value = (base === null || base === undefined || base === "") ? "" : String(base);
-        showKeypad.value = true;
-        history.pushState({ keypad: true }, "");
-      };
+     const openKeypad = () => {
+  if (showKeypad.value) return; // ✅ 避免重複 pushState
+
+  errors.value.amount = false;
+  keypadHint.value = "";
+
+  const base = form.value.amount;
+  keypadExpr.value = (base === null || base === undefined || base === "") ? "" : String(base);
+
+  showKeypad.value = true;
+  history.pushState({ keypad: true }, "");
+};
+
+
 
       const closeKeypad = (fromUser = false) => {
         showKeypad.value = false;
@@ -780,18 +787,21 @@
         return x;
       };
 
-      const amountPreview = computed(() => {
-        const expr = showKeypad.value ? keypadExpr.value : String(form.value.amount ?? "");
-        const cleaned = safeExprForPreview(expr);
-        if (!cleaned) return 0;
-        try {
-          // eslint-disable-next-line no-new-func
-          const v = Function(`"use strict"; return (${cleaned});`)();
-          return Number.isFinite(v) ? v : 0;
-        } catch (e) {
-          return 0;
-        }
-      });
+    const amountPreview = computed(() => {
+  if (!showKeypad.value) return Number(form.value.amount || 0);
+
+  const cleaned = safeExprForPreview(keypadExpr.value);
+  if (!cleaned) return 0;
+
+  try {
+    // eslint-disable-next-line no-new-func
+    const v = Function(`"use strict"; return (${cleaned});`)();
+    return Number.isFinite(v) ? v : 0;
+  } catch (e) {
+    return 0;
+  }
+});
+
 
       const amountPreviewText = computed(() => {
         return (Math.round((amountPreview.value || 0) * 100) / 100).toFixed(2);
@@ -808,20 +818,20 @@ const backspaceOnce = () => {
 const startBackspaceHold = () => {
   keypadHint.value = "";
 
-  // 先刪一次（即時反應）
-  backspaceOnce();
+  if (!keypadExpr.value) return; // ✅ 空就唔開 timer
 
-  // 清掉舊 timer
+  backspaceOnce();
   stopBackspaceHold();
 
-  // 1 秒後先開始連刪
   backspaceHoldDelayTimer = setTimeout(() => {
     backspaceTimer = setInterval(() => {
       if (!showKeypad.value) return stopBackspaceHold();
+      if (!keypadExpr.value) return stopBackspaceHold(); // ✅ 刪到空就停
       backspaceOnce();
     }, 70);
   }, 1000);
 };
+
 
 const stopBackspaceHold = () => {
   if (backspaceHoldDelayTimer) {
@@ -899,53 +909,46 @@ const stopBackspaceHold = () => {
         else form.value.involved.push(u);
       };
 
-      // ====== expenses ======
-      const addExpense = () => {
-        if (showKeypad.value) closeKeypad(true);
+    const addExpense = () => {
+  if (showKeypad.value) closeKeypad(true);
 
-        const amt = Number(form.value.amount);
-errors.value = {
-  item: !form.value.item,
-  amount: !(Number.isFinite(amt) && amt > 0),
-  payer: !form.value.payer,
-  involved: form.value.involved.length === 0
+  const amt = Number(form.value.amount);
+
+  errors.value = {
+    item: !form.value.item,
+    amount: !(Number.isFinite(amt) && amt > 0),
+    payer: !form.value.payer,
+    involved: form.value.involved.length === 0
+  };
+
+  if (Object.values(errors.value).some(v => v)) {
+    toast("請填妥紅色欄位", "error");
+    return;
+  }
+
+  const exp = {
+    id: isEditing.value ? editingId.value : Date.now(),
+    item: form.value.item,
+    hkd: (amt * currentRate.value) || 0,
+    payer: form.value.payer,
+    involved: [...form.value.involved],
+    origAmount: amt,
+    origCurrency: form.value.currency
+  };
+
+  if (isEditing.value) {
+    const i = expenses.value.findIndex(e => e.id === editingId.value);
+    if (i > -1) expenses.value[i] = exp;
+    toast("修改成功");
+  } else {
+    expenses.value.unshift(exp);
+    toast("已新增一筆消費");
+  }
+
+  cancelEdit();
+  saveData();
 };
 
-
-        if(Object.values(errors.value).some(v => v)) {
-          toast("請填妥紅色欄位", "error");
-          return;
-        }
-
-        const amt = Number(form.value.amount);
-        if (!Number.isFinite(amt) || amt <= 0) {
-          errors.value.amount = true;
-          toast("金額必須大於 0", "error");
-          return;
-        }
-
-        const exp = {
-          id: isEditing.value ? editingId.value : Date.now(),
-          item: form.value.item,
-          hkd: (amt * currentRate.value) || 0,
-          payer: form.value.payer,
-          involved: [...form.value.involved],
-          origAmount: amt,
-          origCurrency: form.value.currency
-        };
-
-        if(isEditing.value) {
-          const i = expenses.value.findIndex(e => e.id === editingId.value);
-          if(i > -1) expenses.value[i] = exp;
-          toast("修改成功");
-        } else {
-          expenses.value.unshift(exp);
-          toast("已新增一筆消費");
-        }
-
-        cancelEdit();
-        saveData();
-      };
 
       const editExpense = (i) => {
         const e = expenses.value[i];
@@ -1318,11 +1321,6 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         }
 
 
-// ESC 關 keypad（桌面）
-window.addEventListener("keydown", (e) => {
-  if (!showKeypad.value) return;
-  if (e.key === "Escape") closeKeypad(true);
-});
 
         // local
         const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
