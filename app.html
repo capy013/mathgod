@@ -230,31 +230,36 @@
           </div>
 
           <!-- Amount -->
-          <!-- Amount -->
-<div class="col-span-8 glass-input rounded-2xl flex flex-col justify-center px-4 py-2" :class="{'input-error': errors.amount}">
-  <div class="flex items-center">
-    <span class="text-xs font-black text-gray-500 mr-2">$</span>
+<div class="col-span-8 glass-input rounded-2xl flex flex-col justify-center px-4 py-2 relative" :class="{'input-error': errors.amount}">
+  <div class="flex items-center gap-2">
+    <span class="text-xs font-black text-gray-500">$</span>
 
-    <input
-      v-model.number="form.amount"
-      type="number"
-      inputmode="decimal"
-      step="0.01"
-      @input="errors.amount = false"
-      class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10"
-      placeholder="0.0"
-    />
-
-    <!-- 計數機 icon：撳先開 keypad -->
-    <button
-      type="button"
-      @click="openKeypad()"
-      class="ml-2 w-9 h-9 rounded-xl bg-white/10 text-gray-300 flex items-center justify-center hover:bg-white/20 transition-all btn-press"
-      title="開啟計數機"
-    >
-      <i class="fas fa-calculator text-[12px]"></i>
-    </button>
+    <div class="flex-1">
+      <input
+        v-model.number="form.amount"
+        type="number"
+        inputmode="decimal"
+        step="0.01"
+        @input="errors.amount = false"
+        class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10 pr-10"
+        placeholder="0.0"
+      />
+    </div>
   </div>
+
+ 
+
+
+<!-- 計數機 icon：放欄位外（右上角） -->
+<button
+  type="button"
+  @click.stop.prevent="openKeypad()"
+  class="absolute right-3 top-3 w-9 h-9 rounded-xl bg-white/10 text-gray-300 flex items-center justify-center hover:bg-white/20 transition-all btn-press"
+  title="開啟計數機"
+>
+  <i class="fas fa-calculator text-[12px]"></i>
+</button>
+
 
   <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
     <div>
@@ -364,9 +369,10 @@
 
           <div class="mt-2 flex items-center justify-between">
             <div class="text-[10px] font-bold text-gray-500">Result</div>
-            <div class="font-num font-black text-lg text-right">
-              {{ amountPreviewText }}
-            </div>
+            <div class="font-num font-black text-lg text-right text-gray-300">
+  {{ amountPreviewText }}
+</div>
+
           </div>
 
           <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
@@ -795,23 +801,42 @@
         return (Math.round((amountPreview.value || 0) * 100) / 100).toFixed(2);
       });
 
-      // long-press backspace
-      let backspaceTimer = null;
-      const backspaceOnce = () => { keypadExpr.value = keypadExpr.value.slice(0, -1); };
+      // long-press backspace (hold 1s then repeat)
+let backspaceTimer = null;
+let backspaceHoldDelayTimer = null;
 
-      const startBackspaceHold = () => {
-        keypadHint.value = "";
-        backspaceOnce();
-        stopBackspaceHold();
-        backspaceTimer = setInterval(() => {
-          if (!showKeypad.value) return stopBackspaceHold();
-          backspaceOnce();
-        }, 70);
-      };
+const backspaceOnce = () => {
+  keypadExpr.value = keypadExpr.value.slice(0, -1);
+};
 
-      const stopBackspaceHold = () => {
-        if (backspaceTimer) { clearInterval(backspaceTimer); backspaceTimer = null; }
-      };
+const startBackspaceHold = () => {
+  keypadHint.value = "";
+
+  // 先刪一次（即時反應）
+  backspaceOnce();
+
+  // 清掉舊 timer
+  stopBackspaceHold();
+
+  // 1 秒後先開始連刪
+  backspaceHoldDelayTimer = setTimeout(() => {
+    backspaceTimer = setInterval(() => {
+      if (!showKeypad.value) return stopBackspaceHold();
+      backspaceOnce();
+    }, 70);
+  }, 1000);
+};
+
+const stopBackspaceHold = () => {
+  if (backspaceHoldDelayTimer) {
+    clearTimeout(backspaceHoldDelayTimer);
+    backspaceHoldDelayTimer = null;
+  }
+  if (backspaceTimer) {
+    clearInterval(backspaceTimer);
+    backspaceTimer = null;
+  }
+};
 
       const kp = (key) => {
         keypadHint.value = "";
