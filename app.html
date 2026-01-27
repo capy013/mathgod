@@ -759,7 +759,28 @@
       const recentRooms = ref([]);
       const roomNamesMap = ref({});
 
-      const form = ref({ item: "", amount: null, currency: "HKD", payer: "", involved: [] });
+      const form = ref({ item: "", amount: "", currency: "HKD", payer: "", involved: [] });
+      const sanitizeAmount = () => {
+  let s = String(form.value.amount ?? "");
+
+  // 1) 只保留數字同 .
+  s = s.replace(/[^\d.]/g, "");
+
+  // 2) 只保留第一個小數點
+  const dot = s.indexOf(".");
+  if (dot !== -1) {
+    s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, "");
+  }
+
+  // 3) 避免前面一堆 0（保留 "0." 例外）
+  if (s.length > 1 && s[0] === "0" && s[1] !== ".") {
+    s = s.replace(/^0+/, "");
+    if (s === "") s = "0";
+  }
+
+  form.value.amount = s;
+};
+
       const errors = ref({ item: false, amount: false, payer: false, involved: false });
       const shareOptions = ref({ showList: true });
 
@@ -1659,7 +1680,8 @@ onUnmounted(() => {
         startDrag,
         lastAddedId,
         amountFontClass,
-        
+        sanitizeAmount,
+
       };
     }
   }).mount('#app');
