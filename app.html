@@ -78,6 +78,14 @@
   opacity: 0;
   transform: scale(0.92) translateY(12px);
 }
+@keyframes addedGlow {
+  0%   { transform: scale(0.995); box-shadow: 0 0 0 rgba(16,185,129,0); }
+  40%  { transform: scale(1.01);  box-shadow: 0 0 24px rgba(16,185,129,0.22); }
+  100% { transform: scale(1);     box-shadow: 0 0 0 rgba(16,185,129,0); }
+}
+.just-added {
+  animation: addedGlow 0.9s ease;
+}
 
   </style>
 </head>
@@ -262,12 +270,24 @@
   inputmode="decimal"
   pattern="[0-9.]*"
     @input="errors.amount = false"
-    class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10 pr-14"
+    class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10 pr-24"
     placeholder="0.0"
   />
 
   <!-- subtle divider (between amount and icon) -->
   <span class="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 h-6 w-px bg-white/10"></span>
+<button
+  v-if="form.amount"
+  type="button"
+  class="absolute right-16 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full
+         bg-white/5 text-gray-400 flex items-center justify-center
+         hover:bg-white/10 hover:text-white"
+  @click.stop.prevent="form.amount=''"
+  aria-label="清除金額"
+  title="清除"
+>
+  <i class="fas fa-times text-[10px]"></i>
+</button>
 
 
   <button
@@ -346,8 +366,9 @@
 
       <div class="space-y-3">
         <div v-for="(exp, idx) in expenses" :key="exp.id" @click="editExpense(idx)"
-             class="glass p-4 rounded-2xl flex justify-between items-center border-l-[3px] transition-all active:scale-[0.99]"
-             :style="{ borderColor: isEditing && editingId === exp.id ? '#f59e0b' : '#10b981' }">
+     class="glass p-4 rounded-2xl flex justify-between items-center border-l-[3px] transition-all active:scale-[0.99]"
+     :class="exp.id === lastAddedId ? 'just-added' : ''"
+     :style="{ borderColor: isEditing && editingId === exp.id ? '#f59e0b' : '#10b981' }">
           <div class="flex-1 overflow-hidden pr-3">
             <div class="flex items-center gap-2 mb-1">
               <p class="font-bold text-sm truncate text-gray-100">{{ exp.item }}</p>
@@ -674,6 +695,7 @@
       const eventName = ref("");
       const users = ref([]);
       const expenses = ref([]);
+      const lastAddedId = ref(null);
       const newUser = ref("");
       const isEditing = ref(false);
       const editingId = ref(null);
@@ -1086,7 +1108,10 @@ showKeypad.value = true;
           toast("修改成功");
         } else {
           expenses.value.unshift(exp);
-          toast("已新增一筆消費");
+lastAddedId.value = exp.id;
+setTimeout(() => { if (lastAddedId.value === exp.id) lastAddedId.value = null; }, 1000);
+toast("已新增一筆消費");
+
         }
 
         cancelEdit();
@@ -1560,7 +1585,7 @@ if (savedRoom && navigator.onLine) {
 
         calcPos,
 startDrag,
-
+lastAddedId,
         
       };
     }
