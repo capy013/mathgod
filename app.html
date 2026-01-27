@@ -238,19 +238,31 @@
             <i class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-gray-500"></i>
           </div>
 
-          <div class="col-span-7 glass-input rounded-2xl flex flex-col justify-center px-4 py-2" :class="{'input-error': errors.amount}">
+          <div class="col-span-8 glass-input rounded-2xl flex flex-col justify-center px-4 py-2" :class="{'input-error': errors.amount}">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-black text-gray-500">$</span>
-              <input
-                v-model.number="form.amount"
-                type="number"
-                inputmode="decimal"
-                step="0.01"
-                @input="errors.amount = false"
-                class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10"
-                placeholder="0.0"
-              />
-            </div>
+  <span class="text-xs font-black text-gray-500">$</span>
+
+  <input
+    v-model.number="form.amount"
+    type="number"
+    inputmode="decimal"
+    step="0.01"
+    @input="errors.amount = false"
+    class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10"
+    placeholder="0.0"
+  />
+
+  <!-- calculator icon (inside amount box) -->
+  <button
+    type="button"
+    @click.stop.prevent="openKeypad()"
+    class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center btn-press hover:bg-white/15 hover:border-emerald-500/50 border border-white/10"
+    title="開啟計數機"
+  >
+    <i class="fas fa-calculator text-[12px] text-gray-300"></i>
+  </button>
+</div>
+
 
             <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
               <div>
@@ -263,16 +275,6 @@
               </div>
             </div>
           </div>
-
-          <!-- calculator icon (must click to open keypad) -->
-          <button
-            type="button"
-            @click.stop.prevent="openKeypad()"
-            class="col-span-1 glass-input rounded-2xl flex items-center justify-center btn-press hover:border-emerald-500/50"
-            title="開啟計數機"
-          >
-            <i class="fas fa-calculator text-[12px] text-gray-300"></i>
-          </button>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
