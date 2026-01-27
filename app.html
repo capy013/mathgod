@@ -66,6 +66,19 @@
 
     .capture-mode .truncate { overflow: visible !important; text-overflow: clip !important; }
     .capture-mode .capture-row, .capture-mode .capture-row span { line-height: 1.6 !important; padding-bottom: 2px !important; }
+  
+  /* calculator open / close animation */
+.calc-enter-active,
+.calc-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.calc-enter-from,
+.calc-leave-to {
+  opacity: 0;
+  transform: scale(0.92) translateY(12px);
+}
+
   </style>
 </head>
 
@@ -355,9 +368,15 @@
     </section>
   </main>
 <!-- ===== Floating Draggable Calculator (Top Layer) ===== -->
-<div v-if="showKeypad" class="fixed inset-0 z-[999]">
+<transition name="calc">
+  <div v-if="showKeypad" class="fixed inset-0 z-[999]">
+
   <!-- click-away overlay -->
-  <div class="absolute inset-0 bg-black/40" @click="closeKeypad()"></div>
+  <div
+  class="absolute inset-0 bg-black/40"
+  @click="handleOverlayClick"
+></div>
+
 
   <!-- draggable panel -->
   <div
@@ -367,24 +386,36 @@
   @touchmove.prevent
 >
 
-    <!-- header (drag handle) -->
-    <div
-      class="flex items-center justify-between mb-3 cursor-move select-none"
-      @mousedown.prevent="startDrag"
-      @touchstart.prevent="startDrag"
-    >
-      <div class="text-xs font-black text-gray-200">輸入金額（可計數）</div>
-
-      <button
-        type="button"
-        class="w-9 h-9 rounded-full bg-white/10 text-gray-200 flex items-center justify-center hover:bg-white/15"
-        @click="closeKeypad()"
-        aria-label="關閉"
-        title="關閉"
-      >
-        <i class="fas fa-times"></i>
-      </button>
+    <!-- header -->
+<div class="flex items-center justify-between mb-3 select-none">
+ 
+  <div
+    class="cursor-move"
+    @pointerdown.prevent="startDrag"
+  >
+    <div class="text-xs font-black text-gray-200">
+      輸入金額（可計數）
     </div>
+  </div>
+
+  <button
+    type="button"
+    class="w-9 h-9 rounded-full bg-red-500/20 text-red-400
+           flex items-center justify-center
+           hover:bg-red-500 hover:text-white transition-all"
+    @pointerdown.prevent.stop="closeKeypad()"
+    aria-label="關閉"
+    title="關閉"
+  >
+    <i class="fas fa-times"></i>
+  </button>
+</div>
+<div
+  v-if="overlayConfirm"
+  class="text-[9px] text-red-400 text-center mb-2"
+>
+  再點一次背景即可關閉
+</div>
 
     <!-- display -->
     <div class="glass-input rounded-2xl px-3 py-3 mb-3">
@@ -445,7 +476,8 @@
     </div>
   </div>
 </div>
-
+</div>
+</transition>
 
   <div class="fixed bottom-0 left-0 right-0 footer-gradient z-40 pointer-events-none"></div>
   <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
@@ -787,6 +819,7 @@
       const calcPos = ref({ x: 20, y: 220 });
 let dragging = false;
 let dragOffset = { x: 0, y: 0 };
+const overlayConfirm = ref(false);
 
 
       const openKeypad = () => {
@@ -804,8 +837,10 @@ let dragOffset = { x: 0, y: 0 };
     y: Math.max(8, Math.round(window.innerHeight / 2 - 260))
   };
         
- document.body.style.overflow = 'hidden';
-  showKeypad.value = true;
+ overlayConfirm.value = false;
+document.body.style.overflow = 'hidden';
+showKeypad.value = true;
+
 };
 
 
@@ -851,14 +886,27 @@ let dragOffset = { x: 0, y: 0 };
   window.addEventListener('touchend', end);
   window.addEventListener('touchcancel', end);
 };
+      
+const handleOverlayClick = () => {
+  if (!overlayConfirm.value) {
+    overlayConfirm.value = true;
+    setTimeout(() => {
+      overlayConfirm.value = false;
+    }, 1200);
+    return;
+  }
+  closeKeypad();
+};
 
 
       const closeKeypad = () => {
   showKeypad.value = false;
   keypadHint.value = "";
   stopBackspaceHold();
-  document.body.style.overflow = ''; // ✅ 解鎖 scroll
+  overlayConfirm.value = false;
+  document.body.style.overflow = '';
 };
+
 
 
       // only allow: digits + - * / .
