@@ -274,7 +274,8 @@
             <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
               <div>
                 <span class="text-[9px] font-bold text-emerald-400 font-num">
-                  Rate: {{currentRate.toFixed(3)}} ≈ HKD ${{ (form.amount * currentRate || 0).toFixed(1) }}
+                  Rate: {{currentRate.toFixed(3)}} ≈ HKD ${{ ((Number(amountDisplay) || 0) * currentRate).toFixed(1) }}
+
                 </span>
               </div>
               <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
@@ -353,6 +354,63 @@
       </div>
     </section>
   </main>
+   <!-- ====== Keypad / Calculator ====== -->
+<transition name="fade">
+  <div
+    v-if="showKeypad"
+    class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end"
+    @click.self="closeKeypad()"
+  >
+    <div class="w-full max-w-[500px] mx-auto glass rounded-t-[2rem] p-4 pb-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-xs font-black text-gray-300">輸入金額（可計數）</div>
+        <button class="w-8 h-8 rounded-full bg-white/10 text-gray-300" @click="closeKeypad()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- 顯示屏 -->
+      <div class="glass-input rounded-2xl px-4 py-3 mb-3">
+        <div class="text-[10px] font-bold text-gray-500 mb-1">Expression</div>
+        <div class="font-num font-black text-2xl text-right break-all">
+          {{ keypadExpr || '0' }}
+        </div>
+        <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
+          {{ keypadHint }}
+        </div>
+      </div>
+
+      <!-- 按鍵 -->
+      <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
+        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
+        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('⌫')">⌫</button>
+        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('(')">(</button>
+        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp(')')">)</button>
+
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
+        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
+
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
+        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
+
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
+        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
+
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('0')">0</button>
+        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
+        <button class="bg-emerald-600 rounded-xl py-3 btn-press col-span-2" @click="kp('=')">= / OK</button>
+
+        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press col-span-4" @click="kp('+')">＋</button>
+      </div>
+    </div>
+  </div>
+</transition>
 
   <div class="fixed bottom-0 left-0 right-0 footer-gradient z-40 pointer-events-none"></div>
   <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
@@ -758,6 +816,8 @@ const kp = (key) => {
       };
 
       const addExpense = () => {
+        if (showKeypad.value) closeKeypad();
+
         errors.value = {
           item: !form.value.item,
           amount: !form.value.amount,
@@ -1293,7 +1353,7 @@ const onOffline = () => {
   handleCurrencyChange,
   toggleSelectAll,
   toggleInvolved,
-  appendDate, resetData, removeHistoryRoom, copyText, generateImage, shareViaApp
+  appendDate, resetData, removeHistoryRoom, copyText, generateImage, shareViaApp,
           showKeypad,
 keypadExpr,
 keypadHint,
@@ -1306,63 +1366,7 @@ kp,
 
     }
   }).mount('#app');
-    <!-- ====== Keypad / Calculator ====== -->
-<transition name="fade">
-  <div
-    v-if="showKeypad"
-    class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end"
-    @click.self="closeKeypad()"
-  >
-    <div class="w-full max-w-[500px] mx-auto glass rounded-t-[2rem] p-4 pb-6">
-      <div class="flex items-center justify-between mb-3">
-        <div class="text-xs font-black text-gray-300">輸入金額（可計數）</div>
-        <button class="w-8 h-8 rounded-full bg-white/10 text-gray-300" @click="closeKeypad()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <!-- 顯示屏 -->
-      <div class="glass-input rounded-2xl px-4 py-3 mb-3">
-        <div class="text-[10px] font-bold text-gray-500 mb-1">Expression</div>
-        <div class="font-num font-black text-2xl text-right break-all">
-          {{ keypadExpr || '0' }}
-        </div>
-        <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
-          {{ keypadHint }}
-        </div>
-      </div>
-
-      <!-- 按鍵 -->
-      <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('⌫')">⌫</button>
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('(')">(</button>
-        <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp(')')">)</button>
-
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
-
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
-
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
-
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('0')">0</button>
-        <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
-        <button class="bg-emerald-600 rounded-xl py-3 btn-press col-span-2" @click="kp('=')">= / OK</button>
-
-        <button class="bg-emerald-700/40 rounded-xl py-3 btn-press col-span-4" @click="kp('+')">＋</button>
-      </div>
-    </div>
-  </div>
-</transition>
+   
 
 </script>
 </body>
