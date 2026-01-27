@@ -357,7 +357,7 @@
 <!-- ===== Floating Draggable Calculator (Top Layer) ===== -->
 <div v-if="showKeypad" class="fixed inset-0 z-[999]">
   <!-- click-away overlay -->
-  <div class="absolute inset-0 bg-black/40" @click="closeKeypad(true)"></div>
+  <div class="absolute inset-0 bg-black/40" @click="closeKeypad()"></div>
 
   <!-- draggable panel -->
   <div
@@ -378,7 +378,7 @@
       <button
         type="button"
         class="w-9 h-9 rounded-full bg-white/10 text-gray-200 flex items-center justify-center hover:bg-white/15"
-        @click="closeKeypad(true)"
+        @click="closeKeypad()"
         aria-label="關閉"
         title="關閉"
       >
@@ -803,7 +803,8 @@ let dragOffset = { x: 0, y: 0 };
     x: Math.max(8, Math.round(window.innerWidth / 2 - 160)),
     y: Math.max(8, Math.round(window.innerHeight / 2 - 260))
   };
-
+        
+ document.body.style.overflow = 'hidden';
   showKeypad.value = true;
 };
 
@@ -958,7 +959,7 @@ let dragOffset = { x: 0, y: 0 };
             }
 
             form.value.amount = val;
-            closeKeypad(true);
+            closeKeypad();
           } catch (e) {
             keypadHint.value = e?.message || "計算錯誤";
           }
@@ -1011,7 +1012,7 @@ let dragOffset = { x: 0, y: 0 };
 
       // ====== expenses ======
       const addExpense = () => {
-        if (showKeypad.value) closeKeypad(true);
+        if (showKeypad.value) closeKeypad();
 
         const amt = Number(form.value.amount);
 
@@ -1437,7 +1438,8 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         // ESC closes keypad
         window.addEventListener("keydown", (e) => {
           if (!showKeypad.value) return;
-          if (e.key === "Escape") closeKeypad(true);
+          if (e.key === "Escape") closeKeypad();
+
         });
 
         // load local
