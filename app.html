@@ -581,11 +581,469 @@
   </div>
 
 </div>
-
-<!-- ===================== PART 2: From joinRoom() onwards to end of file ===================== -->
 <script>
-  // （你前面 PART 1 已經有 firebaseConfig / createApp / setup() 大部份）
-  // 由你卡住的 joinRoom 這裡開始，以下一路補到最尾。
+  const firebaseConfig = {
+    apiKey: "yFDRUSUFAFnZf6AGdsEA9LxSyLcZF75oIFfib5At",
+    databaseURL: "https://mathgod2-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "mathgod2"
+  };
+
+  try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+  const db = firebase.database();
+
+  const { createApp, ref, computed, onMounted } = Vue;
+
+  // SW（如果你用 GitHub Pages）
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: '/mathgod/' })
+        .then(() => console.log('SW registered'))
+        .catch(err => console.log('SW failed', err));
+    });
+  }
+
+  createApp({
+    setup() {
+      // ====== base state ======
+      const isLoading = ref(false);
+      const isSyncing = ref(false);
+      const eventName = ref("");
+      const users = ref([]);
+      const expenses = ref([]);
+      const newUser = ref("");
+      const isEditing = ref(false);
+      const editingId = ref(null);
+
+      const showSyncModal = ref(false);
+      const showShareModal = ref(false);
+      const showResetMenu = ref(false);
+      const showTutorial = ref(false);
+      const shareSubMenu = ref('none');
+
+      const toasts = ref([]);
+      const roomId = ref(null);
+      const isOnline = ref(navigator.onLine);
+      const roomInput = ref("");
+      const recentRooms = ref([]);
+      const roomNamesMap = ref({});
+
+      const form = ref({ item: "", amount: null, currency: "HKD", payer: "", involved: [] });
+      const errors = ref({ item: false, amount: false, payer: false, involved: false });
+
+      const shareOptions = ref({ showList: true });
+
+      const toast = (msg, type='success') => {
+        const id = Date.now();
+        toasts.value.push({id, msg, type});
+        setTimeout(() => toasts.value = toasts.value.filter(t=>t.id!==id), 3000);
+      };
+
+      // ====== formatting ======
+      const pad2 = (n) => String(n).padStart(2, "0");
+      const formatTs = (ts) => {
+        const d = new Date(ts);
+        return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+      };
+
+      // ====== date picker ======
+      const openDatePicker = () => {
+        const el = document.getElementById('dateInput');
+        if(!el) return;
+        if (typeof el.showPicker === 'function') el.showPicker();
+        else el.click();
+      };
+
+      const appendDate = (e) => {
+        if (e.target.value) {
+          const dateStr = `(${e.target.value})`;
+          const regex = /\(\d{4}-\d{2}-\d{2}\)$/;
+          if (regex.test(eventName.value)) eventName.value = eventName.value.replace(regex, dateStr);
+          else eventName.value = eventName.value ? `${eventName.value} ${dateStr}` : dateStr;
+          saveData();
+        }
+      };
+
+      // ====== save ======
+      const saveData = () => {
+        const data = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value };
+        localStorage.setItem('mathGod_localData', JSON.stringify(data));
+
+        if (roomId.value) {
+          db.ref('rooms/' + roomId.value).set(data).catch(()=>toast("同步失敗，已存本地", "error"));
+          let names = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
+          names[roomId.value] = eventName.value || '未命名活動';
+          localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
+          roomNamesMap.value = names;
+        }
+      };
+
+      // ====== rates ======
+      const ratesHKD = ref({ HKD: 1 });
+      const rateUpdatedAt = ref(null);
+      const currentRate = ref(1);
+
+      const SUPPORTED = ["HKD","CNY","JPY","TWD","THB","KRW","USD","EUR","GBP"];
+      const RATES_CACHE_KEY = "mathGod_rates_to_HKD_v1";
+      const RATES_TTL_MS = 6 * 60 * 60 * 1000;
+
+      const loadRatesCache = () => {
+        const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+        if (cached?.rates && cached?.updatedAt) {
+          ratesHKD.value = cached.rates;
+          rateUpdatedAt.value = cached.updatedAt;
+        }
+      };
+
+      const saveRatesCache = (rates, updatedAt) => {
+        localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ rates, updatedAt }));
+        ratesHKD.value = rates;
+        rateUpdatedAt.value = updatedAt;
+      };
+
+      const refreshRatesSilently = async (force=false) => {
+        if (!navigator.onLine) return;
+
+        const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+        const freshEnough = cached?.updatedAt && (Date.now() - cached.updatedAt < RATES_TTL_MS);
+        if (!force && freshEnough) return;
+
+        try {
+          const res = await fetch(`https://open.er-api.com/v6/latest/USD`, { cache: "no-store" });
+          const data = await res.json();
+          const r = data?.rates;
+          if (!r?.HKD) return;
+
+          const toHKD = { HKD: 1 };
+          SUPPORTED.forEach(code => {
+            if (code === "HKD") return;
+            if (r[code]) toHKD[code] = r.HKD / r[code];
+          });
+
+          saveRatesCache(toHKD, Date.now());
+        } catch (e) {}
+      };
+
+      const handleCurrencyChange = async () => {
+        if (form.value.currency === "HKD") {
+          currentRate.value = 1;
+          return;
+        }
+        const cachedRate = ratesHKD.value?.[form.value.currency];
+        currentRate.value = cachedRate || 1;
+
+        await refreshRatesSilently(false);
+
+        const newRate = ratesHKD.value?.[form.value.currency];
+        if (newRate) currentRate.value = newRate;
+
+        if (!navigator.onLine && !newRate) toast("離線且未有匯率快取（可先上線開一次App）", "error");
+      };
+
+      // ====== keypad / calculator ======
+      const showKeypad = ref(false);
+      const keypadExpr = ref("");
+      const keypadHint = ref("");
+
+      const openKeypad = () => {
+        keypadHint.value = "";
+        const base = form.value.amount;
+        keypadExpr.value = (base === null || base === undefined || base === "") ? "" : String(base);
+        showKeypad.value = true;
+        history.pushState({ keypad: true }, "");
+      };
+
+      const closeKeypad = (fromUser = false) => {
+        showKeypad.value = false;
+        keypadHint.value = "";
+        if (fromUser) {
+          if (history.state && history.state.keypad) history.back();
+        }
+      };
+
+      const evalExpr = (expr) => {
+        const cleaned = (expr || "").replace(/\s+/g, "");
+        if (!cleaned) return null;
+        if (!/^[0-9+\-*/.]+$/.test(cleaned)) throw new Error("只可輸入數字同 + − × ÷ 及 .");
+        // eslint-disable-next-line no-new-func
+        const v = Function(`"use strict"; return (${cleaned});`)();
+        if (!Number.isFinite(v)) throw new Error("計算結果無效");
+        return v;
+      };
+
+      const safeExprForPreview = (s) => {
+        let x = (s || "").replace(/\s+/g, "");
+        if (!/^[0-9+\-*/.]*$/.test(x)) return "";
+        x = x.replace(/[+\-*/]+$/g, "");
+        if (x.endsWith(".")) x += "0";
+        return x;
+      };
+
+      const amountPreview = computed(() => {
+        const expr = showKeypad.value ? keypadExpr.value : String(form.value.amount ?? "");
+        const cleaned = safeExprForPreview(expr);
+        if (!cleaned) return 0;
+        try {
+          // eslint-disable-next-line no-new-func
+          const v = Function(`"use strict"; return (${cleaned});`)();
+          return Number.isFinite(v) ? v : 0;
+        } catch (e) {
+          return 0;
+        }
+      });
+
+      const amountPreviewText = computed(() => {
+        return (Math.round((amountPreview.value || 0) * 100) / 100).toFixed(2);
+      });
+
+      // long-press backspace
+      let backspaceTimer = null;
+      const backspaceOnce = () => { keypadExpr.value = keypadExpr.value.slice(0, -1); };
+
+      const startBackspaceHold = () => {
+        keypadHint.value = "";
+        backspaceOnce();
+        stopBackspaceHold();
+        backspaceTimer = setInterval(() => {
+          if (!showKeypad.value) return stopBackspaceHold();
+          backspaceOnce();
+        }, 70);
+      };
+
+      const stopBackspaceHold = () => {
+        if (backspaceTimer) { clearInterval(backspaceTimer); backspaceTimer = null; }
+      };
+
+      const kp = (key) => {
+        keypadHint.value = "";
+
+        if (key === "C") { keypadExpr.value = ""; return; }
+        if (key === "⌫") { backspaceOnce(); return; }
+
+        if (key === "=") {
+          try {
+            const v = evalExpr(keypadExpr.value);
+            const val = (v === null) ? null : Math.round(v * 100) / 100;
+
+            if (val === null || !Number.isFinite(val) || val <= 0) {
+              keypadHint.value = "請輸入有效金額（需大於 0）";
+              return;
+            }
+            form.value.amount = val;
+            closeKeypad(true);
+          } catch (e) {
+            keypadHint.value = e?.message || "計算錯誤";
+          }
+          return;
+        }
+
+        const last = keypadExpr.value.slice(-1);
+        const isOp = (c) => ["+","-","*","/"].includes(c);
+
+        if (isOp(key)) {
+          if (!keypadExpr.value) return;
+          if (isOp(last)) {
+            keypadExpr.value = keypadExpr.value.slice(0, -1) + key;
+            return;
+          }
+        }
+
+        if (key === ".") {
+          const parts = keypadExpr.value.split(/[+\-*/]/);
+          const current = parts[parts.length - 1] || "";
+          if (current.includes(".")) return;
+          if (current === "") keypadExpr.value += "0";
+        }
+
+        keypadExpr.value += key;
+      };
+
+      // ====== users ======
+      const addUser = () => {
+        const n = newUser.value.trim();
+        if(!n) return;
+        if(users.value.includes(n)) { toast("朋友已存在", "error"); return; }
+        users.value.push(n);
+        form.value.involved.push(n);
+        newUser.value = "";
+        saveData();
+      };
+
+      const toggleSelectAll = () => {
+        form.value.involved = (form.value.involved.length === users.value.length) ? [] : [...users.value];
+      };
+
+      const toggleInvolved = (u) => {
+        const idx = form.value.involved.indexOf(u);
+        if(idx > -1) form.value.involved.splice(idx,1);
+        else form.value.involved.push(u);
+      };
+
+      // ====== expenses ======
+      const addExpense = () => {
+        if (showKeypad.value) closeKeypad(true);
+
+        errors.value = {
+          item: !form.value.item,
+          amount: !form.value.amount,
+          payer: !form.value.payer,
+          involved: form.value.involved.length === 0
+        };
+
+        if(Object.values(errors.value).some(v => v)) {
+          toast("請填妥紅色欄位", "error");
+          return;
+        }
+
+        const amt = Number(form.value.amount);
+        if (!Number.isFinite(amt) || amt <= 0) {
+          errors.value.amount = true;
+          toast("金額必須大於 0", "error");
+          return;
+        }
+
+        const exp = {
+          id: isEditing.value ? editingId.value : Date.now(),
+          item: form.value.item,
+          hkd: (amt * currentRate.value) || 0,
+          payer: form.value.payer,
+          involved: [...form.value.involved],
+          origAmount: amt,
+          origCurrency: form.value.currency
+        };
+
+        if(isEditing.value) {
+          const i = expenses.value.findIndex(e => e.id === editingId.value);
+          if(i > -1) expenses.value[i] = exp;
+          toast("修改成功");
+        } else {
+          expenses.value.unshift(exp);
+          toast("已新增一筆消費");
+        }
+
+        cancelEdit();
+        saveData();
+      };
+
+      const editExpense = (i) => {
+        const e = expenses.value[i];
+        editingId.value = e.id;
+        isEditing.value = true;
+        form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])] };
+        handleCurrencyChange();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const cancelEdit = () => {
+        isEditing.value = false;
+        editingId.value = null;
+        form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [...users.value] };
+        currentRate.value = 1;
+        errors.value = { item: false, amount: false, payer: false, involved: false };
+      };
+
+      const removeExpense = (i) => {
+        if(confirm("確定刪除紀錄？")) {
+          expenses.value.splice(i, 1);
+          saveData();
+        }
+      };
+
+      const removeUser = (i) => {
+        const name = users.value[i];
+        if(!name) return;
+
+        if(!confirm("確定刪除此人？（會同時移除相關消費關聯）")) return;
+
+        users.value.splice(i, 1);
+        form.value.involved = (form.value.involved || []).filter(u => u !== name);
+        if (form.value.payer === name) form.value.payer = "";
+
+        expenses.value = (expenses.value || [])
+          .map(e => ({
+            ...e,
+            payer: e.payer === name ? "" : e.payer,
+            involved: (e.involved || []).filter(u => u !== name),
+            hkd: Number(e.hkd || 0),
+          }))
+          .filter(e => e.payer && Array.isArray(e.involved) && e.involved.length > 0);
+
+        if (users.value.length === 0) {
+          form.value.involved = [];
+          form.value.payer = "";
+        }
+
+        saveData();
+        toast("已刪除朋友並清理相關紀錄");
+      };
+
+      // ====== settlements ======
+      const settlements = computed(() => {
+        let bal = {};
+        users.value.forEach(u => bal[u] = 0);
+
+        expenses.value.forEach(e => {
+          if(!e || !e.payer || !Array.isArray(e.involved) || e.involved.length === 0) return;
+          if(!(e.payer in bal)) return;
+
+          const h = Number(e.hkd || 0);
+          bal[e.payer] += h;
+
+          const s = h / e.involved.length;
+          e.involved.forEach(u => { if(u in bal) bal[u] -= s; });
+        });
+
+        let d=[], c=[], res=[];
+        for(let u in bal) {
+          if(bal[u] < -0.01) d.push({n: u, a: Math.abs(bal[u])});
+          else if(bal[u] > 0.01) c.push({n: u, a: bal[u]});
+        }
+
+        d.sort((a,b)=>b.a-a.a);
+        c.sort((a,b)=>b.a-a.a);
+
+        let i=0, j=0;
+        while(i<d.length && j<c.length) {
+          let m = Math.min(d[i].a, c[j].a);
+          res.push({from: d[i].n, to: c[j].n, amount: m});
+          d[i].a -= m;
+          c[j].a -= m;
+          if(d[i].a < 0.01) i++;
+          if(c[j].a < 0.01) j++;
+        }
+        return res;
+      });
+
+      // ====== sync room ======
+      const updateHistory = (rid) => {
+        let h = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
+        h = [rid, ...h.filter(x => x !== rid)].slice(0, 10);
+        recentRooms.value = h;
+        localStorage.setItem('mathGod_history', JSON.stringify(h));
+      };
+
+      const getRoomLink = (rid) => {
+        const base = window.location.origin + window.location.pathname;
+        const url = new URL(base);
+        url.searchParams.set("room", rid);
+        return url.toString();
+      };
+
+      const getRoomInviteText = (rid) => {
+        const link = getRoomLink(rid);
+        const name = (eventName.value || "").trim();
+        return `我開咗個記數頁面！🧮
+幫手記低大家消費，最後自動計數每人要畀幾錢！
+
+${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
+⚡️ ${link}`.trim();
+      };
+
+      const copyRoomLink = async () => {
+        if (!roomId.value) { toast("未連線房間", "error"); return; }
+        const text = getRoomInviteText(roomId.value);
+        try { await navigator.clipboard.writeText(text); toast("已複製邀請訊息"); }
+        catch (e) { window.prompt("複製以下訊息分享比朋友：", text); }
+      };
 
       const joinRoom = async (rid, options = {}) => {
         const { silent = false } = options;
@@ -610,7 +1068,6 @@
             roomInput.value = rid;
             localStorage.setItem('mathGod_roomId', rid);
 
-            // 清掉舊 listener 再 on
             db.ref('rooms/' + rid).off();
             db.ref('rooms/' + rid).on('value', s => {
               const v = s.val();
@@ -646,21 +1103,13 @@
       const createRoom = async () => {
         const rid = Math.floor(1000 + Math.random() * 9000).toString();
         const initialData = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value || "" };
-
-        try {
-          await db.ref('rooms/' + rid).set(initialData);
-          joinRoom(rid);
-        } catch (e) {
-          console.error(e);
-          isSyncing.value = false;
-          toast("連線錯誤", "error");
-        }
+        try { await db.ref('rooms/' + rid).set(initialData); joinRoom(rid); }
+        catch(e) { console.error(e); isSyncing.value = false; toast("連線錯誤", "error"); }
       };
 
       const logoutRoom = () => {
-        if (!roomId.value) return;
+        if(!roomId.value) return;
         isSyncing.value = true;
-
         setTimeout(() => {
           db.ref('rooms/' + roomId.value).off();
           roomId.value = null;
@@ -673,7 +1122,7 @@
       };
 
       const removeHistoryRoom = (rid) => {
-        if (confirm("從最近紀錄中刪除此房間？")) {
+        if(confirm("從最近紀錄中刪除此房間？")) {
           let h = recentRooms.value.filter(x => x !== rid);
           recentRooms.value = h;
           localStorage.setItem('mathGod_history', JSON.stringify(h));
@@ -685,95 +1134,41 @@
         }
       };
 
-      const resetData = (t, ask = true) => {
+      // ====== reset ======
+      const resetData = (t, ask=true) => {
         const doReset = () => {
-          if (t === 'all') {
-            users.value = [];
-            expenses.value = [];
-            eventName.value = "";
+          if(t==='all'){
+            users.value=[];
+            expenses.value=[];
+            eventName.value="";
             form.value = { item: "", amount: null, currency: "HKD", payer: "", involved: [] };
           } else {
-            expenses.value = [];
+            expenses.value=[];
           }
           saveData();
-          showResetMenu.value = false;
+          showResetMenu.value=false;
         };
-
-        if (ask) {
-          if (confirm(t === 'all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) {
+        if(ask) {
+          if(confirm(t==='all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) {
             doReset();
             toast("資料已重置");
           }
-        } else {
-          doReset();
-        }
+        } else doReset();
       };
 
-      const appendDate = (e) => {
-        if (e.target.value) {
-          const dateStr = `(${e.target.value})`;
-          const regex = /\(\d{4}-\d{2}-\d{2}\)$/;
-          if (regex.test(eventName.value)) {
-            eventName.value = eventName.value.replace(regex, dateStr);
-          } else {
-            eventName.value = eventName.value ? `${eventName.value} ${dateStr}` : dateStr;
-          }
-          saveData();
-        }
-      };
-
-      // ====== settlements ======
-      const settlements = computed(() => {
-        let bal = {};
-        users.value.forEach(u => bal[u] = 0);
-
-        expenses.value.forEach(e => {
-          if (!e || !e.payer || !Array.isArray(e.involved) || e.involved.length === 0) return;
-          if (!(e.payer in bal)) return;
-
-          const h = Number(e.hkd || 0);
-          bal[e.payer] += h;
-
-          const s = h / e.involved.length;
-          e.involved.forEach(u => {
-            if (u in bal) bal[u] -= s;
-          });
-        });
-
-        let d = [], c = [], res = [];
-        for (let u in bal) {
-          if (bal[u] < -0.01) d.push({ n: u, a: Math.abs(bal[u]) });
-          else if (bal[u] > 0.01) c.push({ n: u, a: bal[u] });
-        }
-
-        d.sort((a, b) => b.a - a.a);
-        c.sort((a, b) => b.a - a.a);
-
-        let i = 0, j = 0;
-        while (i < d.length && j < c.length) {
-          let m = Math.min(d[i].a, c[j].a);
-          res.push({ from: d[i].n, to: c[j].n, amount: m });
-          d[i].a -= m;
-          c[j].a -= m;
-          if (d[i].a < 0.01) i++;
-          if (c[j].a < 0.01) j++;
-        }
-        return res;
-      });
-
-      // ====== Share ======
+      // ====== share ======
       const getShareText = () => {
         let msg = `夾錢通知 (Payment Notice)\n`;
         if (eventName.value) msg += `活動: ${eventName.value}\n`;
         msg += `------------------------------\n`;
         msg += `請跟隨以下列表過數 (Transfer List):\n`;
-        if (settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
+        if(settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
         settlements.value.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
 
         if (shareOptions.value.showList) {
           msg += `\n📋 詳細消費紀錄:\n`;
           expenses.value.forEach((e, idx) => {
-            msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+            msg += `${idx+1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
           });
         }
         msg += `\n------------------------------\nGenerated by ⚡️MathGod`;
@@ -782,18 +1177,15 @@
 
       const copyText = () => {
         navigator.clipboard.writeText(getShareText())
-          .then(() => toast("已複製"))
-          .catch(() => toast("複製失敗", "error"));
+          .then(()=>toast("已複製"))
+          .catch(()=>toast("複製失敗","error"));
       };
 
       const shareViaApp = async (type) => {
         try {
           if (type === 'text') {
-            if (navigator.share) {
-              await navigator.share({ title: 'MathGod 結算', text: getShareText() });
-            } else {
-              copyText();
-            }
+            if (navigator.share) await navigator.share({ title: 'MathGod 結算', text: getShareText() });
+            else copyText();
             return;
           }
 
@@ -834,8 +1226,6 @@
                 toast("系統不支援直接圖片分享，已為你下載");
               }
             });
-
-            return;
           }
         } catch (err) {
           console.error(err);
@@ -875,61 +1265,13 @@
         }
       };
 
-      // ====== Remove / toggle ======
-      const removeUser = (i) => {
-        const name = users.value[i];
-        if (!name) return;
-
-        if (!confirm("確定刪除此人？（會同時移除相關消費關聯）")) return;
-
-        users.value.splice(i, 1);
-
-        form.value.involved = (form.value.involved || []).filter(u => u !== name);
-        if (form.value.payer === name) form.value.payer = "";
-
-        expenses.value = (expenses.value || [])
-          .map(e => ({
-            ...e,
-            payer: e.payer === name ? "" : e.payer,
-            involved: (e.involved || []).filter(u => u !== name),
-            hkd: Number(e.hkd || 0),
-          }))
-          .filter(e => e.payer && Array.isArray(e.involved) && e.involved.length > 0);
-
-        if (users.value.length === 0) {
-          form.value.involved = [];
-          form.value.payer = "";
-        }
-
-        saveData();
-        toast("已刪除朋友並清理相關紀錄");
-      };
-
-      const removeExpense = (i) => {
-        if (confirm("確定刪除紀錄？")) {
-          expenses.value.splice(i, 1);
-          saveData();
-        }
-      };
-
-      const toggleSelectAll = () => {
-        form.value.involved = (form.value.involved.length === users.value.length) ? [] : [...users.value];
-      };
-
-      const toggleInvolved = (u) => {
-        const idx = form.value.involved.indexOf(u);
-        if (idx > -1) form.value.involved.splice(idx, 1);
-        else form.value.involved.push(u);
-      };
-
-      // ====== onMounted ======
+      // ====== mounted ======
       onMounted(() => {
-        // rates
         loadRatesCache();
         refreshRatesSilently(false);
         if (form.value.currency !== "HKD") handleCurrencyChange();
 
-        // 手機返回鍵關 keypad（popstate）
+        // back closes keypad
         window.addEventListener("popstate", () => {
           if (showKeypad.value) {
             showKeypad.value = false;
@@ -938,38 +1280,32 @@
           }
         });
 
-        // ESC 關 keypad
+        // ESC closes keypad
         window.addEventListener("keydown", (e) => {
           if (!showKeypad.value) return;
           if (e.key === "Escape") closeKeypad(true);
         });
 
-        // URL room auto-join
+        // room from url
         const roomFromUrl = new URLSearchParams(window.location.search).get("room");
         if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
-          if (navigator.onLine) {
-            joinRoom(roomFromUrl);
-          } else {
-            toast("偵測到房間連結，但你現正離線，未能加入", "error");
-            isLoading.value = false;
-          }
+          if (navigator.onLine) joinRoom(roomFromUrl);
+          else { toast("偵測到房間連結，但你現正離線，未能加入", "error"); isLoading.value = false; }
           return;
         }
 
-        // load local
+        // local
         const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
-        if (local.users) {
+        if(local.users) {
           users.value = local.users;
           expenses.value = local.expenses || [];
           eventName.value = local.eventName || "";
         }
         form.value.involved = [...users.value];
 
-        // history
         recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
         roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
 
-        // auto rejoin last room
         const savedRoom = localStorage.getItem('mathGod_roomId');
         if (savedRoom && navigator.onLine) {
           joinRoom(savedRoom, { silent: true });
@@ -978,96 +1314,55 @@
           isLoading.value = false;
         }
 
-        const onOnline = () => {
-          isOnline.value = true;
-          toast("已連線（Online）");
-        };
-        const onOffline = () => {
-          isOnline.value = false;
-          toast("離線模式（Offline）", "error");
-        };
+        const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
+        const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
 
         window.addEventListener('online', onOnline);
         window.addEventListener('offline', onOffline);
         if (!navigator.onLine) onOffline();
       });
 
-      // ====== computed for footer ======
-      const recentRoomsWithNames = computed(() => recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' })));
+      const recentRoomsWithNames = computed(() =>
+        recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))
+      );
       const totalSpent = computed(() => expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0));
 
       // ====== return ======
       return {
-        // state
-        isLoading,
-        isSyncing,
-        isOnline,
+        isLoading, isSyncing, isOnline,
         shareSubMenu,
-        eventName,
-        users,
-        expenses,
-        newUser,
-        form,
-        isEditing,
-        editingId,
-        showSyncModal,
-        showShareModal,
-        showResetMenu,
-        showTutorial,
-        toasts,
-        roomId,
-        roomInput,
-        currentRate,
-        shareOptions,
-        errors,
+        eventName, users, expenses, newUser,
+        form, isEditing, editingId,
+        showSyncModal, showShareModal, showResetMenu, showTutorial,
+        toasts, roomId, roomInput,
+
+        currentRate, rateUpdatedAt, formatTs,
+        shareOptions, errors,
 
         // keypad
-        showKeypad,
-        keypadExpr,
-        keypadHint,
-       
-        amountPreview,
-        amountPreviewText,
-        openKeypad,
-        closeKeypad,
-        kp,
-        startBackspaceHold,
-        stopBackspaceHold,
-
-        // misc
-        rateUpdatedAt,
-        formatTs,
-        openDatePicker,
+        showKeypad, keypadExpr, keypadHint,
+        amountPreview, amountPreviewText,
+        openKeypad, closeKeypad, kp,
+        startBackspaceHold, stopBackspaceHold,
 
         // computed
-        recentRoomsWithNames,
-        totalSpent,
-        settlements,
+        recentRoomsWithNames, totalSpent, settlements,
 
         // actions
-        addUser,
-        addExpense,
-        saveData,
-        joinRoom,
-        createRoom,
-        logoutRoom,
-        editExpense,
-        cancelEdit,
-        removeUser,
-        removeExpense,
+        openDatePicker, appendDate,
+        addUser, addExpense, editExpense, cancelEdit,
+        removeUser, removeExpense,
+        toggleSelectAll, toggleInvolved,
         handleCurrencyChange,
-        toggleSelectAll,
-        toggleInvolved,
-        appendDate,
-        resetData,
-        removeHistoryRoom,
-        copyText,
-        generateImage,
-        shareViaApp,
+        saveData,
+        joinRoom, createRoom, logoutRoom,
+        resetData, removeHistoryRoom,
         copyRoomLink,
+        copyText, shareViaApp, generateImage,
       };
     }
   }).mount('#app');
 </script>
+
 </body>
 </html>
