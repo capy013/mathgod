@@ -300,31 +300,40 @@
     placeholder="0.0"
   />
 
-  <!-- subtle divider (between amount and icon) -->
-  <span class="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 h-6 w-px bg-white/10"></span>
-<button
-  v-if="form.amount"
-  type="button"
-  class="absolute right-[44px] top-1/2 -translate-y-1/2 clear-btn"
-  @click.stop.prevent="form.amount=''"
-  aria-label="清除金額"
-  title="清除"
->
-  <i class="fas fa-times"></i>
-</button>
-
-
-
+<!-- right tools slot -->
+<div class="absolute right-1 inset-y-0 flex items-center gap-1">
+  
+  <!-- clear X -->
   <button
-  type="button"
-  @click.stop.prevent="openKeypad()"
-  class="absolute right-0 inset-y-0 my-auto w-10 h-10 flex items-center justify-center rounded-full hover:bg-emerald-500/10 active:bg-emerald-500/20"
-  title="開啟計數機"
-  aria-label="開啟計數機"
->
-
-    <i class="fas fa-calculator text-[14px] text-emerald-400 -translate-x-[0.5px]"></i>
+    v-if="form.amount"
+    type="button"
+    class="clear-btn"
+    @click.stop.prevent="form.amount=''"
+    aria-label="清除金額"
+    title="清除"
+  >
+    <i class="fas fa-times"></i>
   </button>
+
+  <!-- divider -->
+  <span class="h-6 w-px bg-white/10"></span>
+
+  <!-- calculator -->
+  <button
+    type="button"
+    @click.stop.prevent="openKeypad()"
+    class="w-10 h-10 flex items-center justify-center rounded-full
+           hover:bg-emerald-500/10 active:bg-emerald-500/20"
+    title="開啟計數機"
+    aria-label="開啟計數機"
+  >
+    <i class="fas fa-calculator text-[14px] text-emerald-400"></i>
+  </button>
+
+</div>
+
+
+ 
 
 
 
