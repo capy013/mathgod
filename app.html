@@ -86,6 +86,24 @@
 .just-added {
   animation: addedGlow 0.9s ease;
 }
+    /* unified clear button */
+.clear-btn{
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.55);
+  transition: all .15s ease;
+}
+.clear-btn:hover{
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.90);
+}
+.clear-btn i{ font-size: 11px; line-height: 1; }
+
 
   </style>
 </head>
@@ -237,9 +255,17 @@
       <div class="space-y-4">
         <div class="glass-input rounded-2xl flex items-center px-4 relative" :class="{'input-error': errors.item}">
           <input v-model="form.item" @input="errors.item = false" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30" placeholder="消費項目 (例如: 晚餐)">
-          <button v-if="form.item" @click="form.item = ''" class="absolute right-3 p-2 text-gray-500 hover:text-white transition-colors">
-            <i class="fas fa-times text-xs"></i>
-          </button>
+          <button
+  v-if="form.item"
+  type="button"
+  @click.stop.prevent="form.item=''"
+  class="absolute right-3 top-1/2 -translate-y-1/2 clear-btn"
+  aria-label="清除消費項目"
+  title="清除"
+>
+  <i class="fas fa-times"></i>
+</button>
+
         </div>
 
         <!-- currency + amount + calc icon -->
@@ -270,7 +296,7 @@
   inputmode="decimal"
   pattern="[0-9.]*"
     @input="errors.amount = false"
-    class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10 pr-24"
+    class="w-full bg-transparent text-right font-num font-black text-xl outline-none placeholder-white/10 pr-28"
     placeholder="0.0"
   />
 
@@ -279,15 +305,14 @@
 <button
   v-if="form.amount"
   type="button"
-  class="absolute right-16 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full
-         bg-white/5 text-gray-400 flex items-center justify-center
-         hover:bg-white/10 hover:text-white"
+  class="absolute right-[44px] top-1/2 -translate-y-1/2 clear-btn"
   @click.stop.prevent="form.amount=''"
   aria-label="清除金額"
   title="清除"
 >
-  <i class="fas fa-times text-[10px]"></i>
+  <i class="fas fa-times"></i>
 </button>
+
 
 
   <button
