@@ -843,17 +843,15 @@ showKeypad.value = true;
       const startDrag = (e) => {
   dragging = true;
 
-  const p = e.touches ? e.touches[0] : e;
+  const p = (e.touches && e.touches[0]) ? e.touches[0] : e;
   dragOffset.x = p.clientX - calcPos.value.x;
   dragOffset.y = p.clientY - calcPos.value.y;
 
   const move = (ev) => {
     if (!dragging) return;
-    const m = ev.touches ? ev.touches[0] : ev;
 
-    // keep inside viewport a bit
-    const w = 320; // panel approx width
-    const h = 520; // rough height, ok to be approximate
+    const m = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+
     const maxX = Math.max(0, window.innerWidth - 40);
     const maxY = Math.max(0, window.innerHeight - 40);
 
@@ -868,20 +866,31 @@ showKeypad.value = true;
 
   const end = () => {
     dragging = false;
+
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', end);
+    window.removeEventListener('pointercancel', end);
+
     window.removeEventListener('mousemove', move);
     window.removeEventListener('mouseup', end);
+
     window.removeEventListener('touchmove', move);
     window.removeEventListener('touchend', end);
     window.removeEventListener('touchcancel', end);
   };
 
+  // ✅ Pointer events（Android / 新 browser 最穩）
+  window.addEventListener('pointermove', move, { passive: false });
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+
+  // ✅ 保底：舊 browser
   window.addEventListener('mousemove', move, { passive: false });
   window.addEventListener('mouseup', end);
   window.addEventListener('touchmove', move, { passive: false });
   window.addEventListener('touchend', end);
   window.addEventListener('touchcancel', end);
 };
-      
 
 
 
