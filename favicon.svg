@@ -25,7 +25,7 @@
                     flood-color="#000" flood-opacity="0.6"/>
     </filter>
 
-    <!-- Clip for lightning (in the same coord space as the lightning group) -->
+    <!-- Clip for lightning -->
     <clipPath id="boltClip">
       <path
         d="M548 150
@@ -44,8 +44,7 @@
     <rect x="64" y="64" width="896" height="896" rx="190" fill="url(#bg)"/>
   </g>
 
-  <!-- ===== Foreground: scaled inward for more padding ===== -->
-  <!-- scale around center (512,512) -->
+  <!-- ===== Foreground scaled inward ===== -->
   <g transform="translate(512 512) scale(0.90) translate(-512 -512)">
 
     <!-- Rings -->
@@ -101,7 +100,7 @@
         fill="#F5B200"
       />
 
-      <!-- bottom triangle darker facet -->
+      <!-- bottom darker triangle -->
       <g clip-path="url(#boltClip)">
         <path
           d="M520 650
@@ -109,20 +108,18 @@
              L542 600
              Z"
           fill="#E29A00"
-          opacity="0.98"
         />
       </g>
 
-      <!-- ✅ separator line between the two main colors (main vs mid facet) -->
-      <!-- hard, straight, clipped to bolt; no curves, no overflow -->
+      <!-- separator line (lighter, more subtle) -->
       <g clip-path="url(#boltClip)">
         <path
           d="M602 460 L520 650 L448 900"
           stroke="#D98E00"
-          stroke-width="8"
+          stroke-width="6"
           stroke-linecap="butt"
           stroke-linejoin="miter"
-          opacity="0.95"
+          opacity="0.65"
         />
       </g>
 
