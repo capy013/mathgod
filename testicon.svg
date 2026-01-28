@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1024" height="1024"
+     viewBox="0 0 1024 1024">
+
+  <defs>
+    <!-- Background -->
+    <radialGradient id="bgGrad" cx="0.3" cy="0.2" r="1">
+      <stop offset="0%" stop-color="#2b2b2b"/>
+      <stop offset="60%" stop-color="#151515"/>
+      <stop offset="100%" stop-color="#050505"/>
+    </radialGradient>
+
+    <!-- Green ring -->
+    <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9ED94A"/>
+      <stop offset="100%" stop-color="#6FBF2D"/>
+    </linearGradient>
+
+    <!-- Lightning main -->
+    <linearGradient id="boltMain" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE25A"/>
+      <stop offset="100%" stop-color="#FFC800"/>
+    </linearGradient>
+
+    <!-- Lightning inner facet -->
+    <linearGradient id="boltInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7C400"/>
+      <stop offset="100%" stop-color="#E3A900"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="32" y="32" width="960" height="960" rx="200"
+        fill="url(#bgGrad)"/>
+
+  <!-- Left ring -->
+  <circle cx="330" cy="420" r="150"
+          fill="none"
+          stroke="url(#greenGrad)"
+          stroke-width="90"/>
+
+  <!-- Right ring -->
+  <circle cx="700" cy="640" r="150"
+          fill="none"
+          stroke="url(#greenGrad)"
+          stroke-width="90"/>
+
+  <!-- Lightning -->
+  <!-- Main shape -->
+  <path
+    d="M560 150
+       L720 150
+       L600 470
+       L780 470
+       L460 900
+       L560 610
+       L360 610
+       Z"
+    fill="url(#boltMain)"/>
+
+  <!-- Inner facet -->
+  <path
+    d="M600 470
+       L780 470
+       L460 900
+       L520 660
+       Z"
+    fill="url(#boltInner)"/>
+
+</svg>
