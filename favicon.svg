@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150" fill="none">
+  <defs>
+    <!-- Background -->
+    <radialGradient id="bgRad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+      gradientTransform="translate(55 45) rotate(55) scale(140)">
+      <stop offset="0" stop-color="#1a1a1a"/>
+      <stop offset="0.55" stop-color="#0b0b0b"/>
+      <stop offset="1" stop-color="#050505"/>
+    </radialGradient>
+
+    <!-- Subtle highlight -->
+    <linearGradient id="bgSheen" x1="20" y1="18" x2="130" y2="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="0.35" stop-color="#ffffff" stop-opacity="0.02"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Green ring gradient -->
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="150" y2="150" gradientUnits="userSpaceOnUse"
