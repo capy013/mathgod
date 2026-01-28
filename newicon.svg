@@ -1,25 +1,62 @@
-<svg width="512" height="512" viewBox="0 0 512 512"
-     xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <!-- 黑色背景 -->
-  <rect x="0" y="0" width="512" height="512" fill="#111111" />
+  <rect width="512" height="512" fill="#1a1a1a"/>
 
-  <!-- 綠色百分號圓圈（左） -->
-  <circle cx="155" cy="205" r="60" fill="#35B34A" />
+  <!-- 定義陰影效果 -->
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="3" dy="3" stdDeviation="2" flood-opacity="0.4"/>
+    </filter>
+  </defs>
 
-  <!-- 綠色百分號圓圈（右） -->
-  <circle cx="357" cy="307" r="60" fill="#35B34A" />
+  <!-- 左上綠色百分號圓圈 -->
+  <g>
+    <!-- 外圓 -->
+    <circle cx="165" cy="155" r="65" fill="#3DB662"/>
+    <!-- 內圓（黑色） -->
+    <circle cx="165" cy="155" r="35" fill="#1a1a1a"/>
+  </g>
 
-  <!-- 黃色閃電：用多邊形大約重現形狀 -->
-  <polygon
-    points="
-      230,60
-      330,60
-      270,220
-      360,220
-      210,452
-      250,280
-      170,280
-    "
-    fill="#FFD22A"
-  />
+  <!-- 右下綠色百分號圓圈 -->
+  <g>
+    <!-- 外圓 -->
+    <circle cx="365" cy="335" r="65" fill="#3DB662"/>
+    <!-- 內圓（黑色） -->
+    <circle cx="365" cy="335" r="35" fill="#1a1a1a"/>
+  </g>
+
+  <!-- 黃色閃電符號（主體） -->
+  <g filter="url(#shadow)">
+    <!-- 閃電主形狀 -->
+    <polygon points="
+      260,75
+      345,75
+      245,245
+      385,245
+      180,455
+      250,290
+      150,290
+    " fill="#FFD700"/>
+  </g>
+
+  <!-- 閃電陰影部分（深橙色） -->
+  <g opacity="0.7">
+    <!-- 右側陰影 -->
+    <polygon points="
+      330,100
+      345,75
+      290,200
+      385,245
+      350,280
+      280,200
+    " fill="#FFA500"/>
+    
+    <!-- 下方陰影 -->
+    <polygon points="
+      245,245
+      290,245
+      350,380
+      310,380
+    " fill="#FF8C00"/>
+  </g>
 </svg>
