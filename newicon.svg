@@ -1,62 +1,54 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <!-- 黑色背景 -->
-  <rect width="512" height="512" fill="#1a1a1a"/>
+  <rect width="512" height="512" fill="#2a2a2a"/>
 
-  <!-- 定義陰影效果 -->
-  <defs>
-    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="3" dy="3" stdDeviation="2" flood-opacity="0.4"/>
-    </filter>
-  </defs>
+  <!-- 左上綠色圓環 -->
+  <circle cx="230" cy="210" r="75" fill="#3dd99f" stroke="none"/>
+  <circle cx="230" cy="210" r="45" fill="#2a2a2a"/>
 
-  <!-- 左上綠色百分號圓圈 -->
-  <g>
-    <!-- 外圓 -->
-    <circle cx="165" cy="155" r="65" fill="#3DB662"/>
-    <!-- 內圓（黑色） -->
-    <circle cx="165" cy="155" r="35" fill="#1a1a1a"/>
-  </g>
+  <!-- 右下綠色圓環 -->
+  <circle cx="390" cy="390" r="75" fill="#3dd99f" stroke="none"/>
+  <circle cx="390" cy="390" r="45" fill="#2a2a2a"/>
 
-  <!-- 右下綠色百分號圓圈 -->
-  <g>
-    <!-- 外圓 -->
-    <circle cx="365" cy="335" r="65" fill="#3DB662"/>
-    <!-- 內圓（黑色） -->
-    <circle cx="365" cy="335" r="35" fill="#1a1a1a"/>
-  </g>
+  <!-- 黃色閃電主體（亮黃） -->
+  <polygon points="
+    320,95
+    430,95
+    290,290
+    420,290
+    200,500
+    310,350
+    240,350
+  " fill="#ffd700"/>
 
-  <!-- 黃色閃電符號（主體） -->
-  <g filter="url(#shadow)">
-    <!-- 閃電主形狀 -->
-    <polygon points="
-      260,75
-      345,75
-      245,245
-      385,245
-      180,455
-      250,290
-      150,290
-    " fill="#FFD700"/>
-  </g>
+  <!-- 閃電右側陰影（深橙 - 右上斜邊） -->
+  <polygon points="
+    400,95
+    430,95
+    350,250
+    380,250
+  " fill="#cc8800"/>
 
-  <!-- 閃電陰影部分（深橙色） -->
-  <g opacity="0.7">
-    <!-- 右側陰影 -->
-    <polygon points="
-      330,100
-      345,75
-      290,200
-      385,245
-      350,280
-      280,200
-    " fill="#FFA500"/>
-    
-    <!-- 下方陰影 -->
-    <polygon points="
-      245,245
-      290,245
-      350,380
-      310,380
-    " fill="#FF8C00"/>
-  </g>
-</svg>
+  <!-- 閃電右側陰影（深橙 - 右下） -->
+  <polygon points="
+    350,250
+    420,290
+    350,340
+    280,290
+  " fill="#ff9900"/>
+
+  <!-- 閃電下方陰影（棕色） -->
+  <polygon points="
+    290,290
+    350,340
+    310,350
+    240,350
+  " fill="#b8860b"/>
+
+  <!-- 底部閃電尖端陰影（棕色） -->
+  <polygon points="
+    240,350
+    310,350
+    200,500
+    180,480
+  " fill="
