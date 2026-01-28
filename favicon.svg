@@ -24,66 +24,109 @@
       <feDropShadow dx="0" dy="24" stdDeviation="22"
                     flood-color="#000" flood-opacity="0.6"/>
     </filter>
+
+    <!-- Clip for lightning (in the same coord space as the lightning group) -->
+    <clipPath id="boltClip">
+      <path
+        d="M548 150
+           L712 150
+           L602 460
+           L792 460
+           L448 900
+           L542 600
+           L350 600
+           Z"/>
+    </clipPath>
   </defs>
 
-  <!-- ===== Background ===== -->
+  <!-- Background -->
   <g filter="url(#shadow)">
     <rect x="64" y="64" width="896" height="896" rx="190" fill="url(#bg)"/>
   </g>
 
-  <!-- ===== Rings ===== -->
-  <g opacity="0.98">
-    <circle cx="300" cy="344" r="132"
-            stroke="url(#ringGrad)"
-            stroke-width="78"
-            fill="none"/>
-    <circle cx="736" cy="680" r="132"
-            stroke="url(#ringGrad)"
-            stroke-width="78"
-            fill="none"/>
-  </g>
+  <!-- ===== Foreground: scaled inward for more padding ===== -->
+  <!-- scale around center (512,512) -->
+  <g transform="translate(512 512) scale(0.90) translate(-512 -512)">
 
-  <!-- ===== Lightning ===== -->
-  <g transform="translate(-34 -6)">
+    <!-- Rings -->
+    <g opacity="0.98">
+      <circle cx="300" cy="344" r="132"
+              stroke="url(#ringGrad)"
+              stroke-width="78"
+              fill="none"/>
+      <circle cx="736" cy="680" r="132"
+              stroke="url(#ringGrad)"
+              stroke-width="78"
+              fill="none"/>
+    </g>
 
-    <!-- shadow -->
-    <path
-      d="M548 150
-         L712 150
-         L602 460
-         L792 460
-         L448 900
-         L542 600
-         L350 600
-         Z"
-      fill="#B87400"
-      opacity="0.40"
-      transform="translate(18 22)"
-    />
+    <!-- Lightning -->
+    <g transform="translate(-34 -6)">
 
-    <!-- main lightning -->
-    <path
-      d="M548 150
-         L712 150
-         L602 460
-         L792 460
-         L448 900
-         L542 600
-         L350 600
-         Z"
-      fill="#FFCE00"
-    />
+      <!-- shadow -->
+      <path
+        d="M548 150
+           L712 150
+           L602 460
+           L792 460
+           L448 900
+           L542 600
+           L350 600
+           Z"
+        fill="#B87400"
+        opacity="0.40"
+        transform="translate(18 22)"
+      />
 
-    <!-- inner darker facet (cut by color only) -->
-    <path
-      d="M602 460
-         L792 460
-         L448 900
-         L520 650
-         Z"
-      fill="#F5B200"
-    />
+      <!-- main lightning -->
+      <path
+        d="M548 150
+           L712 150
+           L602 460
+           L792 460
+           L448 900
+           L542 600
+           L350 600
+           Z"
+        fill="#FFCE00"
+      />
 
+      <!-- mid facet -->
+      <path
+        d="M602 460
+           L792 460
+           L448 900
+           L520 650
+           Z"
+        fill="#F5B200"
+      />
+
+      <!-- bottom triangle darker facet -->
+      <g clip-path="url(#boltClip)">
+        <path
+          d="M520 650
+             L448 900
+             L542 600
+             Z"
+          fill="#E29A00"
+          opacity="0.98"
+        />
+      </g>
+
+      <!-- ✅ separator line between the two main colors (main vs mid facet) -->
+      <!-- hard, straight, clipped to bolt; no curves, no overflow -->
+      <g clip-path="url(#boltClip)">
+        <path
+          d="M602 460 L520 650 L448 900"
+          stroke="#D98E00"
+          stroke-width="8"
+          stroke-linecap="butt"
+          stroke-linejoin="miter"
+          opacity="0.95"
+        />
+      </g>
+
+    </g>
   </g>
 
 </svg>
