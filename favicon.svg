@@ -8,15 +8,15 @@
     <!-- Background -->
     <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
       gradientTransform="translate(360 280) rotate(55) scale(980)">
-      <stop offset="0" stop-color="#1e1e1e"/>
-      <stop offset="0.6" stop-color="#0b0b0b"/>
+      <stop offset="0" stop-color="#202020"/>
+      <stop offset="0.6" stop-color="#0c0c0c"/>
       <stop offset="1" stop-color="#050505"/>
     </radialGradient>
 
-    <!-- Green rings -->
+    <!-- Green rings (sat +30%) -->
     <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#5BC88D"/>
-      <stop offset="1" stop-color="#2E9F63"/>
+      <stop offset="0" stop-color="#6FE6A4"/>
+      <stop offset="1" stop-color="#25B86B"/>
     </linearGradient>
 
     <!-- Soft shadow -->
@@ -26,31 +26,28 @@
     </filter>
   </defs>
 
-  <!-- ===== Background ===== -->
+  <!-- Background -->
   <g filter="url(#shadow)">
     <rect x="64" y="64" width="896" height="896" rx="190" fill="url(#bg)"/>
   </g>
 
-  <!-- ===== Rings (smaller, same thickness) ===== -->
-  <g opacity="0.95">
-    <!-- top-left -->
+  <!-- Rings -->
+  <g opacity="0.98">
     <circle cx="300" cy="344" r="132"
             stroke="url(#ringGrad)"
             stroke-width="78"
             fill="none"/>
 
-    <!-- bottom-right -->
     <circle cx="736" cy="680" r="132"
             stroke="url(#ringGrad)"
             stroke-width="78"
             fill="none"/>
   </g>
 
-  <!-- ===== Lightning (original-style with internal lines) ===== -->
-  <!-- optical centered -->
+  <!-- Lightning -->
   <g transform="translate(-34 -6)">
 
-    <!-- shadow (same shape, offset) -->
+    <!-- shadow -->
     <path
       d="M548 150
          L712 150
@@ -60,12 +57,12 @@
          L542 600
          L350 600
          Z"
-      fill="#C89B12"
-      opacity="0.35"
+      fill="#B88400"
+      opacity="0.38"
       transform="translate(18 22)"
     />
 
-    <!-- main lightning -->
+    <!-- main lightning (sat +30%) -->
     <path
       d="M548 150
          L712 150
@@ -75,23 +72,23 @@
          L542 600
          L350 600
          Z"
-      fill="#FFD84A"
+      fill="#FFD100"
     />
 
-    <!-- inner darker facet (original-style plane) -->
+    <!-- inner darker facet -->
     <path
       d="M602 460
          L792 460
          L448 900
          L520 650
          Z"
-      fill="#F2C22A"
+      fill="#F5B800"
     />
 
     <!-- inner cut line 1 -->
     <path
       d="M602 460 L520 650"
-      stroke="#E6B91F"
+      stroke="#E6A800"
       stroke-width="10"
       stroke-linecap="square"
     />
@@ -99,7 +96,7 @@
     <!-- inner cut line 2 -->
     <path
       d="M520 650 L448 900"
-      stroke="#E0B11A"
+      stroke="#DFA000"
       stroke-width="10"
       stroke-linecap="square"
     />
