@@ -994,6 +994,29 @@ watch(activeDayNameInput, (v) => {
       };
 
       const activeDay = computed(() => days.value.find(d => d.id === activeDayId.value) || null);
+      // ✅ 切換 Day
+const setActiveDay = (id) => {
+  if (!id) return;
+  activeDayId.value = id;
+  cancelEdit();
+  saveData();
+};
+
+// ✅ 新增 Day
+const addDay = () => {
+  ensureDefaultDay();
+  const n = days.value.length + 1;
+  const id = `day${Date.now()}`;
+  days.value.push({
+    id,
+    name: `Day${n}`,
+    expenses: []
+  });
+  activeDayId.value = id;
+  showDaySettings.value = true;
+  saveData();
+};
+
 
       const currentExpenses = computed(() => {
         ensureDefaultDay();
