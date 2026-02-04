@@ -890,6 +890,7 @@ const activeDayReadable = computed(() => {
 
 // ✅ stable day name input (prevents cursor jumping)
 const activeDayNameInput = ref("");
+       const activeDay = computed(() => days.value.find(d => d.id === activeDayId.value) || null);
 // ✅ 切換 Day 時，同步 input
 watch(activeDayId, () => {
   activeDayNameInput.value = activeDay.value?.name || "";
@@ -993,7 +994,7 @@ watch(activeDayNameInput, (v) => {
         if (!activeDayId.value) activeDayId.value = days.value[0]?.id || "day1";
       };
 
-      const activeDay = computed(() => days.value.find(d => d.id === activeDayId.value) || null);
+     
       // ✅ 切換 Day
 const setActiveDay = (id) => {
   if (!id) return;
@@ -1019,13 +1020,13 @@ const addDay = () => {
 
 
       const currentExpenses = computed(() => {
-        ensureDefaultDay();
+     
         const d = activeDay.value;
         return (d && Array.isArray(d.expenses)) ? d.expenses : [];
       });
 
       const allExpenses = computed(() => {
-        ensureDefaultDay();
+      
         return (days.value || []).flatMap(d => (d.expenses || []));
       });
 
