@@ -876,6 +876,33 @@
       const multiDayMode = ref(false);
       const days = ref([]); // [{id, name, expenses: []}]
       const activeDayId = ref(null);
+// ✅ day settings panel
+const showDaySettings = ref(false);
+
+// ✅ readable day label (for reset/share)
+const activeDayIndex = computed(() =>
+  (days.value || []).findIndex(d => d.id === activeDayId.value)
+);
+const activeDayReadable = computed(() => {
+  const i = activeDayIndex.value;
+  return i >= 0 ? `第${i + 1}日` : "當日";
+});
+
+// ✅ stable day name input (prevents cursor jumping)
+const activeDayNameInput = ref("");
+// ✅ 切換 Day 時，同步 input
+watch(activeDayId, () => {
+  activeDayNameInput.value = activeDay.value?.name || "";
+}, { immediate: true });
+
+// ✅ 改 Day 名（唔會 cursor 跳）
+watch(activeDayNameInput, (v) => {
+  const d = activeDay.value;
+  if (!d) return;
+  const name = String(v || "").trim();
+  d.name = name || "Day1";
+  saveData();
+});
 
       const lastAddedId = ref(null);
       const newUser = ref("");
@@ -979,47 +1006,7 @@
         return (days.value || []).flatMap(d => (d.expenses || []));
       });
 
-      const activeDayName = computed({
-        get() { return activeDay.value?.name || ""; },
-        set(v) { /* handled by renameActiveDay */ }
-      });
-
-      const setActiveDay = (id) => {
-        activeDayId.value = id;
-        cancelEdit();
-        saveData();
-      };
-
-      const addDay = () => {
-        ensureDefaultDay();
-        const n = (days.value.length || 0) + 1;
-        const id = "day" + Date.now();
-        days.value.push({ id, name: `Day${n}`, expenses: [] });
-        activeDayId.value = id;
-        cancelEdit();
-        saveData();
-        toast("已新增 Day");
-      };
-
       
-
-      // We'll update rename via watcher-like manual method:
-      const _activeDayNameTmp = ref("");
-      // use this ref for v-model
-      // (wired below in return, we bind to activeDayNameProxy)
-      const activeDayNameProxy = computed({
-        get() {
-          _activeDayNameTmp.value = activeDay.value?.name || "";
-          return _activeDayNameTmp.value;
-        },
-        set(v) {
-          _activeDayNameTmp.value = v;
-          const d = activeDay.value;
-          if (!d) return;
-          d.name = String(v || "").trim() || "未命名";
-          saveData();
-        }
-      });
 
       const removeActiveDay = () => {
         ensureDefaultDay();
@@ -1062,6 +1049,8 @@
           days: JSON.parse(JSON.stringify(days.value || [])),
           activeDayId: activeDayId.value
         };
+
+
         localStorage.setItem('mathGod_localData', JSON.stringify(data));
 
         if (roomId.value) {
@@ -1907,7 +1896,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         multiDayMode, days, activeDayId, activeDay,
         currentExpenses, allExpenses,
         setActiveDay, addDay, removeActiveDay,
-        activeDayName: activeDayNameProxy,
+      
         onToggleMultiDay,
         showDaySettings,
 activeDayNameInput,
