@@ -217,6 +217,34 @@
 
   <!-- Main -->
   <main class="p-5 space-y-6 flex-1">
+      <!-- STEP 1 -->
+    <section class="glass p-5 rounded-[2rem]">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
+        <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-400 font-num">{{ users.length }} 人</span>
+      </div>
+
+      <div class="flex gap-2 mb-4">
+        <div class="flex-1 glass-input rounded-xl flex items-center px-4 transition-all"
+             :class="{'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]': users.length === 0}">
+          <i class="fas fa-user-plus text-xs text-gray-500 mr-2"></i>
+          <input v-model="newUser" @keyup.enter="addUser" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30" placeholder="輸入名字...">
+        </div>
+        <button @click="addUser" class="bg-emerald-600 px-5 rounded-xl font-black text-xs btn-press shadow-lg shadow-emerald-900/50">加入</button>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <transition-group name="toast">
+          <div v-for="(u, i) in users" :key="u" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 group">
+            {{ u }}
+            <button @click="removeUser(i)" class="text-gray-600 hover:text-red-400 px-1"><i class="fas fa-times"></i></button>
+          </div>
+        </transition-group>
+        <div v-if="users.length === 0" class="w-full text-center py-2 text-[10px] text-emerald-400/70 animate-pulse">
+          <i class="fas fa-arrow-up mr-1"></i> 請先加入參與活動的朋友
+        </div>
+      </div>
+    </section>
 
     <!-- ✅ Multi-day tabs (only when enabled) -->
     <section v-if="multiDayMode" class="glass p-4 rounded-[2rem]">
@@ -272,34 +300,7 @@
       </div>
     </section>
 
-    <!-- STEP 1 -->
-    <section class="glass p-5 rounded-[2rem]">
-      <div class="flex justify-between items-center mb-3">
-        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
-        <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-400 font-num">{{ users.length }} 人</span>
-      </div>
-
-      <div class="flex gap-2 mb-4">
-        <div class="flex-1 glass-input rounded-xl flex items-center px-4 transition-all"
-             :class="{'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]': users.length === 0}">
-          <i class="fas fa-user-plus text-xs text-gray-500 mr-2"></i>
-          <input v-model="newUser" @keyup.enter="addUser" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30" placeholder="輸入名字...">
-        </div>
-        <button @click="addUser" class="bg-emerald-600 px-5 rounded-xl font-black text-xs btn-press shadow-lg shadow-emerald-900/50">加入</button>
-      </div>
-
-      <div class="flex flex-wrap gap-2">
-        <transition-group name="toast">
-          <div v-for="(u, i) in users" :key="u" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 group">
-            {{ u }}
-            <button @click="removeUser(i)" class="text-gray-600 hover:text-red-400 px-1"><i class="fas fa-times"></i></button>
-          </div>
-        </transition-group>
-        <div v-if="users.length === 0" class="w-full text-center py-2 text-[10px] text-emerald-400/70 animate-pulse">
-          <i class="fas fa-arrow-up mr-1"></i> 請先加入參與活動的朋友
-        </div>
-      </div>
-    </section>
+  
 
     <!-- STEP 2 -->
     <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-visible"
