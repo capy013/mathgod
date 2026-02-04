@@ -855,27 +855,7 @@
   const db = firebase.database();
 
   const { createApp, ref, computed, onMounted, onUnmounted, watch } = Vue;
-const showDaySettings = ref(false);
 
-// ✅ readable day label (for reset/share)
-const activeDayIndex = computed(() => (days.value || []).findIndex(d => d.id === activeDayId.value));
-const activeDayReadable = computed(() => {
-  const i = activeDayIndex.value;
-  return i >= 0 ? `第${i+1}日` : "當日";
-});
-
-// ✅ stable day name input (prevents cursor jumping)
-const activeDayNameInput = ref("");
-watch(activeDayId, () => {
-  activeDayNameInput.value = activeDay.value?.name || "";
-}, { immediate: true });
-
-watch(activeDayNameInput, (v) => {
-  const d = activeDay.value;
-  if (!d) return;
-  d.name = (String(v || "").trim() || d.name || "Day1");
-  saveData();
-});
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
