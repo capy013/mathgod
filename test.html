@@ -1921,26 +1921,25 @@ try {
         window.removeEventListener("offline", onOffline);
       });
 
-      // ====== return ======
-    return {
-  // state
-  isLoading, isSyncing, isOnline,
-  eventName, users, newUser,
-  form, isEditing, editingId,
-  showSyncModal, showShareModal, showResetMenu, showTutorial,
-  toasts, roomId, roomInput,
-  shareSubMenu,
-  
-  // handlers
-  handleSyncClick,
+           // ====== return ======
+      return {
+        // state
+        isLoading, isSyncing, isOnline,
+        eventName, users, newUser,
+        form, isEditing, editingId,
+        showSyncModal, showShareModal, showResetMenu, showTutorial,
+        toasts, roomId, roomInput,
+        shareSubMenu,
 
+        // handlers
+        handleSyncClick,
 
         // multi-day
         multiDayMode, days, activeDayId, activeDay,
-  currentExpenses, allExpenses,
-  setActiveDay, addDay, removeActiveDay,
-  activeDayNameProxy,
-  onToggleMultiDay,
+        currentExpenses, allExpenses,
+        setActiveDay, addDay, removeActiveDay,
+        activeDayNameProxy,
+        onToggleMultiDay,
 
         // totals
         totalSpentDay, totalSpentAll, totalSpentForShare,
@@ -1970,12 +1969,17 @@ try {
         copyRoomLink,
         copyText, shareViaApp, generateImage,
 
+        // computed
+        recentRoomsWithNames,
+
+        // drag & misc
         calcPos,
         startDrag,
         lastAddedId,
         amountFontClass,
         sanitizeAmount,
       };
+
     }
   }).mount('#app');
 </script>
