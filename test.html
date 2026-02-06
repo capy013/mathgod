@@ -190,26 +190,21 @@
         class="absolute -left-[9999px] opacity-0"
         @change="appendDate"
       />
+    </div>
 
-    <!-- ✅ Sticky Day tabs (only when enabled) -->
-    <div v-if="multiDayMode" class="mt-3">
-      <div class="flex gap-2 overflow-x-auto custom-scroll pb-1">
-        <button
-          v-for="d in days"
-          :key="d.id"
-          @click="setActiveDay(d.id)"
-          class="day-tab px-3 py-2 rounded-xl text-[11px] font-black whitespace-nowrap flex items-center gap-2"
-          :class="activeDayId===d.id ? 'active' : ''"
-        >
-          <i class="fas fa-calendar text-[10px]" :class="activeDayId===d.id ? 'text-emerald-400' : 'text-gray-500'"></i>
-          <span class="truncate max-w-[140px]">{{ d.name }}</span>
-        </button>
+    <!-- ✅ Multi-day toggle -->
+    <div class="flex items-center justify-between px-2">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-layer-group text-[11px]" :class="multiDayMode ? 'text-emerald-400' : 'text-gray-500'"></i>
+        <span class="text-[10px] font-bold" :class="multiDayMode ? 'text-emerald-300' : 'text-gray-400'">多天模式</span>
+        <span class="text-[9px] font-bold text-gray-500" v-if="multiDayMode">（Day 分頁）</span>
       </div>
-    </div>
 
+      <label class="relative inline-flex items-center cursor-pointer select-none">
+        <input type="checkbox" v-model="multiDayMode" @change="onToggleMultiDay" class="sr-only peer">
+        <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+      </label>
     </div>
-
-    
 
     <!-- Syncing bar -->
     <div v-if="isSyncing" class="mt-3">
@@ -222,10 +217,7 @@
 
   <!-- Main -->
   <main class="p-5 space-y-6 flex-1">
-
-   
-
-    <!-- STEP 1 -->
+      <!-- STEP 1 -->
     <section class="glass p-5 rounded-[2rem]">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
@@ -241,7 +233,7 @@
         <button @click="addUser" class="bg-emerald-600 px-5 rounded-xl font-black text-xs btn-press shadow-lg shadow-emerald-900/50">加入</button>
       </div>
 
-            <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-2">
         <transition-group name="toast">
           <div v-for="(u, i) in users" :key="u" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 group">
             {{ u }}
@@ -252,83 +244,63 @@
           <i class="fas fa-arrow-up mr-1"></i> 請先加入參與活動的朋友
         </div>
       </div>
+    </section>
 
-      <!-- ✅ Multi-day toggle moved here (under friends) -->
-      <div class="mt-5 bg-black/20 p-3 rounded-xl border border-white/5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-layer-group text-[11px]" :class="multiDayMode ? 'text-emerald-400' : 'text-gray-500'"></i>
-            <div>
-              <div class="text-xs font-black text-gray-200 leading-tight">多天模式</div>
-              <div class="text-[10px] font-bold text-gray-500 leading-tight">
-                開咗之後用 Day 分頁記數，最後會綜合結算
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button
-              v-if="multiDayMode"
-              @click="showDaySettings = !showDaySettings"
-              class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 btn-press"
-              :title="showDaySettings ? '收起設定' : '展開設定'"
-            >
-              <i class="fas" :class="showDaySettings ? 'fa-chevron-up' : 'fa-sliders'"></i>
-            </button>
-
-            <label class="relative inline-flex items-center cursor-pointer select-none">
-              <input type="checkbox" v-model="multiDayMode" @change="onToggleMultiDay" class="sr-only peer">
-              <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
+    <!-- ✅ Multi-day tabs (only when enabled) -->
+    <section v-if="multiDayMode" class="glass p-4 rounded-[2rem]">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">DAY 分頁</h3>
+        <div class="flex items-center gap-2">
+          <button @click="addDay" class="bg-emerald-600 px-3 py-2 rounded-xl font-black text-[10px] btn-press shadow-lg shadow-emerald-900/40">
+            <i class="fas fa-plus mr-1"></i>新增 Day
+          </button>
         </div>
+      </div>
 
-        <!-- ✅ Settings expand area -->
-        <transition name="fade">
-          <div v-if="multiDayMode && showDaySettings" class="mt-4">
-            <div class="flex justify-between items-center mb-3">
-              <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">DAY 設定</h3>
-              <button @click="addDay" class="bg-emerald-600 px-3 py-2 rounded-xl font-black text-[10px] btn-press shadow-lg shadow-emerald-900/40">
-                <i class="fas fa-plus mr-1"></i>新增 Day
-              </button>
-            </div>
+      <div class="flex gap-2 overflow-x-auto custom-scroll pb-1">
+        <button
+          v-for="d in days"
+          :key="d.id"
+          @click="setActiveDay(d.id)"
+          class="day-tab px-3 py-2 rounded-xl text-[11px] font-black whitespace-nowrap flex items-center gap-2"
+          :class="activeDayId===d.id ? 'active' : ''"
+        >
+          <i class="fas fa-calendar text-[10px]" :class="activeDayId===d.id ? 'text-emerald-400' : 'text-gray-500'"></i>
+          <span class="truncate max-w-[140px]">{{ d.name }}</span>
+        </button>
+      </div>
 
-            <div class="mt-3 flex items-center justify-between bg-black/20 p-3 rounded-xl border border-white/5">
-              <div class="min-w-0">
-                <div class="text-[9px] text-gray-500 font-bold uppercase mb-1">當日名稱（Tab 用短啲：Day1/Day2）</div>
-                <input
-                  v-model="activeDayNameInput"
-                  class="w-full bg-transparent outline-none text-sm font-bold text-white/90"
-                  placeholder="例如：Day1 / Day2 / Osaka"
-                />
-                <div class="text-[10px] font-bold text-gray-500 mt-2">
-                  易讀顯示：<span class="text-gray-200">{{ activeDayReadable }}</span>
-                </div>
-              </div>
+      <div class="mt-3 flex items-center justify-between bg-black/20 p-3 rounded-xl border border-white/5">
+        <div class="min-w-0">
+          <div class="text-[9px] text-gray-500 font-bold uppercase mb-1">當日名稱</div>
+          <input
+  v-model="activeDayNameProxy"
+  class="w-full bg-transparent outline-none text-sm font-bold text-white/90"
+  placeholder="例如：Day1 / 東京 Day2"
+/>
 
-              <button
-                class="ml-3 w-10 h-10 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
-                @click="removeActiveDay"
-                title="刪除當日"
-                aria-label="刪除當日"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
+        </div>
+        <button
+          class="ml-3 w-10 h-10 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
+          @click="removeActiveDay"
+          title="刪除當日"
+          aria-label="刪除當日"
+        >
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
 
-            <div class="mt-3 flex justify-between items-end px-1">
-              <div class="text-[10px] font-bold text-gray-400">
-                當日總支出：<span class="text-white font-num">${{ totalSpentDay.toFixed(1) }}</span>
-              </div>
-              <div class="text-[10px] font-bold text-gray-500">
-                全部總支出：<span class="text-emerald-300 font-num">${{ totalSpentAll.toFixed(1) }}</span>
-              </div>
-            </div>
-          </div>
-        </transition>
+      <div class="mt-3 flex justify-between items-end px-1">
+        <div class="text-[10px] font-bold text-gray-400">
+          當日總支出：<span class="text-white font-num">${{ totalSpentDay.toFixed(1) }}</span>
+        </div>
+        <div class="text-[10px] font-bold text-gray-500">
+          全部總支出：<span class="text-emerald-300 font-num">${{ totalSpentAll.toFixed(1) }}</span>
+        </div>
       </div>
     </section>
 
+  
 
     <!-- STEP 2 -->
     <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-visible"
@@ -613,19 +585,12 @@
         <i class="fas fa-cog"></i> 重設
       </button>
       <div v-if="showResetMenu" class="absolute bottom-full mb-3 left-0 right-0 bg-[#1a1a1a] rounded-2xl border border-white/10 overflow-hidden shadow-2xl z-50">
-
-        <button
-          v-if="multiDayMode"
-          @click="resetData('day')"
-          class="w-full p-4 text-xs font-bold text-left text-orange-200 border-b border-white/5 hover:bg-white/5"
-        >
-          <i class="fas fa-broom mr-2"></i>清除當天（{{ activeDayReadable }}）
-        </button>
-
         <button @click="resetData('expenses')" class="w-full p-4 text-xs font-bold text-left text-red-300 border-b border-white/5 hover:bg-white/5">
           <i class="fas fa-eraser mr-2"></i>只清空消費紀錄
         </button>
-
+        <button @click="resetData('all')" class="w-full p-4 text-xs font-bold text-left text-red-500 hover:bg-white/5">
+          <i class="fas fa-bomb mr-2"></i>清除所有紀錄 (包括朋友)
+        </button>
       </div>
     </div>
   </footer>
@@ -692,27 +657,7 @@
           <span class="font-black text-2xl tracking-tight">${{ totalSpentForShare.toFixed(1) }}</span>
         </div>
 
-        <!-- ✅ daily subtotals (only for multi-day + scope all) -->
-        <div v-if="multiDayMode && shareOptions.scope==='all'" class="bg-white p-3 rounded border border-gray-300 mb-4">
-          <p class="text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-200 pb-1">每日小計</p>
-
-          <div v-for="(d, idx) in days" :key="d.id" class="flex justify-between items-center py-1 text-[11px] font-bold">
-            <span class="text-gray-700">
-              {{ d.name }} <span class="text-gray-400 font-medium">（第{{ idx+1 }}日）</span>
-            </span>
-            <span class="font-num text-gray-800">
-              ${{ (d.expenses || []).reduce((s,e)=>s+Number(e?.hkd||0),0).toFixed(1) }}
-            </span>
-          </div>
-
-          <div class="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center font-black text-[12px]">
-            <span class="text-gray-700">總計</span>
-            <span class="font-num text-black">${{ totalSpentForShare.toFixed(1) }}</span>
-          </div>
-        </div>
-
         <div class="bg-white p-3 rounded border border-gray-300 mb-4">
-
           <p class="text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-200 pb-1">過數指南 (Payment Guide)</p>
           <div v-if="settlementsForShare.length === 0" class="text-center text-gray-400 text-xs py-2">沒有人需要夾錢</div>
           <div v-for="s in settlementsForShare" class="flex justify-between items-center py-1 text-sm font-bold">
@@ -854,8 +799,7 @@
   try { firebase.initializeApp(firebaseConfig); } catch(e) {}
   const db = firebase.database();
 
-  const { createApp, ref, computed, onMounted, onUnmounted, watch } = Vue;
-
+  const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -876,34 +820,6 @@
       const multiDayMode = ref(false);
       const days = ref([]); // [{id, name, expenses: []}]
       const activeDayId = ref(null);
-// ✅ day settings panel
-const showDaySettings = ref(false);
-
-// ✅ readable day label (for reset/share)
-const activeDayIndex = computed(() =>
-  (days.value || []).findIndex(d => d.id === activeDayId.value)
-);
-const activeDayReadable = computed(() => {
-  const i = activeDayIndex.value;
-  return i >= 0 ? `第${i + 1}日` : "當日";
-});
-
-// ✅ stable day name input (prevents cursor jumping)
-const activeDayNameInput = ref("");
-       const activeDay = computed(() => days.value.find(d => d.id === activeDayId.value) || null);
-// ✅ 切換 Day 時，同步 input
-watch(activeDayId, () => {
-  activeDayNameInput.value = activeDay.value?.name || "";
-}, { immediate: true });
-
-// ✅ 改 Day 名（唔會 cursor 跳）
-watch(activeDayNameInput, (v) => {
-  const d = activeDay.value;
-  if (!d) return;
-  const name = String(v || "").trim();
-  d.name = name || "Day1";
-  saveData();
-});
 
       const lastAddedId = ref(null);
       const newUser = ref("");
@@ -994,43 +910,60 @@ watch(activeDayNameInput, (v) => {
         if (!activeDayId.value) activeDayId.value = days.value[0]?.id || "day1";
       };
 
-     
-      // ✅ 切換 Day
-const setActiveDay = (id) => {
-  if (!id) return;
-  activeDayId.value = id;
-  cancelEdit();
-  saveData();
-};
-
-// ✅ 新增 Day
-const addDay = () => {
-  ensureDefaultDay();
-  const n = days.value.length + 1;
-  const id = `day${Date.now()}`;
-  days.value.push({
-    id,
-    name: `Day${n}`,
-    expenses: []
-  });
-  activeDayId.value = id;
-  showDaySettings.value = true;
-  saveData();
-};
-
+      const activeDay = computed(() => days.value.find(d => d.id === activeDayId.value) || null);
 
       const currentExpenses = computed(() => {
-     
+        ensureDefaultDay();
         const d = activeDay.value;
         return (d && Array.isArray(d.expenses)) ? d.expenses : [];
       });
 
       const allExpenses = computed(() => {
-      
+        ensureDefaultDay();
         return (days.value || []).flatMap(d => (d.expenses || []));
       });
 
-      
+      const activeDayName = computed({
+        get() { return activeDay.value?.name || ""; },
+        set(v) { /* handled by renameActiveDay */ }
+      });
+
+      const setActiveDay = (id) => {
+        activeDayId.value = id;
+        cancelEdit();
+        saveData();
+      };
+
+      const addDay = () => {
+        ensureDefaultDay();
+        const n = (days.value.length || 0) + 1;
+        const id = "day" + Date.now();
+        days.value.push({ id, name: `Day${n}`, expenses: [] });
+        activeDayId.value = id;
+        cancelEdit();
+        saveData();
+        toast("已新增 Day");
+      };
+
+      const renameActiveDay = () => {
+
+      // We'll update rename via watcher-like manual method:
+      const _activeDayNameTmp = ref("");
+      // use this ref for v-model
+      // (wired below in return, we bind to activeDayNameProxy)
+      const activeDayNameProxy = computed({
+        get() {
+          _activeDayNameTmp.value = activeDay.value?.name || "";
+          return _activeDayNameTmp.value;
+        },
+        set(v) {
+          _activeDayNameTmp.value = v;
+          const d = activeDay.value;
+          if (!d) return;
+          d.name = String(v || "").trim() || "未命名";
+          saveData();
+        }
+      });
 
       const removeActiveDay = () => {
         ensureDefaultDay();
@@ -1051,17 +984,16 @@ const addDay = () => {
       };
 
       const onToggleMultiDay = () => {
-  ensureDefaultDay();
-  if (!multiDayMode.value) {
-    showDaySettings.value = false;
-    toast("已關閉多天模式");
-  } else {
-    showDaySettings.value = true;
-    toast("已開啟多天模式");
-  }
-  saveData();
-};
-
+        ensureDefaultDay();
+        if (!multiDayMode.value) {
+          // turning OFF: keep days data, just hide UI
+          // for share scope, default all (still valid)
+          toast("已關閉多天模式");
+        } else {
+          toast("已開啟多天模式");
+        }
+        saveData();
+      };
 
       // ========= save / load (local + room) =========
       const saveData = () => {
@@ -1073,8 +1005,6 @@ const addDay = () => {
           days: JSON.parse(JSON.stringify(days.value || [])),
           activeDayId: activeDayId.value
         };
-
-
         localStorage.setItem('mathGod_localData', JSON.stringify(data));
 
         if (roomId.value) {
@@ -1096,12 +1026,17 @@ const addDay = () => {
       const RATES_TTL_MS = 6 * 60 * 60 * 1000;
 
       const loadRatesCache = () => {
-        const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
-        if (cached?.rates && cached?.updatedAt) {
-          ratesHKD.value = cached.rates;
-          rateUpdatedAt.value = cached.updatedAt;
-        }
-      };
+  try {
+    const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+    if (cached?.rates && cached?.updatedAt) {
+      ratesHKD.value = cached.rates;
+      rateUpdatedAt.value = cached.updatedAt;
+    }
+  } catch (e) {
+    console.error("Failed to load rates cache:", e);
+  }
+};
+
 
       const saveRatesCache = (rates, updatedAt) => {
         localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ rates, updatedAt }));
@@ -1299,7 +1234,7 @@ const addDay = () => {
               return;
             }
 
-            form.value.amount = String(val);
+            form.value.amount = val;
             closeKeypad();
           } catch (e) {
             keypadHint.value = e?.message || "計算錯誤";
@@ -1405,7 +1340,7 @@ const addDay = () => {
 
         editingId.value = e.id;
         isEditing.value = true;
-        form.value = { item: e.item, amount: String(e.origAmount ?? ""), currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])] };
+        form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])] };
         handleCurrencyChange();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       };
@@ -1646,58 +1581,48 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
       };
 
       const removeHistoryRoom = (rid) => {
-        if (confirm("從最近紀錄中刪除此房間？")) {
-          let h = recentRooms.value.filter(x => x !== rid);
-          recentRooms.value = h;
-          localStorage.setItem('mathGod_history', JSON.stringify(h));
+  if (confirm("從最近紀錄中刪除此房間？")) {
+    let h = (recentRooms.value || []).filter(x => x !== rid);
+    recentRooms.value = h;
+    localStorage.setItem('mathGod_history', JSON.stringify(h));
 
-          let names = { ...(roomNamesMap.value || {}) };
-          delete names[rid];
-          localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
-          roomNamesMap.value = names;
-        }
-      };
-
-      // ====== reset ======
-      const resetData = (t, ask = true) => {
-  const doReset = () => {
-    if (t === 'all') {
-      users.value = [];
-      eventName.value = "";
-      multiDayMode.value = false;
-      days.value = [{ id: "day1", name: "Day1", expenses: [] }];
-      activeDayId.value = "day1";
-      form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [] };
-    } else if (t === 'day') {
-      ensureDefaultDay();
-      const d = activeDay.value;
-      if (d) d.expenses = [];
-    } else {
-      ensureDefaultDay();
-      // clear all expenses across all days
-      days.value = (days.value || []).map(d => ({ ...d, expenses: [] }));
-    }
-    saveData();
-    showResetMenu.value = false;
-  };
-
-  const msg =
-    t === 'all'
-      ? "確定清除所有紀錄（包括朋友）嗎？"
-      : t === 'day'
-        ? `確定清除當天（${activeDayReadable.value}）所有消費嗎？`
-        : "確定只清空消費紀錄嗎？";
-
-  if (ask) {
-    if (confirm(msg)) {
-      doReset();
-      toast("資料已重置");
-    }
-  } else {
-    doReset();
+    let names = { ...(roomNamesMap.value || {}) };
+    delete names[rid];
+    localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
+    roomNamesMap.value = names;
+    toast("已從紀錄中移除");
   }
 };
 
+
+      // ====== reset ======
+      const resetData = (t, ask = true) => {
+        const doReset = () => {
+          if (t === 'all') {
+            users.value = [];
+            eventName.value = "";
+            multiDayMode.value = false;
+            days.value = [{ id: "day1", name: "Day1", expenses: [] }];
+            activeDayId.value = "day1";
+            form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [] };
+          } else {
+            ensureDefaultDay();
+            // clear all expenses across all days
+            days.value = (days.value || []).map(d => ({ ...d, expenses: [] }));
+          }
+          saveData();
+          showResetMenu.value = false;
+        };
+
+        if (ask) {
+          if (confirm(t === 'all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) {
+            doReset();
+            toast("資料已重置");
+          }
+        } else {
+          doReset();
+        }
+      };
 
       // ====== share ======
       const getShareText = () => {
@@ -1840,8 +1765,9 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
 
       // ====== computed ======
       const recentRoomsWithNames = computed(() =>
-        recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))
-      );
+  (recentRooms.value || []).map(id => ({ id, name: (roomNamesMap.value || {})[id] || '未命名活動' }))
+);
+
 
       onMounted(() => {
         window.removeEventListener("keydown", onEsc);
@@ -1856,7 +1782,14 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         refreshRatesSilently(false);
 
         // load local
-        const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
+let local = {};
+try {
+  local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
+} catch (e) {
+  console.error("Failed to parse local data:", e);
+  local = {};
+}
+
 
         // ✅ backward compat: if old structure has expenses, migrate -> Day1
         users.value = local.users || [];
@@ -1918,14 +1851,10 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
 
         // multi-day
         multiDayMode, days, activeDayId, activeDay,
-        currentExpenses, allExpenses,
-        setActiveDay, addDay, removeActiveDay,
-      
-        onToggleMultiDay,
-        showDaySettings,
-activeDayNameInput,
-activeDayReadable,
-
+  currentExpenses, allExpenses,
+  setActiveDay, addDay, removeActiveDay,
+  activeDayNameProxy,
+  onToggleMultiDay,
 
         // totals
         totalSpentDay, totalSpentAll, totalSpentForShare,
