@@ -946,9 +946,13 @@
       };
 
       const renameActiveDay = () => {
+  // This function is now handled by activeDayNameProxy computed setter
+  // Keeping for backward compatibility but functionality moved to computed
+};
 
-      // We'll update rename via watcher-like manual method:
-      const _activeDayNameTmp = ref("");
+// We'll update rename via watcher-like manual method:
+const _activeDayNameTmp = ref("");
+
       // use this ref for v-model
       // (wired below in return, we bind to activeDayNameProxy)
       const activeDayNameProxy = computed({
