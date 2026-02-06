@@ -2,366 +2,385 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MathGod⚡️夾錢計數小助手</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MathGod⚡️夾錢計數小助手 (Pro)</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary-dark: #0a2f23;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --neon-green: #00ff9d;
+        /* === ORIGINAL CSS FROM PDF === */
+        :root { 
+            --primary: #10b981; 
+            --bg: #050505; 
+            --card-bg: rgba(30, 30, 30, 0.65); 
+            --border: rgba(255, 255, 255, 0.1); 
         }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: var(--primary-dark);
-            color: #e0e0e0;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 255, 157, 0.05) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(0, 157, 255, 0.05) 0%, transparent 20%);
-            min-height: 100vh;
-            /* Prevent pull-to-refresh on mobile */
-            overscroll-behavior-y: none;
+        [v-cloak] { display: none !important; }
+        body { 
+            background-color: var(--bg); 
+            color: #fff; 
+            font-family: 'Noto Sans TC', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            overscroll-behavior-y: none; 
         }
-
-        .mono { font-family: 'JetBrains Mono', monospace; }
-
-        /* Glassmorphism Card - 原本樣式 */
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        
+        /* Glassmorphism */
+        .glass { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border: 1px solid var(--border); 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); 
         }
-
-        /* Inputs - 原本樣式 */
-        .glass-input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
+        .glass-input { 
+            background: rgba(0,0,0,0.3); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            transition: all 0.3s; 
         }
-        .glass-input:focus {
-            outline: none;
-            border-color: var(--neon-green);
-            background: rgba(0, 0, 0, 0.5);
-            box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+        .glass-input:focus-within { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); 
+            background: rgba(0,0,0,0.5); 
         }
-
-        /* Scrollbar hiding */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Buttons click effect */
+        
+        /* Utils */
+        .font-num { font-family: 'JetBrains Mono', monospace; }
         .btn-press { transition: transform 0.1s; }
-        .btn-press:active { transform: scale(0.95); }
+        .btn-press:active { transform: scale(0.96); }
+        
+        .footer-gradient { 
+            background: linear-gradient(to top, rgba(5,5,5,0.95) 10%, rgba(5,5,5,0.6) 40%, rgba(5,5,5,0) 100%); 
+            pointer-events: none; 
+            height: 120px; 
+        }
 
         /* Animations */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
         .list-enter-active, .list-leave-active { transition: all 0.4s ease; }
         .list-enter-from, .list-leave-to { opacity: 0; transform: translateX(-20px); }
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-        .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-        /* 新增：天數標籤樣式 (保持原本設計風格) */
+        @keyframes lightningBar {
+            0% { transform: translateX(-120%); }
+            100% { transform: translateX(420%); }
+        }
+        .animate-lightning-bar { animation: lightningBar 1s infinite linear; }
+
+        /* Calculator Animation */
+        .calc-enter-active, .calc-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+        .calc-enter-from, .calc-leave-to { opacity: 0; transform: scale(0.92) translateY(12px); }
+
+        /* Checkbox & Inputs */
+        .math-check { 
+            appearance: none; width: 20px; height: 20px; 
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; 
+            position: relative; transition: all 0.2s; 
+        }
+        .math-check:checked { background: var(--primary); border-color: var(--primary); }
+        .math-check:checked::after { 
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; 
+            position: absolute; font-size: 10px; left: 50%; top: 50%; transform: translate(-50%, -50%); 
+        }
+
+        /* NEW: Day Tabs Integration */
         .day-tab {
-            transition: all 0.3s ease;
             white-space: nowrap;
-            border: 1px solid transparent;
+            transition: all 0.3s ease;
         }
         .day-tab.active {
-            background: rgba(0, 255, 157, 0.2);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-            font-weight: bold;
-            box-shadow: 0 0 10px rgba(0, 255, 157, 0.1);
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
         }
-        .day-tab.inactive {
-            background: rgba(255, 255, 255, 0.05);
-            color: #888;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
 
-<div id="app" class="max-w-md mx-auto relative pb-24">
+<div id="app" v-cloak class="min-h-screen flex flex-col max-w-[500px] mx-auto relative pb-32">
 
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 cursor-pointer" @click="resetData">
-            <i class="fa-solid fa-bolt text-yellow-400 mr-2"></i>MathGod
-        </h1>
+    <header class="p-6 pb-4 rounded-b-[2.5rem] sticky top-0 z-40 transition-all duration-500 shadow-2xl backdrop-blur-xl border-b border-white/5 bg-[#0a2f23]/90">
         
-        <div class="flex space-x-3">
-            <div v-if="roomId" @click="copyRoomLink" class="glass-panel px-3 py-1 rounded-full text-xs flex items-center gap-2 cursor-pointer active:scale-95 transition-transform border-green-500/30 border">
-                <span class="text-green-400 font-bold">● Live</span>
-                <span class="mono">{{ roomId }}</span>
-                <i class="fa-regular fa-copy text-gray-400"></i>
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-lg border border-white/10">
+                    <i class="fas fa-bolt text-yellow-300 text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black italic tracking-tighter text-white leading-none">MathGod</h1>
+                    <p class="text-[9px] font-bold text-emerald-400/80 tracking-[0.1em] uppercase">
+                        {{ isEditing ? '正在修改模式' : '多天旅程同步版' }}
+                    </p>
+                </div>
             </div>
-            
-            <button @click="showSettings = !showSettings" class="w-8 h-8 rounded-full glass-panel flex items-center justify-center hover:bg-white/10 text-gray-300">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-        </div>
-    </div>
 
-    <div v-if="!isInRoom" class="glass-panel rounded-2xl p-6 mb-6 text-center space-y-4 animate-fade-in">
-        <div class="text-6xl mb-4">👋</div>
-        <h2 class="text-xl font-bold">建立或加入房間</h2>
-        <p class="text-sm text-gray-400">與朋友即時同步帳目</p>
-        
-        <div class="grid grid-cols-2 gap-3 mt-4">
-            <button @click="createRoom" class="btn-press bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl shadow-lg shadow-green-500/20">
-                新房間
-            </button>
-            <button @click="showJoinInput = true" v-if="!showJoinInput" class="btn-press glass-input py-3 rounded-xl font-bold">
-                加入房間
-            </button>
-        </div>
-
-        <div v-if="showJoinInput" class="mt-2 flex gap-2">
-            <input v-model="joinRoomId" type="text" placeholder="輸入房號" class="glass-input w-full p-3 rounded-xl text-center mono text-lg uppercase">
-            <button @click="joinRoom" class="bg-blue-500 text-white px-4 rounded-xl">
-                <i class="fa-solid fa-arrow-right"></i>
-            </button>
-        </div>
-        
-        <div v-if="historyRooms.length > 0" class="mt-6 text-left">
-            <h3 class="text-xs text-gray-500 mb-2 ml-1">最近房間</h3>
-            <div class="space-y-2">
-                <div v-for="(room, idx) in historyRooms" :key="idx" class="glass-panel p-3 rounded-xl flex justify-between items-center" @click="joinHistoryRoom(room.id)">
-                    <span class="mono text-sm text-green-400">{{ room.id }}</span>
-                    <span class="text-xs text-gray-500">{{ formatDate(room.timestamp) }}</span>
-                    <button @click.stop="removeHistoryRoom(idx)" class="text-gray-600 hover:text-red-400 px-2">
-                        <i class="fa-solid fa-times"></i>
+            <div class="flex items-center gap-2">
+                <div v-if="roomId" class="glass px-3 py-1.5 rounded-full flex items-center gap-3 border-emerald-500/30 bg-emerald-900/20">
+                    <div class="text-right">
+                        <p class="text-[8px] font-bold uppercase text-emerald-400">ONLINE</p>
+                        <p class="text-xs font-num font-bold text-emerald-400 leading-none">#{{ roomId }}</p>
+                    </div>
+                    <button @click="copyRoomLink" class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">
+                        <i class="fas fa-link text-[10px]"></i>
+                    </button>
+                    <button @click="logoutRoom" class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white">
+                        <i class="fas fa-power-off text-[10px]"></i>
                     </button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div v-else>
-        
-        <div class="glass-panel rounded-2xl p-4 mb-4">
-            <div class="flex flex-wrap gap-2 mb-4">
-                <div v-for="(user, index) in users" :key="index" class="relative group">
-                    <div class="px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-gray-700 to-gray-600 border border-gray-500 shadow-sm cursor-default">
-                        {{ user }}
-                    </div>
-                    <button v-if="users.length > 1" @click="removeUser(index)" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i class="fa-solid fa-times"></i>
-                    </button>
-                </div>
-                <button @click="addUser" class="px-3 py-1 rounded-full text-sm font-medium border border-dashed border-gray-500 text-gray-400 hover:border-green-400 hover:text-green-400 transition-colors">
-                    +
+                <button v-else @click="createRoom" class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 flex items-center gap-2 btn-press hover:border-emerald-500/50">
+                    <i class="fas fa-plus text-emerald-400"></i>
+                    <span>新房間</span>
                 </button>
-            </div>
-
-            <div class="flex items-center justify-between text-sm">
-                <div class="flex items-center gap-2">
-                    <span class="text-gray-400">匯率: 1 {{ currencyCode }} = </span>
-                    <input type="number" v-model.number="currencyRate" @change="handleCurrencyChange" class="glass-input w-16 px-2 py-1 rounded text-center mono" step="0.001">
-                    <span class="text-gray-400">HKD</span>
-                </div>
-                <select v-model="currencyCode" @change="handleCurrencyChange" class="glass-input px-2 py-1 rounded text-xs bg-gray-800">
-                    <option value="JPY">JPY</option>
-                    <option value="TWD">TWD</option>
-                    <option value="KRW">KRW</option>
-                    <option value="THB">THB</option>
-                    <option value="CNY">CNY</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="USD">USD</option>
-                    <option value="OTHER">其他</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <div class="flex overflow-x-auto no-scrollbar gap-2 pb-1 items-center">
-                <button 
-                    v-for="day in totalDays" 
-                    :key="day"
-                    @click="currentDay = day"
-                    class="day-tab px-4 py-2 rounded-xl text-sm btn-press"
-                    :class="currentDay === day ? 'active' : 'inactive'"
-                >
-                    Day {{ day }}
-                </button>
-                <button @click="addNewDay" class="w-8 h-8 rounded-xl glass-input flex items-center justify-center text-gray-400 hover:text-white hover:border-green-400 transition-colors flex-shrink-0">
-                    <i class="fa-solid fa-plus text-xs"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="glass-panel rounded-2xl p-4 mb-4 border-l-4 border-l-green-500">
-            <div class="flex justify-between items-center mb-3">
-                <span class="text-green-400 font-bold text-sm">
-                    <i class="fa-solid fa-pen-to-square"></i> 記帳 <span class="text-gray-500 text-xs ml-1">(Day {{ currentDay }})</span>
-                </span>
-                <span class="text-xs text-gray-500 mono">{{ new Date().toLocaleDateString() }}</span>
-            </div>
-
-            <div class="space-y-3">
-                <input v-model="newItem" placeholder="項目 (e.g. 晚餐)" class="glass-input w-full p-3 rounded-xl">
-                
-                <div class="flex gap-2">
-                    <input v-model.number="newPrice" type="number" inputmode="decimal" placeholder="金額" class="glass-input w-2/3 p-3 rounded-xl mono text-lg font-bold">
-                    <select v-model="newPayer" class="glass-input w-1/3 p-3 rounded-xl text-sm bg-gray-800">
-                        <option value="" disabled>誰付?</option>
-                        <option v-for="u in users" :key="u" :value="u">{{ u }}</option>
-                    </select>
-                </div>
-
-                <div class="mt-2">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs text-gray-400">分錢的人:</span>
-                        <button @click="toggleSelectAll" class="text-xs text-green-400">全選/取消</button>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button 
-                            v-for="user in users" 
-                            :key="user" 
-                            @click="toggleInvolved(user)"
-                            class="px-3 py-1 rounded-lg text-xs transition-all duration-200 border"
-                            :class="newInvolved.includes(user) ? 'bg-green-500/20 border-green-500 text-green-300' : 'bg-transparent border-gray-600 text-gray-500'"
-                        >
-                            {{ user }}
-                        </button>
-                    </div>
-                </div>
-
-                <button @click="addExpense" :disabled="!isFormValid" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-black font-bold py-3 rounded-xl shadow-lg mt-2 btn-press disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
+                <button v-if="!roomId" @click="showJoinModal = true" class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 btn-press">
                     加入
                 </button>
             </div>
         </div>
 
-        <div class="space-y-2 mb-20">
-            <h3 class="text-gray-400 text-sm font-bold ml-1 mb-2 flex justify-between">
-                <span>Day {{ currentDay }} 紀錄</span>
-                <span v-if="currentDayTotal > 0" class="text-green-400 mono text-xs">Total: HKD {{ formatMoney(currentDayTotal) }}</span>
-            </h3>
-            
-            <div v-if="filteredExpenses.length === 0" class="text-center py-8 text-gray-500 opacity-50">
-                <i class="fa-solid fa-receipt text-4xl mb-2"></i>
-                <p>這天還沒有消費哦</p>
-            </div>
+        <div class="glass-input rounded-2xl flex items-center px-4 py-1 mb-3">
+            <i class="fas fa-pen text-[10px] text-gray-500 mr-3"></i>
+            <input v-model="eventName" @change="saveData" class="w-full bg-transparent py-2 text-sm font-bold outline-none placeholder-white/20" placeholder="活動名稱 (e.g. 日本之旅)">
+        </div>
 
-            <transition-group name="list">
-                <div v-for="(expense, index) in filteredExpenses" :key="expense.id" class="glass-panel p-3 rounded-xl flex justify-between items-center group">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-white">{{ expense.item }}</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-300">{{ expense.payer }}付</span>
-                        </div>
-                        <div class="text-xs text-gray-400 mt-1">
-                            涉及: {{ getInvolvedText(expense.involved) }}
-                        </div>
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button 
+                v-for="day in totalDays" 
+                :key="day"
+                @click="currentDay = day"
+                class="day-tab px-4 py-2 rounded-xl text-xs font-black glass border border-white/5"
+                :class="currentDay === day ? 'active' : 'text-gray-500 opacity-60 hover:opacity-100'"
+            >
+                DAY {{ day }}
+            </button>
+            <button @click="addNewDay" class="px-3 py-2 rounded-xl glass border border-white/5 text-gray-400 hover:text-white hover:border-emerald-500 btn-press">
+                <i class="fas fa-plus text-xs"></i>
+            </button>
+        </div>
+
+        <div v-if="isLoading" class="mt-3">
+            <div class="h-1 w-full overflow-hidden rounded-full bg-white/10">
+                <div class="h-full w-1/3 bg-emerald-400 animate-lightning-bar"></div>
+            </div>
+        </div>
+
+    </header>
+
+    <main class="p-5 space-y-6 flex-1">
+
+        <div v-if="!roomId && showJoinModal" class="glass p-6 rounded-[2rem] text-center space-y-4 animate-fade-in">
+            <h3 class="text-lg font-bold">加入房間</h3>
+            <input v-model="joinInput" class="glass-input w-full p-4 rounded-xl text-center font-num text-xl uppercase placeholder-white/20" placeholder="Room ID">
+            <button @click="joinRoom" class="w-full bg-emerald-600 py-3 rounded-xl font-bold text-black btn-press">進入</button>
+            <button @click="showJoinModal = false" class="text-xs text-gray-500 underline">取消</button>
+        </div>
+
+        <div v-else-if="roomId">
+            <section class="glass p-5 rounded-[2rem] mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
+                    <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-400 font-num">{{ users.length }}人</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <div v-for="(u, i) in users" :key="u" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 group">
+                        {{ u }}
+                        <button @click="removeUser(i)" class="text-gray-600 hover:text-red-400 px-1"><i class="fas fa-times"></i></button>
                     </div>
-                    <div class="text-right">
-                        <div class="font-bold mono text-green-400">{{ formatMoney(expense.price) }} <span class="text-[10px] text-gray-500">{{ expense.currency }}</span></div>
-                        <div class="text-[10px] text-gray-500 mono">≈ HKD {{ formatMoney(expense.hkd) }}</div>
-                    </div>
-                    <button @click="removeExpense(expense)" class="ml-3 text-gray-600 hover:text-red-400 w-8 h-8 flex items-center justify-center transition-colors">
-                        <i class="fa-solid fa-trash"></i>
+                    <button @click="addUserPrompt" class="px-3 py-2 rounded-xl border border-dashed border-gray-600 text-gray-500 text-xs hover:border-emerald-500 hover:text-emerald-500 transition-colors">
+                        <i class="fas fa-plus mr-1"></i>加人
                     </button>
                 </div>
-            </transition-group>
-        </div>
-    </div>
+            </section>
 
-    <div v-if="isInRoom" class="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none">
-        <button @click="openSummary" class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-8 py-3 rounded-full shadow-2xl shadow-yellow-400/30 btn-press pointer-events-auto flex items-center gap-2 transition-colors">
-            <i class="fa-solid fa-calculator"></i> 結算總數
+            <section class="glass p-6 rounded-[2rem] relative overflow-visible" :class="{'border-amber-500/50': isEditing}">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2" :class="isEditing ? 'text-amber-500' : 'text-emerald-500'">
+                        {{ isEditing ? '正在修改' : `STEP 2: Day ${currentDay} 記帳` }}
+                    </h3>
+                    <button v-if="isEditing" @click="cancelEdit" class="text-[10px] text-gray-400 underline hover:text-white">取消修改</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="glass-input rounded-2xl flex items-center px-4 relative">
+                        <input v-model="form.item" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30" placeholder="消費項目 (e.g. 晚餐)">
+                        <button v-if="form.item" @click="form.item=''" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-3">
+                        <div class="col-span-4 glass-input rounded-2xl relative">
+                            <select v-model="form.currency" @change="saveData" class="w-full h-full bg-transparent px-2 text-[11px] font-black outline-none text-center appearance-none">
+                                <option v-for="c in ['HKD','JPY','TWD','KRW','THB','CNY','USD','EUR','GBP']" :value="c">{{ c }}</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-gray-500 pointer-events-none"></i>
+                        </div>
+                        
+                        <div class="col-span-8 glass-input rounded-2xl flex items-center pl-4 pr-1 py-2">
+                            <span class="text-xs font-black text-gray-500 mr-2">$</span>
+                            <input v-model="form.amount" type="text" inputmode="decimal" @click="openKeypad" readonly class="w-full bg-transparent font-num font-black outline-none placeholder-white/10 text-lg" placeholder="0.0">
+                            
+                            <button @click.stop="openKeypad" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-emerald-500/10 active:bg-emerald-500/20 text-emerald-400">
+                                <i class="fas fa-calculator"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-bold text-gray-500 ml-1">誰付錢</p>
+                            <div class="glass-input rounded-xl relative">
+                                <select v-model="form.payer" class="w-full bg-transparent p-3 text-xs font-bold outline-none appearance-none">
+                                    <option value="" disabled>請選擇...</option>
+                                    <option v-for="u in users" :value="u">{{ u }}</option>
+                                </select>
+                                <i class="fas fa-caret-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between px-1">
+                                <p class="text-[9px] font-bold text-gray-500">誰有份 ({{ form.involved.length }})</p>
+                                <button @click="toggleSelectAll" class="text-[9px] text-emerald-500 font-bold">全選/取消</button>
+                            </div>
+                            <div class="glass-input rounded-xl p-2 max-h-28 overflow-y-auto space-y-1 custom-scroll">
+                                <div v-for="u in users" :key="u" @click="toggleInvolved(u)" class="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer hover:bg-white/5">
+                                    <div class="math-check flex items-center justify-center" :class="{'bg-emerald-500 border-emerald-500': form.involved.includes(u)}">
+                                        <i v-if="form.involved.includes(u)" class="fas fa-check text-[10px] text-black"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold" :class="form.involved.includes(u) ? 'text-white' : 'text-gray-500'">{{ u }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button @click="addExpense" :disabled="!isFormValid" class="w-full py-4 rounded-2xl font-black text-sm shadow-xl btn-press flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:grayscale" :class="isEditing ? 'bg-amber-600 shadow-amber-900/40' : 'bg-emerald-600 shadow-emerald-900/40'">
+                        <i class="fas" :class="isEditing ? 'fa-save' : 'fa-plus'"></i>
+                        <span>{{ isEditing ? '儲存修改' : '確認入數' }}</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="pb-24">
+                <div class="flex justify-between items-end mb-3 ml-2 mr-2">
+                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Day {{ currentDay }} 紀錄</h3>
+                    <span class="text-[10px] font-num text-emerald-400">Total: ${{ currentDayTotal.toFixed(1) }}</span>
+                </div>
+                
+                <div v-if="currentDayExpenses.length === 0" class="text-center py-6 opacity-30">
+                    <i class="fas fa-clipboard-list text-3xl mb-2"></i>
+                    <p class="text-xs">這天暫無消費</p>
+                </div>
+
+                <transition-group name="list">
+                    <div v-for="exp in currentDayExpenses" :key="exp.id" @click="editExpense(exp)" class="glass p-4 rounded-2xl flex justify-between items-center border-l-[3px] transition-all active:scale-[0.99] mb-3" :style="{ borderColor: isEditing && editingId === exp.id ? '#f59e0b' : '#10b981' }">
+                        <div class="flex-1 overflow-hidden pr-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <p class="font-bold text-sm truncate text-gray-100">{{ exp.item }}</p>
+                                <span v-if="exp.currency !== 'HKD'" class="text-[8px] bg-white/10 px-1.5 rounded text-gray-400 font-num">{{ exp.currency }}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                                <span class="text-emerald-400 font-num">HKD ${{ (exp.hkd || 0).toFixed(1) }}</span>
+                                <span class="text-gray-600">|</span>
+                                <span>{{ exp.payer }} 付</span>
+                            </p>
+                        </div>
+                        <button @click.stop="removeExpense(exp.id)" class="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-red-500/20 hover:text-red-400">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                </transition-group>
+            </section>
+        </div>
+    </main>
+
+    <footer v-if="roomId" class="fixed bottom-6 left-0 right-0 max-w-[500px] mx-auto px-6 z-50 grid grid-cols-2 gap-4 pointer-events-none">
+        <button @click="showSettlement = true" class="pointer-events-auto bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black text-xs shadow-2xl shadow-emerald-900/40 btn-press flex items-center justify-center gap-2 text-white border border-emerald-400/20 backdrop-blur-md">
+            <i class="fas fa-receipt"></i> 結算分享
         </button>
-    </div>
+        <button @click="resetData" class="pointer-events-auto bg-[#151515]/90 border border-white/10 py-4 rounded-2xl font-black text-xs text-gray-400 backdrop-blur-md btn-press hover:bg-white/5 flex items-center justify-center gap-2 shadow-xl">
+            <i class="fas fa-trash"></i> 重設
+        </button>
+    </footer>
 
-    <div v-if="showSettings" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in" @click.self="showSettings = false">
-        <div class="glass-panel w-full max-w-sm rounded-2xl p-6 relative">
-            <h3 class="text-xl font-bold mb-4">設定</h3>
-            <div class="space-y-3">
-                <button @click="resetData" class="w-full py-3 bg-red-500/20 border border-red-500 text-red-400 rounded-xl">
-                    ⚠️ 清空所有資料
-                </button>
-                <button @click="logoutRoom" class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-xl">
-                    退出房間
-                </button>
-                <button @click="showSettings = false" class="w-full py-3 bg-transparent border border-gray-600 rounded-xl mt-4">
-                    關閉
-                </button>
+    <transition name="calc">
+        <div v-if="showKeypadModal" class="fixed inset-0 z-[999] flex items-end sm:items-center justify-center pointer-events-none">
+            <div class="absolute inset-0 bg-black/40 pointer-events-auto" @click="showKeypadModal = false"></div>
+            <div class="pointer-events-auto bg-[#1a1a1a] w-full max-w-sm p-4 rounded-t-3xl sm:rounded-3xl border-t border-white/10 shadow-2xl relative">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-bold text-gray-400">輸入金額</span>
+                    <button @click="showKeypadModal = false" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><i class="fas fa-times text-xs"></i></button>
+                </div>
+                <div class="glass-input rounded-2xl p-4 mb-4 text-right">
+                    <div class="text-2xl font-num font-black text-white break-all">{{ keypadExpr || '0' }}</div>
+                </div>
+                <div class="grid grid-cols-4 gap-2 font-num font-bold">
+                    <button v-for="k in ['C','/','*','-','7','8','9','+','4','5','6','.','1','2','3','0']" :key="k" @click="kp(k)" 
+                        class="py-4 rounded-xl btn-press"
+                        :class="['C','/','*','-','+'].includes(k) ? 'bg-emerald-900/40 text-emerald-400' : 'bg-white/5 text-white'">
+                        {{ k }}
+                    </button>
+                    <button @click="confirmKeypad" class="col-span-4 bg-emerald-600 py-4 rounded-xl text-black font-black btn-press mt-2">OK</button>
+                </div>
             </div>
         </div>
-    </div>
+    </transition>
 
-    <div v-if="showSummaryModal" class="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/90 backdrop-blur-md p-0 md:p-4 animate-fade-in" @click.self="showSummaryModal = false">
-        <div class="bg-[#0f172a] w-full md:max-w-md h-[90vh] md:h-auto md:rounded-3xl rounded-t-3xl p-6 overflow-y-auto relative flex flex-col border border-gray-700">
-            
+    <div v-if="showSettlement" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 p-4 animate-fade-in" @click.self="showSettlement = false">
+        <div class="glass w-full max-w-md rounded-3xl p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-white"><span class="text-yellow-400">⚡️</span> 最終結果</h3>
-                <button @click="showSummaryModal = false" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark fa-xl"></i></button>
+                <h3 class="text-xl font-bold"><span class="text-yellow-400">⚡️</span> 最終結算</h3>
+                <button @click="showSettlement = false"><i class="fas fa-times"></i></button>
             </div>
-
-            <div id="capture-area" class="bg-[#1e293b] p-5 rounded-2xl border border-gray-700 mb-4">
-                <div class="text-center mb-4">
-                    <div class="text-gray-400 text-xs uppercase tracking-widest mb-1">Total Spending</div>
-                    <div class="text-3xl font-bold text-white mono">HKD {{ formatMoney(totalSpendingHKD) }}</div>
+            
+            <div id="capture-area" class="bg-[#151515] p-5 rounded-2xl border border-white/10 mb-4">
+                <div class="text-center mb-6 border-b border-white/5 pb-4">
+                    <p class="text-gray-500 text-xs uppercase tracking-widest mb-1">Total Spending</p>
+                    <p class="text-3xl font-num font-black text-white">HKD ${{ totalSpent.toFixed(1) }}</p>
+                    <p class="text-[10px] text-gray-600 mt-1">Across {{ totalDays }} Days</p>
                 </div>
 
                 <div class="space-y-3">
-                    <div v-for="(debt, idx) in calculatedDebts" :key="idx" class="flex items-center justify-between bg-[#0f172a] p-3 rounded-lg border border-gray-800">
+                    <div v-for="(debt, idx) in settlements" :key="idx" class="flex justify-between items-center bg-white/5 p-3 rounded-lg">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center font-bold text-xs">{{ debt.from[0] }}</div>
-                            <i class="fa-solid fa-arrow-right text-gray-600 text-xs"></i>
-                            <div class="w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold text-xs">{{ debt.to[0] }}</div>
+                            <i class="fas fa-arrow-right text-gray-600 text-xs"></i>
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">{{ debt.to[0] }}</div>
                         </div>
-                        <div class="flex flex-col text-right">
-                            <span class="text-sm text-gray-400">{{ debt.from }} 比 {{ debt.to }}</span>
-                            <span class="text-lg font-bold text-yellow-400 mono">${{ formatMoney(debt.amount) }}</span>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400">{{ debt.from }} 給 {{ debt.to }}</p>
+                            <p class="text-lg font-num font-bold text-yellow-400">${{ debt.amount.toFixed(1) }}</p>
                         </div>
                     </div>
-                    
-                    <div v-if="calculatedDebts.length === 0" class="text-center text-green-400 py-4 bg-[#0f172a] rounded-lg border border-gray-800 border-dashed">
+                    <div v-if="settlements.length === 0" class="text-center text-emerald-400 py-4">
                         🎉 數目分明，無需夾錢！
                     </div>
                 </div>
-                
-                <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between text-xs text-gray-500">
+                <div class="mt-4 pt-4 border-t border-white/5 flex justify-between text-[10px] text-gray-600">
                     <span>Room: {{ roomId }}</span>
-                    <span>Days: {{ totalDays }}</span>
+                    <span>Generated by MathGod</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-auto md:mt-0">
-                <button @click="copyText" class="py-3 bg-gray-700 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-600 text-white transition-colors">
-                    <i class="fa-regular fa-copy"></i> 複製文字
-                </button>
-                <button @click="generateImage" class="py-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl font-bold flex items-center justify-center gap-2 text-white shadow-lg shadow-blue-500/30 transition-colors">
-                    <i class="fa-solid fa-image"></i> 儲存圖片
-                </button>
-            </div>
+            <button @click="copySummary" class="w-full bg-emerald-600 py-3 rounded-xl font-bold text-black mb-3">複製文字</button>
+            <button @click="saveImage" class="w-full bg-white/10 py-3 rounded-xl font-bold">儲存圖片</button>
         </div>
     </div>
 
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+const { createApp, ref, computed, onMounted, watch } = Vue;
 
-// Firebase Config (Keep original)
 const firebaseConfig = {
     apiKey: "yFDRUSUFAFnZf6AGdsEA9LxSyLcZF75oIFfib5At",
     databaseURL: "https://mathgod2-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -371,406 +390,264 @@ const firebaseConfig = {
     appId: "1:536739462528:web:123456"
 };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 createApp({
     setup() {
         // State
-        const users = ref(['A', 'B']);
-        const shareExpenses = ref([]);
-        const currencyCode = ref('JPY');
-        const currencyRate = ref(0.053);
-        
-        // Multi-day State
-        const currentDay = ref(1);
-        const totalDays = ref(1);
-        
-        // Room State
         const roomId = ref('');
-        const joinRoomId = ref('');
-        const isInRoom = ref(false);
-        const showJoinInput = ref(false);
-        const historyRooms = ref([]);
+        const eventName = ref('');
+        const users = ref(['A', 'B']);
+        const expenses = ref([]);
+        const totalDays = ref(1);
+        const currentDay = ref(1);
         
-        // UI State
-        const showSettings = ref(false);
-        const showSummaryModal = ref(false);
+        // Form
+        const form = ref({
+            item: '',
+            amount: '',
+            currency: 'HKD',
+            payer: '',
+            involved: []
+        });
         
-        // Input State
-        const newItem = ref('');
-        const newPrice = ref('');
-        const newPayer = ref('');
-        const newInvolved = ref([...users.value]);
-
-        // --- Computed ---
-
-        const isFormValid = computed(() => {
-            return newItem.value && newPrice.value && newPayer.value && newInvolved.value.length > 0;
-        });
-
-        const filteredExpenses = computed(() => {
-            // 只顯示當前 Day 的項目，並按時間倒序
-            return shareExpenses.value
-                .filter(e => (e.day || 1) === currentDay.value)
-                .sort((a, b) => b.timestamp - a.timestamp);
-        });
-
-        const currentDayTotal = computed(() => {
-            return filteredExpenses.value.reduce((sum, e) => sum + (e.hkd || 0), 0);
-        });
-
-        const totalSpendingHKD = computed(() => {
-            // 計算所有 Day 的總和
-            return shareExpenses.value.reduce((sum, e) => sum + (Number(e.hkd) || 0), 0);
-        });
-
-        const calculatedDebts = computed(() => {
-            return calculateDebtsLogic(shareExpenses.value, users.value);
-        });
-
-        // --- Methods ---
-
-        const formatMoney = (val) => {
-            if (!val && val !== 0) return '0.0';
-            return Number(val).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        };
+        // UI
+        const isLoading = ref(false);
+        const showJoinModal = ref(false);
+        const showSettlement = ref(false);
+        const showKeypadModal = ref(false);
+        const joinInput = ref('');
+        const keypadExpr = ref('');
         
-        const formatDate = (ts) => {
-            return new Date(ts).toLocaleDateString();
-        };
+        // Editing
+        const isEditing = ref(false);
+        const editingId = ref(null);
 
-        const getInvolvedText = (inv) => {
-            if (!inv) return '無';
-            if (inv.length === users.value.length) return '所有人';
-            return inv.join(', ');
-        };
+        // Rates
+        const rates = { HKD:1, JPY:0.053, TWD:0.25, KRW:0.006, THB:0.22, CNY:1.1, USD:7.8, EUR:8.5, GBP:9.8 };
 
-        // --- Core Actions ---
+        // Computed
+        const isFormValid = computed(() => form.value.item && form.value.amount && form.value.payer && form.value.involved.length > 0);
+        
+        const currentDayExpenses = computed(() => {
+            return expenses.value.filter(e => (e.day || 1) === currentDay.value).sort((a,b) => b.timestamp - a.timestamp);
+        });
 
-        const addNewDay = () => {
-            totalDays.value++;
-            currentDay.value = totalDays.value; // 自動跳轉到新的一天
-            saveData();
-        };
+        const currentDayTotal = computed(() => currentDayExpenses.value.reduce((acc, e) => acc + (e.hkd || 0), 0));
+        
+        const totalSpent = computed(() => expenses.value.reduce((acc, e) => acc + (e.hkd || 0), 0));
 
-        const addUser = () => {
-            const name = prompt("輸入名字:");
-            if (name && !users.value.includes(name)) {
-                users.value.push(name);
-                newInvolved.value.push(name); 
-                saveData();
-            }
-        };
-
-        const removeUser = (index) => {
-            if (users.value.length <= 1) return;
-            if (confirm(`確定刪除 ${users.value[index]}? (會影響歷史帳目)`)) {
-                const removedName = users.value[index];
-                users.value.splice(index, 1);
-                newInvolved.value = newInvolved.value.filter(u => u !== removedName);
-                saveData();
-            }
-        };
-
-        const toggleInvolved = (user) => {
-            if (newInvolved.value.includes(user)) {
-                newInvolved.value = newInvolved.value.filter(u => u !== user);
-            } else {
-                newInvolved.value.push(user);
-            }
-        };
-
-        const toggleSelectAll = () => {
-            if (newInvolved.value.length === users.value.length) {
-                newInvolved.value = [];
-            } else {
-                newInvolved.value = [...users.value];
-            }
-        };
-
-        const addExpense = () => {
-            if (!isFormValid.value) return;
-
-            const expense = {
-                id: Date.now().toString(), // local ID
-                timestamp: Date.now(),
-                item: newItem.value,
-                price: parseFloat(newPrice.value),
-                currency: currencyCode.value,
-                rate: currencyRate.value,
-                hkd: parseFloat(newPrice.value) * currencyRate.value,
-                payer: newPayer.value,
-                involved: [...newInvolved.value],
-                day: currentDay.value // 關鍵：寫入當前天數
-            };
-
-            const roomRef = db.ref('rooms/' + roomId.value + '/expenses');
-            roomRef.push(expense);
-
-            newItem.value = '';
-            newPrice.value = '';
-            // 不重置 Payer 和 Involved，方便連續輸入
-        };
-
-        const removeExpense = (expense) => {
-            if (confirm(`刪除「${expense.item}」?`)) {
-                if (expense.firebaseKey) {
-                    db.ref('rooms/' + roomId.value + '/expenses/' + expense.firebaseKey).remove();
+        const settlements = computed(() => {
+            let bal = {};
+            users.value.forEach(u => bal[u] = 0);
+            expenses.value.forEach(e => {
+                const amt = e.hkd;
+                if(amt && e.involved.length){
+                    bal[e.payer] += amt;
+                    const split = amt / e.involved.length;
+                    e.involved.forEach(u => bal[u] -= split);
                 }
-            }
-        };
-
-        const handleCurrencyChange = () => {
-            saveData();
-        };
-
-        // --- Firebase ---
-
-        const createRoom = () => {
-            const newRoomId = Math.floor(1000 + Math.random() * 9000).toString();
-            roomId.value = newRoomId;
-            isInRoom.value = true;
-            
-            db.ref('rooms/' + newRoomId).set({
-                users: ['A', 'B'],
-                currencyCode: 'JPY',
-                currencyRate: 0.053,
-                totalDays: 1,
-                createdAt: Date.now()
             });
+            let db = [], cr = [];
+            for(let u in bal){
+                if(bal[u] < -0.1) db.push({u, amt: bal[u]});
+                if(bal[u] > 0.1) cr.push({u, amt: bal[u]});
+            }
+            db.sort((a,b)=>a.amt-b.amt); cr.sort((a,b)=>b.amt-a.amt);
             
-            saveHistory(newRoomId);
-            listenToRoom(newRoomId);
+            let res = [];
+            let i=0, j=0;
+            while(i<db.length && j<cr.length){
+                let d = db[i], c = cr[j];
+                let val = Math.min(Math.abs(d.amt), c.amt);
+                res.push({from: d.u, to: c.u, amount: val});
+                d.amt += val; c.amt -= val;
+                if(Math.abs(d.amt)<0.1) i++;
+                if(c.amt<0.1) j++;
+            }
+            return res;
+        });
+
+        // Methods
+        const createRoom = () => {
+            const id = Math.floor(1000 + Math.random()*9000).toString();
+            db.ref('rooms/' + id).set({ users: ['A','B'], totalDays: 1, created: Date.now() });
+            enterRoom(id);
         };
 
         const joinRoom = () => {
-            if (!joinRoomId.value) return;
-            const rid = joinRoomId.value;
-            checkAndJoin(rid);
+            if(!joinInput.value) return;
+            db.ref('rooms/' + joinInput.value).once('value', snap => {
+                if(snap.exists()) enterRoom(joinInput.value);
+                else alert('房間不存在');
+            });
         };
 
-        const joinHistoryRoom = (rid) => {
-            checkAndJoin(rid);
-        };
-
-        const checkAndJoin = (rid) => {
-             db.ref('rooms/' + rid).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    roomId.value = rid;
-                    isInRoom.value = true;
-                    saveHistory(rid);
-                    listenToRoom(rid);
-                } else {
-                    alert("找不到房間！");
+        const enterRoom = (id) => {
+            roomId.value = id;
+            showJoinModal.value = false;
+            isLoading.value = true;
+            localStorage.setItem('mathgod_room', id);
+            
+            db.ref('rooms/' + id).on('value', snap => {
+                isLoading.value = false;
+                const val = snap.val();
+                if(val){
+                    if(val.users) users.value = val.users;
+                    if(val.eventName) eventName.value = val.eventName;
+                    if(val.totalDays) totalDays.value = val.totalDays;
+                    if(val.expenses){
+                        expenses.value = Object.keys(val.expenses).map(k => ({...val.expenses[k], id: k}));
+                    } else expenses.value = [];
                 }
             });
-        };
-
-        const listenToRoom = (rid) => {
-            const roomRef = db.ref('rooms/' + rid);
-            roomRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    if (data.users) users.value = data.users;
-                    if (data.currencyCode) currencyCode.value = data.currencyCode;
-                    if (data.currencyRate) currencyRate.value = data.currencyRate;
-                    if (data.totalDays) totalDays.value = data.totalDays; // Sync days
-                    
-                    if (data.expenses) {
-                        const arr = [];
-                        Object.keys(data.expenses).forEach(key => {
-                            arr.push({ ...data.expenses[key], firebaseKey: key });
-                        });
-                        shareExpenses.value = arr;
-                    } else {
-                        shareExpenses.value = [];
-                    }
-                }
-            });
-        };
-
-        const saveData = () => {
-            if (!roomId.value) return;
-            db.ref('rooms/' + roomId.value).update({
-                users: users.value,
-                currencyCode: currencyCode.value,
-                currencyRate: currencyRate.value,
-                totalDays: totalDays.value
-            });
-        };
-
-        const resetData = () => {
-            if (confirm("嚴重警告：這會清空房間所有帳目！")) {
-                db.ref('rooms/' + roomId.value + '/expenses').remove();
-            }
         };
 
         const logoutRoom = () => {
-            isInRoom.value = false;
             roomId.value = '';
-            shareExpenses.value = [];
-            // Optional: Reload to clear all states cleanly
-             window.location.reload();
+            expenses.value = [];
+            localStorage.removeItem('mathgod_room');
+            location.reload();
         };
 
-        // --- Local History ---
-        const saveHistory = (rid) => {
-            let history = JSON.parse(localStorage.getItem('mathgod_history') || '[]');
-            // remove if exists
-            history = history.filter(r => r.id !== rid);
-            // unshift
-            history.unshift({ id: rid, timestamp: Date.now() });
-            localStorage.setItem('mathgod_history', JSON.stringify(history));
-            historyRooms.value = history;
-        };
-        
-        const removeHistoryRoom = (index) => {
-            let history = JSON.parse(localStorage.getItem('mathgod_history') || '[]');
-            history.splice(index, 1);
-            localStorage.setItem('mathgod_history', JSON.stringify(history));
-            historyRooms.value = history;
+        const addNewDay = () => {
+            totalDays.value++;
+            currentDay.value = totalDays.value;
+            saveData();
         };
 
-        // --- Logic (Split Bills) ---
-        function calculateDebtsLogic(expenses, userList) {
-            let balances = {};
-            userList.forEach(u => balances[u] = 0);
-
-            expenses.forEach(e => {
-                const amount = Number(e.hkd);
-                const payer = e.payer;
-                const involved = e.involved || [];
-                
-                if (amount > 0 && involved.length > 0) {
-                    balances[payer] = (balances[payer] || 0) + amount;
-                    const splitAmount = amount / involved.length;
-                    involved.forEach(u => {
-                        balances[u] = (balances[u] || 0) - splitAmount;
-                    });
-                }
-            });
-
-            let debtors = [];
-            let creditors = [];
-
-            for (const [user, amount] of Object.entries(balances)) {
-                if (amount < -0.01) debtors.push({ user, amount });
-                if (amount > 0.01) creditors.push({ user, amount });
-            }
-
-            debtors.sort((a, b) => a.amount - b.amount);
-            creditors.sort((a, b) => b.amount - a.amount);
-
-            let results = [];
-            let i = 0; 
-            let j = 0; 
-
-            while (i < debtors.length && j < creditors.length) {
-                let debtor = debtors[i];
-                let creditor = creditors[j];
-                
-                let debtAmount = Math.abs(debtor.amount);
-                let creditAmount = creditor.amount;
-                let settleAmount = 0;
-
-                if (debtAmount < creditAmount) {
-                    settleAmount = debtAmount;
-                    creditor.amount -= settleAmount;
-                    debtor.amount = 0;
-                    i++;
-                } else {
-                    settleAmount = creditAmount;
-                    debtor.amount += settleAmount;
-                    creditor.amount = 0;
-                    j++;
-                }
-
-                if (settleAmount > 0.1) {
-                    results.push({
-                        from: debtor.user,
-                        to: creditor.user,
-                        amount: settleAmount
-                    });
-                }
-            }
-            return results;
-        }
-
-        // --- Export ---
-        const openSummary = () => {
-            showSummaryModal.value = true;
-        };
-
-        const copyText = () => {
-            let msg = `⚡️MathGod 結算 (Room: ${roomId.value})\n`;
+        const addExpense = () => {
+            const hkd = parseFloat(form.value.amount) * (rates[form.value.currency] || 1);
+            const data = {
+                ...form.value,
+                hkd,
+                timestamp: Date.now(),
+                day: currentDay.value
+            };
             
-            if (calculatedDebts.value.length === 0) {
-                msg += `無需夾錢！\n`;
+            if(isEditing.value && editingId.value){
+                db.ref(`rooms/${roomId.value}/expenses/${editingId.value}`).update(data);
+                isEditing.value = false;
+                editingId.value = null;
             } else {
-                calculatedDebts.value.forEach(d => {
-                    msg += `${d.from} 比 ${d.to}: $${formatMoney(d.amount)}\n`;
-                });
+                db.ref(`rooms/${roomId.value}/expenses`).push(data);
             }
             
-            msg += `\n📋 詳細紀錄 (Total: $${formatMoney(totalSpendingHKD.value)}):\n`;
-            
-            // 按 Day 分組導出
-            const grouped = {};
-            shareExpenses.value.forEach(e => {
-                const d = e.day || 1;
-                if (!grouped[d]) grouped[d] = [];
-                grouped[d].push(e);
-            });
-
-            Object.keys(grouped).sort((a,b)=>a-b).forEach(day => {
-                msg += `\n[Day ${day}]\n`;
-                grouped[day].forEach(e => {
-                    msg += `- ${e.item} (${e.payer}): $${formatMoney(e.hkd)}\n`;
-                });
-            });
-            
-            msg += `\nGenerated by MathGod`;
-            
-            navigator.clipboard.writeText(msg).then(() => alert("已複製！"));
+            form.value.item = '';
+            form.value.amount = '';
+            form.value.involved = [...users.value];
         };
 
-        const generateImage = () => {
-            const el = document.getElementById("capture-area");
-            html2canvas(el, { backgroundColor: "#0f172a" }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `mathgod_${roomId.value}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
+        const removeExpense = (id) => {
+            if(confirm('刪除此紀錄?')) db.ref(`rooms/${roomId.value}/expenses/${id}`).remove();
+        };
+
+        const editExpense = (exp) => {
+            isEditing.value = true;
+            editingId.value = exp.id;
+            form.value = { ...exp };
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const cancelEdit = () => {
+            isEditing.value = false;
+            editingId.value = null;
+            form.value.item = '';
+            form.value.amount = '';
+        };
+
+        const addUserPrompt = () => {
+            const name = prompt('輸入名字:');
+            if(name && !users.value.includes(name)){
+                users.value.push(name);
+                saveData();
+            }
+        };
+
+        const removeUser = (idx) => {
+            if(confirm('刪除使用者?')) {
+                users.value.splice(idx, 1);
+                saveData();
+            }
+        };
+
+        const saveData = () => {
+            if(roomId.value){
+                db.ref(`rooms/${roomId.value}`).update({
+                    users: users.value,
+                    eventName: eventName.value,
+                    totalDays: totalDays.value
+                });
+            }
+        };
+
+        const toggleInvolved = (u) => {
+            const idx = form.value.involved.indexOf(u);
+            if(idx > -1) form.value.involved.splice(idx, 1);
+            else form.value.involved.push(u);
+        };
+        
+        const toggleSelectAll = () => {
+            form.value.involved = form.value.involved.length === users.value.length ? [] : [...users.value];
+        };
+
+        // Keypad
+        const openKeypad = () => {
+            keypadExpr.value = form.value.amount || '';
+            showKeypadModal.value = true;
+        };
+        const kp = (k) => {
+            if(k === 'C') keypadExpr.value = '';
+            else keypadExpr.value += k;
+        };
+        const confirmKeypad = () => {
+            try {
+                // simple eval replacement
+                const res = Function('"use strict";return (' + keypadExpr.value + ')')();
+                form.value.amount = String(parseFloat(res).toFixed(1));
+                showKeypadModal.value = false;
+            } catch(e) {}
+        };
+
+        // Export
+        const copySummary = () => {
+            let t = `⚡️MathGod Summary (#${roomId.value})\n`;
+            settlements.value.forEach(s => t += `${s.from} -> ${s.to}: $${s.amount.toFixed(1)}\n`);
+            t += `\nTotal: $${totalSpent.value.toFixed(1)}\n`;
+            navigator.clipboard.writeText(t).then(()=>alert('Copied!'));
+        };
+        
+        const saveImage = () => {
+            html2canvas(document.querySelector('#capture-area'), {backgroundColor:'#151515'}).then(c => {
+                const a = document.createElement('a');
+                a.download = 'settlement.png';
+                a.href = c.toDataURL();
+                a.click();
             });
         };
         
-        const copyRoomLink = () => {
-            navigator.clipboard.writeText(roomId.value).then(() => alert("已複製房號！"));
-        };
+        const copyRoomLink = () => navigator.clipboard.writeText(roomId.value);
 
-        // Load History
+        // Init
         onMounted(() => {
-            const history = JSON.parse(localStorage.getItem('mathgod_history') || '[]');
-            historyRooms.value = history;
+            const saved = localStorage.getItem('mathgod_room');
+            if(saved) enterRoom(saved);
+            form.value.involved = [...users.value];
+        });
+        
+        watch(users, (newUsers) => {
+            if(!isEditing.value) form.value.involved = [...newUsers];
         });
 
         return {
-            users, shareExpenses, currencyCode, currencyRate,
-            roomId, joinRoomId, isInRoom, showJoinInput, historyRooms,
-            showSettings, showSummaryModal,
-            newItem, newPrice, newPayer, newInvolved, isFormValid,
-            currentDay, totalDays, // Multiday vars
-            filteredExpenses, currentDayTotal, totalSpendingHKD, calculatedDebts,
-            
-            addNewDay, addUser, removeUser, createRoom, joinRoom, joinHistoryRoom, removeHistoryRoom,
-            logoutRoom, resetData, addExpense, removeExpense, toggleInvolved, toggleSelectAll,
-            handleCurrencyChange,
-            openSummary, copyText, generateImage, copyRoomLink,
-            formatMoney, formatDate, getInvolvedText
+            roomId, eventName, users, currentDay, totalDays, expenses,
+            form, isLoading, showJoinModal, showSettlement, showKeypadModal,
+            isEditing, editingId, joinInput, keypadExpr,
+            currentDayExpenses, currentDayTotal, totalSpent, settlements, isFormValid,
+            createRoom, joinRoom, logoutRoom, addNewDay, addExpense, removeExpense, editExpense, cancelEdit,
+            addUserPrompt, removeUser, saveData, toggleInvolved, toggleSelectAll,
+            openKeypad, kp, confirmKeypad, copySummary, saveImage, copyRoomLink
         };
     }
 }).mount('#app');
