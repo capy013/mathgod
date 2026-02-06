@@ -184,13 +184,14 @@
         </div>
 
         <button
-          v-else
-          @click="isOnline ? (showSyncModal = true) : toast('目前離線，未能同步', 'error')"
-          class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press"
-          :class="isOnline ? 'hover:border-emerald-500/50' : 'opacity-40 grayscale'">
-          <i :class="['fas', isOnline ? 'fa-cloud' : 'fa-wifi', isOnline ? 'text-emerald-400' : 'text-gray-500']"></i>
-          <span>{{ isOnline ? '同步MODE' : '離線中' }}</span>
-        </button>
+  v-else
+  @click="handleSyncClick"
+  class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press"
+  :class="isOnline ? 'hover:border-emerald-500/50' : 'opacity-40 grayscale'">
+  <i :class="['fas', isOnline ? 'fa-cloud' : 'fa-wifi', isOnline ? 'text-emerald-400' : 'text-gray-500']"></i>
+  <span>{{ isOnline ? '同步MODE' : '離線中' }}</span>
+</button>
+
       </div>
     </div>
 
@@ -664,8 +665,9 @@
   </footer>
 
   <!-- Sync Modal -->
-  <div v-if="showSyncModal" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showSyncModal = false">
-    <div class="glass w-full max-w-sm p-8 rounded-[2.5rem] relative overflow-hidden">
+<div v-if="showSyncModal" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showSyncModal = false">
+  <div class="glass w-full max-w-sm p-8 rounded-[2.5rem] relative overflow-hidden">
+
       <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-emerald-900/20 to-transparent pointer-events-none"></div>
 
       <div class="relative z-10 text-center mb-8">
@@ -931,7 +933,15 @@
         toasts.value.push({id, msg, type});
         setTimeout(() => toasts.value = toasts.value.filter(t=>t.id!==id), 3000);
       };
-
+const handleSyncClick = () => {
+  console.log('Sync button clicked, isOnline:', isOnline.value);
+  if (!isOnline.value) {
+    toast('目前離線，未能同步', 'error');
+    return;
+  }
+  console.log('Opening sync modal');
+  showSyncModal.value = true;
+};
       const pad2 = (n) => String(n).padStart(2, "0");
       const formatTs = (ts) => {
         const d = new Date(ts);
@@ -1912,14 +1922,18 @@ try {
       });
 
       // ====== return ======
-      return {
-        // state
-        isLoading, isSyncing, isOnline,
-        eventName, users, newUser,
-        form, isEditing, editingId,
-        showSyncModal, showShareModal, showResetMenu, showTutorial,
-        toasts, roomId, roomInput,
-        shareSubMenu,
+    return {
+  // state
+  isLoading, isSyncing, isOnline,
+  eventName, users, newUser,
+  form, isEditing, editingId,
+  showSyncModal, showShareModal, showResetMenu, showTutorial,
+  toasts, roomId, roomInput,
+  shareSubMenu,
+  
+  // handlers
+  handleSyncClick,
+
 
         // multi-day
         multiDayMode, days, activeDayId, activeDay,
