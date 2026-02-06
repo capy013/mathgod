@@ -90,6 +90,31 @@
     .clear-btn:hover{ background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.90); }
     .clear-btn i{ font-size: 11px; line-height: 1; }
     .amount-fit{ font-variant-numeric: tabular-nums; letter-spacing: 0.02em; line-height: 1; }
+/* Browser-style tabs */
+.browser-tab {
+  background: transparent;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.2s;
+}
+
+.browser-tab:hover:not(.active) {
+  background: rgba(255,255,255,0.03);
+}
+
+.browser-tab.active {
+  background: rgba(30,30,30,0.65);
+  border-bottom: 2px solid transparent;
+}
+
+.browser-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(16,185,129,0.6), transparent);
+}
 
     /* tabs */
 .day-tab {
@@ -266,108 +291,86 @@
       </div>
     </section>
 
-    <!-- ✅ Multi-day tabs (only when enabled) -->
-<section v-if="multiDayMode" class="glass p-5 rounded-[2rem]">
-  <div class="flex justify-between items-center mb-4">
-    <div>
-      <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">DAY 分頁管理</h3>
-      <p class="text-[9px] text-gray-500 font-bold">共 {{ days.length }} 日 · 滑動查看更多</p>
-    </div>
-    <button @click="addDay" class="bg-emerald-600 px-4 py-2.5 rounded-xl font-black text-[10px] btn-press shadow-lg shadow-emerald-900/40 hover:bg-emerald-500 transition-all">
-      <i class="fas fa-plus mr-1.5"></i>新增
-    </button>
-  </div>
-
-  <!-- Tabs with gradient indicators -->
-  <div class="relative">
-    <!-- Left gradient fade -->
-    <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[rgba(30,30,30,0.65)] to-transparent pointer-events-none z-10 rounded-l-xl"></div>
-    
-    <!-- Right gradient fade -->
-    <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[rgba(30,30,30,0.65)] to-transparent pointer-events-none z-10 rounded-r-xl"></div>
-    
-    <!-- Scrollable tabs -->
-    <div class="flex gap-2 overflow-x-auto custom-scroll pb-2 pt-1 px-1 -mx-1 scroll-smooth">
+    <!-- ✅ Browser-style tabs (only when enabled) -->
+<section v-if="multiDayMode" class="glass rounded-[2rem] overflow-hidden">
+  
+  <!-- Browser-style tab bar -->
+  <div class="bg-black/20 border-b border-white/5">
+    <div class="flex items-center overflow-x-auto custom-scroll">
+      <!-- Tabs -->
       <button
         v-for="(d, idx) in days"
         :key="d.id"
         @click="setActiveDay(d.id)"
-        class="day-tab px-4 py-3 rounded-xl text-[11px] font-black whitespace-nowrap flex items-center gap-2 shrink-0 transition-all duration-200"
+        class="browser-tab group relative flex items-center gap-2 px-4 py-3 min-w-[140px] max-w-[180px] shrink-0 transition-all"
         :class="activeDayId===d.id ? 'active' : ''"
       >
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
-               :class="activeDayId===d.id ? 'bg-emerald-500/20' : 'bg-white/5'">
-            <span class="font-num font-black text-[10px]" 
-                  :class="activeDayId===d.id ? 'text-emerald-400' : 'text-gray-500'">
-              {{ idx + 1 }}
-            </span>
-          </div>
-          <span class="truncate max-w-[120px]" :class="activeDayId===d.id ? 'text-white' : 'text-gray-400'">
+        <!-- Tab content -->
+        <div class="flex items-center gap-2 flex-1 min-w-0">
+          <span class="font-num font-black text-[10px] w-5 h-5 rounded-md flex items-center justify-center shrink-0"
+                :class="activeDayId===d.id ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-gray-500'">
+            {{ idx + 1 }}
+          </span>
+          <span class="truncate text-[11px] font-bold" :class="activeDayId===d.id ? 'text-white' : 'text-gray-400'">
             {{ d.name }}
           </span>
+          <span v-if="(d.expenses || []).length > 0" 
+                class="ml-auto px-1.5 py-0.5 rounded-full text-[8px] font-black shrink-0"
+                :class="activeDayId===d.id ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-gray-500'">
+            {{ (d.expenses || []).length }}
+          </span>
         </div>
-        <div v-if="(d.expenses || []).length > 0" 
-             class="ml-1 px-1.5 py-0.5 rounded-full text-[8px] font-black"
-             :class="activeDayId===d.id ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-gray-500'">
-          {{ (d.expenses || []).length }}
-        </div>
+
+        <!-- Close button (show on hover or active) -->
+        <button
+          v-if="days.length > 1"
+          @click.stop="confirmRemoveDay(d.id)"
+          class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          :class="activeDayId===d.id ? 'hover:bg-red-500/20 text-red-400' : 'hover:bg-white/10 text-gray-500'"
+        >
+          <i class="fas fa-times text-[10px]"></i>
+        </button>
+
+        <!-- Active indicator -->
+        <div v-if="activeDayId===d.id" class="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400"></div>
+      </button>
+
+      <!-- Add new tab button -->
+      <button @click="addDay" class="px-4 py-3 text-gray-500 hover:text-emerald-400 hover:bg-white/5 transition-all shrink-0">
+        <i class="fas fa-plus text-xs"></i>
       </button>
     </div>
   </div>
 
+  <!-- Tab content (compact) -->
+  <div class="p-4">
+    <!-- Quick edit name -->
+    <div class="flex items-center gap-2 mb-3">
+      <input
+        v-model="activeDayNameProxy"
+        maxlength="20"
+        class="flex-1 bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm font-bold text-white placeholder-white/20 focus:border-emerald-500/50 focus:bg-black/30 transition-all outline-none"
+        placeholder="重新命名..."
+      />
+      <div class="text-[9px] text-gray-600 font-num">{{ activeDayNameProxy.length }}/20</div>
+    </div>
 
-      <div class="mt-4 bg-gradient-to-br from-black/30 to-black/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-  <div class="flex items-start justify-between gap-3">
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center gap-2 mb-2">
-        <i class="fas fa-edit text-emerald-400 text-[10px]"></i>
-        <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">編輯當日名稱</div>
+    <!-- Stats (compact 2-column) -->
+    <div class="grid grid-cols-2 gap-2">
+      <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 p-2.5 rounded-lg">
+        <div class="text-[8px] font-bold text-blue-300 uppercase tracking-wide mb-0.5">當日</div>
+        <div class="text-lg font-black font-num text-white">${{ totalSpentDay.toFixed(1) }}</div>
       </div>
-      <div class="relative">
-        <input
-          v-model="activeDayNameProxy"
-          class="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 outline-none text-sm font-bold text-white placeholder-white/20 focus:border-emerald-500/50 focus:bg-black/50 transition-all"
-          placeholder="例如：東京 Day1 / 大阪購物日"
-        />
-        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 font-num pointer-events-none">
-          {{ activeDayNameProxy.length }}/20
-        </div>
+      
+      <div class="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 p-2.5 rounded-lg">
+        <div class="text-[8px] font-bold text-emerald-300 uppercase tracking-wide mb-0.5">全部</div>
+        <div class="text-lg font-black font-num text-emerald-400">${{ totalSpentAll.toFixed(1) }}</div>
       </div>
     </div>
-    <button
-      class="w-11 h-11 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:border-red-500 hover:text-white transition-all flex items-center justify-center shrink-0 mt-6"
-      @click="removeActiveDay"
-      title="刪除當日"
-      aria-label="刪除當日"
-    >
-      <i class="fas fa-trash text-sm"></i>
-    </button>
   </div>
-</div>
-<div class="mt-4 grid grid-cols-2 gap-3">
-  <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 p-3 rounded-xl">
-    <div class="flex items-center gap-1.5 mb-1">
-      <i class="fas fa-calendar-day text-blue-400 text-[9px]"></i>
-      <div class="text-[9px] font-bold text-blue-300 uppercase tracking-wide">當日支出</div>
-    </div>
-    <div class="text-xl font-black font-num text-white">
-      ${{ totalSpentDay.toFixed(1) }}
-    </div>
-  </div>
-  
-  <div class="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 p-3 rounded-xl">
-    <div class="flex items-center gap-1.5 mb-1">
-      <i class="fas fa-layer-group text-emerald-400 text-[9px]"></i>
-      <div class="text-[9px] font-bold text-emerald-300 uppercase tracking-wide">全部支出</div>
-    </div>
-    <div class="text-xl font-black font-num text-emerald-400">
-      ${{ totalSpentAll.toFixed(1) }}
-    </div>
-  </div>
-</div>
 
-    </section>
+</section>
+
 
   
 
@@ -775,26 +778,53 @@
 
       <div class="glass p-6 rounded-[2rem] space-y-4">
 
-        <!-- ✅ share scope -->
-        <div v-if="multiDayMode" class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-          <span class="text-xs font-bold text-gray-300">結算範圍</span>
-          <div class="flex gap-2">
-            <button
-              class="px-3 py-2 rounded-xl text-[10px] font-black btn-press border border-white/10"
-              :class="shareOptions.scope==='all' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-300'"
-              @click="shareOptions.scope='all';"
-            >
-              綜合全部
-            </button>
-            <button
-              class="px-3 py-2 rounded-xl text-[10px] font-black btn-press border border-white/10"
-              :class="shareOptions.scope==='day' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-300'"
-              @click="shareOptions.scope='day';"
-            >
-              只計當日
-            </button>
-          </div>
+        <!-- ✅ share scope with day selection -->
+<div v-if="multiDayMode" class="bg-black/20 p-4 rounded-xl border border-white/5 space-y-3">
+  <div class="flex justify-between items-center">
+    <span class="text-xs font-bold text-gray-300">結算範圍</span>
+    <div class="flex gap-2">
+      <button
+        class="px-3 py-2 rounded-xl text-[10px] font-black btn-press border border-white/10"
+        :class="shareOptions.scope==='all' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-300'"
+        @click="shareOptions.scope='all'; shareOptions.selectedDays = [];"
+      >
+        全部
+      </button>
+      <button
+        class="px-3 py-2 rounded-xl text-[10px] font-black btn-press border border-white/10"
+        :class="shareOptions.scope==='custom' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-300'"
+        @click="shareOptions.scope='custom';"
+      >
+        自選日子
+      </button>
+    </div>
+  </div>
+
+  <!-- Day selection (when custom) -->
+  <div v-if="shareOptions.scope==='custom'" class="space-y-2">
+    <div class="text-[9px] text-gray-500 font-bold">選擇要結算的日子：</div>
+    <div class="grid grid-cols-2 gap-2">
+      <label
+        v-for="(d, idx) in days"
+        :key="d.id"
+        class="flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all"
+        :class="shareOptions.selectedDays.includes(d.id) ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-white/5 border border-white/10 hover:bg-white/10'"
+      >
+        <input
+          type="checkbox"
+          :value="d.id"
+          v-model="shareOptions.selectedDays"
+          class="math-check"
+        />
+        <div class="flex-1 min-w-0">
+          <div class="text-[10px] font-bold text-white truncate">{{ d.name }}</div>
+          <div class="text-[8px] text-gray-400 font-num">${{ (d.expenses || []).reduce((s,e)=>s+Number(e?.hkd||0),0).toFixed(1) }}</div>
         </div>
+      </label>
+    </div>
+  </div>
+</div>
+
 
         <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
           <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
@@ -926,7 +956,7 @@
       };
 
       const errors = ref({ item: false, amount: false, payer: false, involved: false });
-      const shareOptions = ref({ showList: true, scope: "all" }); // scope: 'all' | 'day'
+      const shareOptions = ref({ showList: true, scope: "all", selectedDays: [] }); // scope: 'all' | 'day'
 
       const toast = (msg, type='success') => {
         const id = Date.now();
@@ -1064,6 +1094,28 @@ const _activeDayNameTmp = ref("");
         saveData();
         toast("已刪除當日");
       };
+
+      const confirmRemoveDay = (dayId) => {
+  const day = days.value.find(d => d.id === dayId);
+  if (!day) return;
+  
+  if (days.value.length <= 1) {
+    toast("至少要保留 1 日", "error");
+    return;
+  }
+  
+  if (!confirm(`確定刪除「${day.name}」？`)) return;
+  
+  const idx = days.value.findIndex(d => d.id === dayId);
+  if (idx > -1) {
+    days.value.splice(idx, 1);
+    activeDayId.value = days.value[Math.max(0, idx-1)]?.id || days.value[0]?.id;
+    cancelEdit();
+    saveData();
+    toast("已刪除");
+  }
+};
+
 
       const onToggleMultiDay = () => {
         ensureDefaultDay();
@@ -1516,10 +1568,24 @@ const _activeDayNameTmp = ref("");
       };
 
       // share expenses & settlements based on scope
-      const expensesForShare = computed(() => {
-        if (!multiDayMode.value) return allExpenses.value;
-        return shareOptions.value.scope === "all" ? allExpenses.value : currentExpenses.value;
-      });
+     const expensesForShare = computed(() => {
+  if (!multiDayMode.value) return allExpenses.value;
+  
+  if (shareOptions.value.scope === "all") {
+    return allExpenses.value;
+  }
+  
+  if (shareOptions.value.scope === "custom") {
+    const selectedIds = shareOptions.value.selectedDays || [];
+    if (selectedIds.length === 0) return [];
+    return days.value
+      .filter(d => selectedIds.includes(d.id))
+      .flatMap(d => d.expenses || []);
+  }
+  
+  return currentExpenses.value;
+});
+
 
       const settlementsForShare = computed(() => computeSettlements(expensesForShare.value));
 
@@ -1979,7 +2045,8 @@ try {
         amountFontClass,
         sanitizeAmount,
       };
-
+// ... 其他
+  confirmRemoveDay,
     }
   }).mount('#app');
 </script>
