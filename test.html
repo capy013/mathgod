@@ -720,9 +720,14 @@
         <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
           <h2 class="font-black text-2xl tracking-tighter uppercase mb-1">過數通知單</h2>
           <p v-if="eventName" class="text-sm font-bold text-gray-600">{{ eventName }}</p>
-          <p v-if="multiDayMode" class="text-[10px] font-bold text-gray-500 mt-1">
-            {{ shareOptions.scope === 'all' ? '綜合全部日子' : ('只計：' + (activeDay?.name || '當日')) }}
-          </p>
+         <p v-if="multiDayMode" class="text-[10px] font-bold text-gray-500 mt-1">
+  <template v-if="shareOptions.scope === 'all'">綜合全部日子</template>
+  <template v-else-if="shareOptions.scope === 'custom'">
+    自選：{{ shareOptions.selectedDays.length }} 日
+  </template>
+  <template v-else>只計：{{ activeDay?.name || '當日' }}</template>
+</p>
+
         </div>
 
         <div class="flex justify-between items-end mb-4 px-2">
@@ -746,9 +751,9 @@
         <div v-if="shareOptions.showList" class="mt-4 pt-2 border-t-2 border-dashed border-gray-400">
           <p class="text-[10px] font-bold text-gray-500 mb-2 text-center uppercase">-- 消費紀錄 (Details) --</p>
 
-          <!-- when scope=all, show day grouping -->
-          <template v-if="multiDayMode && shareOptions.scope==='all'">
-            <div v-for="d in days" :key="d.id" class="mb-3">
+          <!-- when scope=all or custom, show day grouping -->
+<template v-if="multiDayMode && (shareOptions.scope==='all' || shareOptions.scope==='custom')">
+  <div v-for="d in daysForShare" :key="d.id" class="mb-3">
               <div class="text-[10px] font-black text-gray-600 mb-1 flex items-center justify-between">
                 <span>{{ d.name }}</span>
                 <span class="font-num text-gray-500">${{ (d.expenses || []).reduce((s,e)=>s+Number(e?.hkd||0),0).toFixed(1) }}</span>
@@ -822,6 +827,10 @@
         </div>
       </label>
     </div>
+    <div v-if="shareOptions.selectedDays.length === 0" class="text-[10px] text-red-400 font-bold text-center py-2 bg-red-500/10 rounded-lg border border-red-500/20">
+  <i class="fas fa-exclamation-triangle mr-1"></i>
+  請至少選擇一日
+</div>
   </div>
 </div>
 
@@ -835,13 +844,22 @@
         </div>
 
         <div v-if="shareSubMenu === 'none'" class="grid grid-cols-2 gap-3">
-          <button @click="shareSubMenu = 'text'" class="bg-gray-700 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
-            <i class="fas fa-file-alt text-lg"></i> 分享文字
-          </button>
-          <button @click="shareSubMenu = 'image'" class="bg-emerald-600 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
-            <i class="fas fa-image text-lg"></i> 分享圖片
-          </button>
-        </div>
+  <button 
+    @click="shareSubMenu = 'text'" 
+    :disabled="multiDayMode && shareOptions.scope === 'custom' && shareOptions.selectedDays.length === 0"
+    class="bg-gray-700 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+  >
+    <i class="fas fa-file-alt text-lg"></i> 分享文字
+  </button>
+  <button 
+    @click="shareSubMenu = 'image'" 
+    :disabled="multiDayMode && shareOptions.scope === 'custom' && shareOptions.selectedDays.length === 0"
+    class="bg-emerald-600 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+  >
+    <i class="fas fa-image text-lg"></i> 分享圖片
+  </button>
+</div>
+
 
         <div v-if="shareSubMenu === 'text'" class="space-y-3">
           <button @click="copyText" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
@@ -1568,23 +1586,21 @@ const _activeDayNameTmp = ref("");
       };
 
       // share expenses & settlements based on scope
-     const expensesForShare = computed(() => {
-  if (!multiDayMode.value) return allExpenses.value;
+     const daysForShare = computed(() => {
+  if (!multiDayMode.value) return [];
   
   if (shareOptions.value.scope === "all") {
-    return allExpenses.value;
+    return days.value;
   }
   
   if (shareOptions.value.scope === "custom") {
     const selectedIds = shareOptions.value.selectedDays || [];
-    if (selectedIds.length === 0) return [];
-    return days.value
-      .filter(d => selectedIds.includes(d.id))
-      .flatMap(d => d.expenses || []);
+    return days.value.filter(d => selectedIds.includes(d.id));
   }
   
-  return currentExpenses.value;
+  return [activeDay.value].filter(Boolean);
 });
+
 
 
       const settlementsForShare = computed(() => computeSettlements(expensesForShare.value));
@@ -1781,31 +1797,40 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         if (eventName.value) msg += `活動: ${eventName.value}\n`;
 
         if (multiDayMode.value) {
-          msg += `範圍: ${shareOptions.value.scope === 'all' ? '綜合全部日子' : ('只計：' + (activeDay.value?.name || '當日'))}\n`;
-        }
+  if (shareOptions.value.scope === 'all') {
+    msg += `範圍: 綜合全部日子\n`;
+  } else if (shareOptions.value.scope === 'custom') {
+    const selectedNames = daysForShare.value.map(d => d.name).join('、');
+    msg += `範圍: 自選 ${shareOptions.value.selectedDays.length} 日 (${selectedNames})\n`;
+  } else {
+    msg += `範圍: 只計 ${activeDay.value?.name || '當日'}\n`;
+  }
+}
+
 
         msg += `------------------------------\n`;
         msg += `請跟隨以下列表過數 (Transfer List):\n`;
         if (settle.length === 0) msg += `(沒有人需要夾錢)\n`;
         settle.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
 
-        if (shareOptions.value.showList) {
-          msg += `\n📋 詳細消費紀錄:\n`;
+       if (shareOptions.value.showList) {
+  msg += `\n📋 詳細消費紀錄:\n`;
 
-          if (multiDayMode.value && shareOptions.value.scope === "all") {
-            (days.value || []).forEach(d => {
-              msg += `\n== ${d.name} ==\n`;
-              (d.expenses || []).forEach((e, idx) => {
-                msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
-              });
-              if ((d.expenses || []).length === 0) msg += `(此日無紀錄)\n`;
-            });
-          } else {
-            expList.forEach((e, idx) => {
-              msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
-            });
-          }
-        }
+  if (multiDayMode.value && (shareOptions.value.scope === "all" || shareOptions.value.scope === "custom")) {
+    daysForShare.value.forEach(d => {
+      msg += `\n== ${d.name} ==\n`;
+      (d.expenses || []).forEach((e, idx) => {
+        msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+      });
+      if ((d.expenses || []).length === 0) msg += `(此日無紀錄)\n`;
+    });
+  } else {
+    expList.forEach((e, idx) => {
+      msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+    });
+  }
+}
+
 
         msg += `\n------------------------------\nGenerated by ⚡️MathGod`;
         return msg;
@@ -1987,7 +2012,7 @@ try {
         window.removeEventListener("offline", onOffline);
       });
 
-           // ====== return ======
+            // ====== return ======
       return {
         // state
         isLoading, isSyncing, isOnline,
@@ -1999,6 +2024,7 @@ try {
 
         // handlers
         handleSyncClick,
+        confirmRemoveDay,
 
         // multi-day
         multiDayMode, days, activeDayId, activeDay,
@@ -2016,7 +2042,7 @@ try {
         // share / validation
         shareOptions, errors,
         expensesForShare, settlementsForShare,
-
+        daysForShare,
         // keypad
         showKeypad, keypadExpr, keypadHint,
         amountPreview, amountPreviewText,
@@ -2045,10 +2071,9 @@ try {
         amountFontClass,
         sanitizeAmount,
       };
-// ... 其他
-  confirmRemoveDay,
     }
   }).mount('#app');
+
 </script>
 
 </body>
