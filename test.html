@@ -917,7 +917,7 @@
   try { firebase.initializeApp(firebaseConfig); } catch(e) {}
   const db = firebase.database();
 
-  const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+  const { createApp, ref, computed, onMounted, onUnmounted, watch } = Vue;
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -929,6 +929,8 @@
 
   createApp({
     setup() {
+      console.log('🚀 App setup started');
+      
       const isLoading = ref(false);
       const isSyncing = ref(false);
       const eventName = ref("");
@@ -974,22 +976,25 @@
       };
 
       const errors = ref({ item: false, amount: false, payer: false, involved: false });
-      const shareOptions = ref({ showList: true, scope: "all", selectedDays: [] }); // scope: 'all' | 'day'
+      const shareOptions = ref({ showList: true, scope: "all", selectedDays: [] });
 
       const toast = (msg, type='success') => {
+        console.log('📢 Toast:', msg, type);
         const id = Date.now();
         toasts.value.push({id, msg, type});
         setTimeout(() => toasts.value = toasts.value.filter(t=>t.id!==id), 3000);
       };
-const handleSyncClick = () => {
-  console.log('Sync button clicked, isOnline:', isOnline.value);
-  if (!isOnline.value) {
-    toast('目前離線，未能同步', 'error');
-    return;
-  }
-  console.log('Opening sync modal');
-  showSyncModal.value = true;
-};
+
+      const handleSyncClick = () => {
+        console.log('🔄 Sync button clicked, isOnline:', isOnline.value);
+        if (!isOnline.value) {
+          toast('目前離線，未能同步', 'error');
+          return;
+        }
+        console.log('✅ Opening sync modal');
+        showSyncModal.value = true;
+      };
+
       const pad2 = (n) => String(n).padStart(2, "0");
       const formatTs = (ts) => {
         const d = new Date(ts);
@@ -1049,18 +1054,15 @@ const handleSyncClick = () => {
         return (days.value || []).flatMap(d => (d.expenses || []));
       });
 
-      const activeDayName = computed({
-        get() { return activeDay.value?.name || ""; },
-        set(v) { /* handled by renameActiveDay */ }
-      });
-
       const setActiveDay = (id) => {
+        console.log('📅 Setting active day:', id);
         activeDayId.value = id;
         cancelEdit();
         saveData();
       };
 
       const addDay = () => {
+        console.log('➕ Adding new day');
         ensureDefaultDay();
         const n = (days.value.length || 0) + 1;
         const id = "day" + Date.now();
@@ -1071,16 +1073,8 @@ const handleSyncClick = () => {
         toast("已新增 Day");
       };
 
-      const renameActiveDay = () => {
-  // This function is now handled by activeDayNameProxy computed setter
-  // Keeping for backward compatibility but functionality moved to computed
-};
+      const _activeDayNameTmp = ref("");
 
-// We'll update rename via watcher-like manual method:
-const _activeDayNameTmp = ref("");
-
-      // use this ref for v-model
-      // (wired below in return, we bind to activeDayNameProxy)
       const activeDayNameProxy = computed({
         get() {
           _activeDayNameTmp.value = activeDay.value?.name || "";
@@ -1114,32 +1108,30 @@ const _activeDayNameTmp = ref("");
       };
 
       const confirmRemoveDay = (dayId) => {
-  const day = days.value.find(d => d.id === dayId);
-  if (!day) return;
-  
-  if (days.value.length <= 1) {
-    toast("至少要保留 1 日", "error");
-    return;
-  }
-  
-  if (!confirm(`確定刪除「${day.name}」？`)) return;
-  
-  const idx = days.value.findIndex(d => d.id === dayId);
-  if (idx > -1) {
-    days.value.splice(idx, 1);
-    activeDayId.value = days.value[Math.max(0, idx-1)]?.id || days.value[0]?.id;
-    cancelEdit();
-    saveData();
-    toast("已刪除");
-  }
-};
-
+        const day = days.value.find(d => d.id === dayId);
+        if (!day) return;
+        
+        if (days.value.length <= 1) {
+          toast("至少要保留 1 日", "error");
+          return;
+        }
+        
+        if (!confirm(`確定刪除「${day.name}」？`)) return;
+        
+        const idx = days.value.findIndex(d => d.id === dayId);
+        if (idx > -1) {
+          days.value.splice(idx, 1);
+          activeDayId.value = days.value[Math.max(0, idx-1)]?.id || days.value[0]?.id;
+          cancelEdit();
+          saveData();
+          toast("已刪除");
+        }
+      };
 
       const onToggleMultiDay = () => {
+        console.log('🔄 Toggle multi-day mode:', multiDayMode.value);
         ensureDefaultDay();
         if (!multiDayMode.value) {
-          // turning OFF: keep days data, just hide UI
-          // for share scope, default all (still valid)
           toast("已關閉多天模式");
         } else {
           toast("已開啟多天模式");
@@ -1157,6 +1149,7 @@ const _activeDayNameTmp = ref("");
           days: JSON.parse(JSON.stringify(days.value || [])),
           activeDayId: activeDayId.value
         };
+        console.log('💾 Saving data:', data);
         localStorage.setItem('mathGod_localData', JSON.stringify(data));
 
         if (roomId.value) {
@@ -1178,17 +1171,16 @@ const _activeDayNameTmp = ref("");
       const RATES_TTL_MS = 6 * 60 * 60 * 1000;
 
       const loadRatesCache = () => {
-  try {
-    const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
-    if (cached?.rates && cached?.updatedAt) {
-      ratesHKD.value = cached.rates;
-      rateUpdatedAt.value = cached.updatedAt;
-    }
-  } catch (e) {
-    console.error("Failed to load rates cache:", e);
-  }
-};
-
+        try {
+          const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+          if (cached?.rates && cached?.updatedAt) {
+            ratesHKD.value = cached.rates;
+            rateUpdatedAt.value = cached.updatedAt;
+          }
+        } catch (e) {
+          console.error("Failed to load rates cache:", e);
+        }
+      };
 
       const saveRatesCache = (rates, updatedAt) => {
         localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ rates, updatedAt }));
@@ -1417,13 +1409,22 @@ const _activeDayNameTmp = ref("");
 
       // ====== users / involved ======
       const addUser = () => {
+        console.log('👤 Adding user:', newUser.value);
         const n = newUser.value.trim();
-        if (!n) return;
-        if (users.value.includes(n)) { toast("朋友已存在", "error"); return; }
+        if (!n) {
+          console.log('❌ Empty name');
+          return;
+        }
+        if (users.value.includes(n)) { 
+          toast("朋友已存在", "error"); 
+          return; 
+        }
+        console.log('✅ User added');
         users.value.push(n);
         form.value.involved.push(n);
         newUser.value = "";
         saveData();
+        toast(`已加入 ${n}`);
       };
 
       const toggleSelectAll = () => {
@@ -1526,7 +1527,6 @@ const _activeDayNameTmp = ref("");
         form.value.involved = (form.value.involved || []).filter(u => u !== name);
         if (form.value.payer === name) form.value.payer = "";
 
-        // remove across all days
         days.value = (days.value || []).map(d => {
           const exps = (d.expenses || [])
             .map(e => ({
@@ -1548,7 +1548,7 @@ const _activeDayNameTmp = ref("");
         toast("已刪除朋友並清理相關紀錄");
       };
 
-      // ====== settlements helper (supports custom expense list) ======
+      // ====== settlements helper ======
       const computeSettlements = (expenseList) => {
         let bal = {};
         users.value.forEach(u => bal[u] = 0);
@@ -1586,41 +1586,38 @@ const _activeDayNameTmp = ref("");
       };
 
       // share expenses & settlements based on scope
-const expensesForShare = computed(() => {
-  if (!multiDayMode.value) return allExpenses.value;
-  
-  if (shareOptions.value.scope === "all") {
-    return allExpenses.value;
-  }
-  
-  if (shareOptions.value.scope === "custom") {
-    const selectedIds = shareOptions.value.selectedDays || [];
-    if (selectedIds.length === 0) return [];
-    return days.value
-      .filter(d => selectedIds.includes(d.id))
-      .flatMap(d => d.expenses || []);
-  }
-  
-  return currentExpenses.value;
-});
+      const expensesForShare = computed(() => {
+        if (!multiDayMode.value) return allExpenses.value;
+        
+        if (shareOptions.value.scope === "all") {
+          return allExpenses.value;
+        }
+        
+        if (shareOptions.value.scope === "custom") {
+          const selectedIds = shareOptions.value.selectedDays || [];
+          if (selectedIds.length === 0) return [];
+          return days.value
+            .filter(d => selectedIds.includes(d.id))
+            .flatMap(d => d.expenses || []);
+        }
+        
+        return currentExpenses.value;
+      });
 
-const daysForShare = computed(() => {
-  if (!multiDayMode.value) return [];
-  
-  if (shareOptions.value.scope === "all") {
-    return days.value;
-  }
-  
-  if (shareOptions.value.scope === "custom") {
-    const selectedIds = shareOptions.value.selectedDays || [];
-    return days.value.filter(d => selectedIds.includes(d.id));
-  }
-  
-  return [activeDay.value].filter(Boolean);
-});
-
-
-
+      const daysForShare = computed(() => {
+        if (!multiDayMode.value) return [];
+        
+        if (shareOptions.value.scope === "all") {
+          return days.value;
+        }
+        
+        if (shareOptions.value.scope === "custom") {
+          const selectedIds = shareOptions.value.selectedDays || [];
+          return days.value.filter(d => selectedIds.includes(d.id));
+        }
+        
+        return [activeDay.value].filter(Boolean);
+      });
 
       const settlementsForShare = computed(() => computeSettlements(expensesForShare.value));
 
@@ -1689,7 +1686,6 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
             db.ref('rooms/' + rid).on('value', s => {
               const v = s.val();
               if (v) {
-                // ✅ migrate room data
                 users.value = v.users || [];
                 eventName.value = v.eventName || "";
                 multiDayMode.value = !!v.multiDayMode;
@@ -1697,7 +1693,6 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
                 if (Array.isArray(v.days) && v.days.length > 0) {
                   days.value = v.days;
                 } else {
-                  // backward compat: old room may have expenses
                   const oldExpenses = Array.isArray(v.expenses) ? v.expenses : [];
                   days.value = [{ id: "day1", name: "Day1", expenses: oldExpenses }];
                 }
@@ -1764,19 +1759,18 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
       };
 
       const removeHistoryRoom = (rid) => {
-  if (confirm("從最近紀錄中刪除此房間？")) {
-    let h = (recentRooms.value || []).filter(x => x !== rid);
-    recentRooms.value = h;
-    localStorage.setItem('mathGod_history', JSON.stringify(h));
+        if (confirm("從最近紀錄中刪除此房間？")) {
+          let h = (recentRooms.value || []).filter(x => x !== rid);
+          recentRooms.value = h;
+          localStorage.setItem('mathGod_history', JSON.stringify(h));
 
-    let names = { ...(roomNamesMap.value || {}) };
-    delete names[rid];
-    localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
-    roomNamesMap.value = names;
-    toast("已從紀錄中移除");
-  }
-};
-
+          let names = { ...(roomNamesMap.value || {}) };
+          delete names[rid];
+          localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
+          roomNamesMap.value = names;
+          toast("已從紀錄中移除");
+        }
+      };
 
       // ====== reset ======
       const resetData = (t, ask = true) => {
@@ -1790,7 +1784,6 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
             form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [] };
           } else {
             ensureDefaultDay();
-            // clear all expenses across all days
             days.value = (days.value || []).map(d => ({ ...d, expenses: [] }));
           }
           saveData();
@@ -1816,40 +1809,38 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         if (eventName.value) msg += `活動: ${eventName.value}\n`;
 
         if (multiDayMode.value) {
-  if (shareOptions.value.scope === 'all') {
-    msg += `範圍: 綜合全部日子\n`;
-  } else if (shareOptions.value.scope === 'custom') {
-    const selectedNames = daysForShare.value.map(d => d.name).join('、');
-    msg += `範圍: 自選 ${shareOptions.value.selectedDays.length} 日 (${selectedNames})\n`;
-  } else {
-    msg += `範圍: 只計 ${activeDay.value?.name || '當日'}\n`;
-  }
-}
-
+          if (shareOptions.value.scope === 'all') {
+            msg += `範圍: 綜合全部日子\n`;
+          } else if (shareOptions.value.scope === 'custom') {
+            const selectedNames = daysForShare.value.map(d => d.name).join('、');
+            msg += `範圍: 自選 ${shareOptions.value.selectedDays.length} 日 (${selectedNames})\n`;
+          } else {
+            msg += `範圍: 只計 ${activeDay.value?.name || '當日'}\n`;
+          }
+        }
 
         msg += `------------------------------\n`;
         msg += `請跟隨以下列表過數 (Transfer List):\n`;
         if (settle.length === 0) msg += `(沒有人需要夾錢)\n`;
         settle.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
 
-       if (shareOptions.value.showList) {
-  msg += `\n📋 詳細消費紀錄:\n`;
+        if (shareOptions.value.showList) {
+          msg += `\n📋 詳細消費紀錄:\n`;
 
-  if (multiDayMode.value && (shareOptions.value.scope === "all" || shareOptions.value.scope === "custom")) {
-    daysForShare.value.forEach(d => {
-      msg += `\n== ${d.name} ==\n`;
-      (d.expenses || []).forEach((e, idx) => {
-        msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
-      });
-      if ((d.expenses || []).length === 0) msg += `(此日無紀錄)\n`;
-    });
-  } else {
-    expList.forEach((e, idx) => {
-      msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
-    });
-  }
-}
-
+          if (multiDayMode.value && (shareOptions.value.scope === "all" || shareOptions.value.scope === "custom")) {
+            daysForShare.value.forEach(d => {
+              msg += `\n== ${d.name} ==\n`;
+              (d.expenses || []).forEach((e, idx) => {
+                msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+              });
+              if ((d.expenses || []).length === 0) msg += `(此日無紀錄)\n`;
+            });
+          } else {
+            expList.forEach((e, idx) => {
+              msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+            });
+          }
+        }
 
         msg += `\n------------------------------\nGenerated by ⚡️MathGod`;
         return msg;
@@ -1955,13 +1946,13 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         }
       };
 
-      // ====== computed ======
       const recentRoomsWithNames = computed(() =>
-  (recentRooms.value || []).map(id => ({ id, name: (roomNamesMap.value || {})[id] || '未命名活動' }))
-);
-
+        (recentRooms.value || []).map(id => ({ id, name: (roomNamesMap.value || {})[id] || '未命名活動' }))
+      );
 
       onMounted(() => {
+        console.log('🎬 App mounted');
+        
         window.removeEventListener("keydown", onEsc);
         window.removeEventListener("online", onOnline);
         window.removeEventListener("offline", onOffline);
@@ -1973,20 +1964,16 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
         loadRatesCache();
         refreshRatesSilently(false);
 
-        // load local
-let local = {};
-try {
-  local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
-} catch (e) {
-  console.error("Failed to parse local data:", e);
-  local = {};
-}
+        let local = {};
+        try {
+          local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
+        } catch (e) {
+          console.error("Failed to parse local data:", e);
+          local = {};
+        }
 
-
-        // ✅ backward compat: if old structure has expenses, migrate -> Day1
         users.value = local.users || [];
         eventName.value = local.eventName || "";
-
         multiDayMode.value = !!local.multiDayMode;
 
         if (Array.isArray(local.days) && local.days.length > 0) {
@@ -2001,11 +1988,9 @@ try {
 
         form.value.involved = [...users.value];
 
-        // history
         recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
         roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
 
-        // URL room auto-join
         const roomFromUrl = new URLSearchParams(window.location.search).get("room");
         if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
           if (navigator.onLine) joinRoom(roomFromUrl);
@@ -2021,8 +2006,9 @@ try {
 
         if (!navigator.onLine) onOffline();
 
-        // ensure currency sync
         if (form.value.currency !== "HKD") handleCurrencyChange();
+        
+        console.log('✅ App ready');
       });
 
       onUnmounted(() => {
@@ -2031,44 +2017,29 @@ try {
         window.removeEventListener("offline", onOffline);
       });
 
-            // ====== return ======
       return {
-        // state
         isLoading, isSyncing, isOnline,
         eventName, users, newUser,
         form, isEditing, editingId,
         showSyncModal, showShareModal, showResetMenu, showTutorial,
         toasts, roomId, roomInput,
         shareSubMenu,
-
-        // handlers
         handleSyncClick,
         confirmRemoveDay,
-
-        // multi-day
         multiDayMode, days, activeDayId, activeDay,
         currentExpenses, allExpenses,
         setActiveDay, addDay, removeActiveDay,
         activeDayNameProxy,
         onToggleMultiDay,
-
-        // totals
         totalSpentDay, totalSpentAll, totalSpentForShare,
-
-        // rates
         currentRate, rateUpdatedAt, formatTs,
-
-        // share / validation
         shareOptions, errors,
         expensesForShare, settlementsForShare,
         daysForShare,
-        // keypad
         showKeypad, keypadExpr, keypadHint,
         amountPreview, amountPreviewText,
         openKeypad, closeKeypad, kp,
         startBackspaceHold, stopBackspaceHold,
-
-        // actions
         openDatePicker, appendDate,
         addUser, addExpense, editExpense, cancelEdit,
         removeUser, removeExpense,
@@ -2079,11 +2050,7 @@ try {
         resetData, removeHistoryRoom,
         copyRoomLink,
         copyText, shareViaApp, generateImage,
-
-        // computed
         recentRoomsWithNames,
-
-        // drag & misc
         calcPos,
         startDrag,
         lastAddedId,
@@ -2092,8 +2059,8 @@ try {
       };
     }
   }).mount('#app');
-
 </script>
+
 
 </body>
 </html>
