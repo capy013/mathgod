@@ -1586,7 +1586,25 @@ const _activeDayNameTmp = ref("");
       };
 
       // share expenses & settlements based on scope
-     const daysForShare = computed(() => {
+const expensesForShare = computed(() => {
+  if (!multiDayMode.value) return allExpenses.value;
+  
+  if (shareOptions.value.scope === "all") {
+    return allExpenses.value;
+  }
+  
+  if (shareOptions.value.scope === "custom") {
+    const selectedIds = shareOptions.value.selectedDays || [];
+    if (selectedIds.length === 0) return [];
+    return days.value
+      .filter(d => selectedIds.includes(d.id))
+      .flatMap(d => d.expenses || []);
+  }
+  
+  return currentExpenses.value;
+});
+
+const daysForShare = computed(() => {
   if (!multiDayMode.value) return [];
   
   if (shareOptions.value.scope === "all") {
@@ -1600,6 +1618,7 @@ const _activeDayNameTmp = ref("");
   
   return [activeDay.value].filter(Boolean);
 });
+
 
 
 
