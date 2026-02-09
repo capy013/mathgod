@@ -409,18 +409,12 @@
   </div>
 
  
+    <!-- 分享 Modal -->
   <div v-if="showShareModal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col p-4 overflow-y-auto" @click.self="showShareModal = false">
     
-    <button @click="showShareModal = false; shareSubMenu = 'none'"
-        class="absolute top-6 right-6 z-[110] w-10 h-10 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white/10 btn-press shadow-2xl hover:animate-[pulse-x_0.3s_ease]">
-  <i class="fas fa-times text-lg"></i>
-</button>
-
-
     <div class="max-w-md mx-auto w-full my-auto">
 
-
-     <div id="capture-zone" class="bg-[#e8e8e8] text-black p-6 rounded-lg shadow-2xl mb-6 relative font-mono">
+      <div id="capture-zone" class="bg-[#e8e8e8] text-black p-6 rounded-lg shadow-2xl mb-6 relative font-mono">
 
         <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300 to-transparent opacity-20"></div>
 
@@ -437,14 +431,15 @@
         <div class="bg-white p-3 rounded border border-gray-300 mb-4">
           <p class="text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-200 pb-1">過數指南 (Payment Guide)</p>
           <div v-if="settlements.length === 0" class="text-center text-gray-400 text-xs py-2">沒有人需要夾錢</div>
-          <div v-for="s in settlements" class="flex justify-between items-center py-1 text-sm font-bold">
-            <div class="flex items-center gap-2">
-              <span class="text-red-600">{{ s.from }}</span>
-              <i class="fas fa-arrow-right-long text-gray-400 mx-2"></i>
-              <span class="text-emerald-600">{{ s.to }}</span>
-            </div>
-            <span>${{ s.amount.toFixed(1) }}</span>
-          </div>
+          <div v-for="s in settlements" class="flex justify-between items-center py-1 text-sm">
+  <div class="flex items-center gap-2">
+    <span class="text-red-600 font-black">{{ s.from }}</span>
+    <i class="fas fa-arrow-right-long text-gray-400 mx-2"></i>
+    <span class="text-emerald-600 font-medium">{{ s.to }}</span>
+  </div>
+  <span class="font-black">${{ s.amount.toFixed(1) }}</span>
+</div>
+
         </div>
 
         <div v-if="shareOptions.showList" class="mt-4 pt-2 border-t-2 border-dashed border-gray-400">
@@ -461,7 +456,6 @@
             </span>
             <span class="whitespace-nowrap font-bold ml-2">${{ e.hkd.toFixed(1) }}</span>
           </div>
-
         </div>
 
         <div class="mt-6 text-center space-y-1">
@@ -509,8 +503,17 @@
           <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
         </div>
       </div>
+
     </div>
+
+    <!-- X button 放喺最外層 -->
+    <button @click="showShareModal = false; shareSubMenu = 'none'"
+            class="fixed top-6 right-6 z-[110] w-10 h-10 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white/10 btn-press shadow-2xl hover:animate-[pulse-x_0.3s_ease]">
+      <i class="fas fa-times text-lg"></i>
+    </button>
+
   </div>
+
 
   
   <div v-if="showTutorial" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md flex items-center justify-center p-6" @click.self="showTutorial = false">
