@@ -435,10 +435,19 @@
 
         <div v-if="shareOptions.showList" class="mt-4 pt-2 border-t-2 border-dashed border-gray-400">
           <p class="text-[10px] font-bold text-gray-500 mb-2 text-center uppercase">-- 消費紀錄 (Details) --</p>
-          <div v-for="e in expenses" class="capture-row flex justify-between text-[10px] leading-[1.4] py-1.5 border-b border-gray-300 last:border-0">
-            <span class="truncate pr-2 font-medium">{{ e.item }} <span class="text-gray-400">({{ e.payer }} > {{ e.involved.join('+') }})</span></span>
-            <span class="whitespace-nowrap font-bold">${{ e.hkd.toFixed(1) }}</span>
+          <div v-for="e in expenses" class="capture-row flex justify-between text-[10px] leading-[1.6] py-1.5 border-b border-gray-300 last:border-0">
+            <span class="pr-2 font-medium" style="overflow: visible; text-overflow: clip; white-space: normal; line-height: 1.6;">
+              {{ e.item }}：
+              <span class="text-gray-400 text-[9px]">
+                💵 {{ e.payer }} | 👥 
+                <template v-if="e.involved.length <= 5">{{ e.involved.join('、') }}</template>
+                <template v-else-if="e.involved.length === users.length">所有人</template>
+                <template v-else>{{ e.involved.length }}人 (除了 {{ users.filter(u => !e.involved.includes(u)).join('、') }})</template>
+              </span>
+            </span>
+            <span class="whitespace-nowrap font-bold ml-2">${{ e.hkd.toFixed(1) }}</span>
           </div>
+
         </div>
 
         <div class="mt-6 text-center">
