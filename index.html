@@ -518,11 +518,10 @@
 
     </div>
 
-    <!-- X button 放喺最外層 -->
-    <button @click="showShareModal = false; shareSubMenu = 'none'"
-            class="fixed top-6 right-6 z-[110] w-10 h-10 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white/10 btn-press shadow-2xl hover:animate-[pulse-x_0.3s_ease]">
-      <i class="fas fa-times text-lg"></i>
-    </button>
+   <button @click="showShareModal = false; shareSubMenu = 'none'"
+        class="sticky top-6 right-6 z-[110] w-10 h-10 bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white/10 btn-press shadow-2xl hover:animate-[pulse-x_0.3s_ease] ml-auto mb-4">
+  <i class="fas fa-times text-lg"></i>
+</button>
 
   </div>
 
