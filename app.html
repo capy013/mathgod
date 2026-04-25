@@ -998,8 +998,8 @@
           </p>
         </div>
         <!-- Preview line -->
-        <div v-if="poolTotal > 0 && poolForm.participants.length > 0" class="text-center text-[11px] font-bold text-gray-400 py-2">
-          每人 ${{ poolForm.perPerson }} {{ poolForm.currency }} × {{ poolForm.participants.length }}人
+        <div v-if="parseFloat(poolForm.perPerson) !== 0 && !isNaN(parseFloat(poolForm.perPerson)) && poolForm.participants.length > 0" class="bg-white/5 rounded-2xl px-4 py-3 text-center mb-1">
+          <span class="text-[12px] font-bold text-gray-300">每人 ${{ poolForm.perPerson }} {{ poolForm.currency }} × {{ poolForm.participants.length }}人</span>
         </div>
         <button @click="addPoolContribution"
           class="w-full py-4 font-black text-sm btn-press shadow-lg transition-all"
@@ -1017,14 +1017,17 @@
       <div v-if="pool.contributions.length > 0" class="mt-4 pt-4 border-t border-white/5">
         <p class="text-[9px] font-bold text-gray-500 uppercase mb-2">現有入數紀錄</p>
         <div class="space-y-1.5 max-h-32 overflow-y-auto custom-scroll">
-          <div v-for="(c,i) in pool.contributions" :key="i" class="flex justify-between text-[11px] font-bold">
+          <div v-for="c in poolMerged" :key="c.name" class="flex justify-between text-[11px] font-bold">
             <span class="text-gray-300">{{ c.name }}</span>
-            <span class="font-num text-yellow-300">HKD ${{ c.amount.toFixed(1) }}</span>
+            <span class="font-num" :class="c.amount >= 0 ? 'text-yellow-300' : 'text-red-400'">
+              <template v-if="baseCurrency === 'HKD'">HKD ${{ c.amount.toFixed(1) }}</template>
+              <template v-else>{{ fmtBase(c.amount) }} {{ baseCurrency }}<span class="text-[9px] text-gray-500 ml-1">≈HKD${{ c.amount.toFixed(1) }}</span></template>
+            </span>
           </div>
         </div>
         <div class="flex justify-between text-[11px] font-bold border-t border-white/5 pt-2 mt-1">
           <span class="text-gray-500">總計</span>
-          <span class="font-num text-yellow-400">HKD ${{ pool.total.toFixed(1) }}</span>
+          <span class="font-num text-yellow-400"><template v-if="baseCurrency==='HKD'">HKD ${{ pool.total.toFixed(1) }}</template><template v-else>{{ fmtBase(pool.total) }} {{ baseCurrency }}<span class="text-[9px] text-gray-500 ml-1">≈HKD${{ pool.total.toFixed(1) }}</span></template></span>
         </div>
       </div>
     </div>
@@ -1487,7 +1490,7 @@ const maxY = window.innerHeight - panelH - 8;
       const evalExpr = (expr) => {
         const cleaned = (expr || "").replace(/\s+/g, "");
         if (!cleaned) return null;
-        if (!/^[0-9+\-*/.() ]+$/.test(cleaned)) throw new Error("只可輸入數字同運算符號");
+        if (!/^[0-9+\-*/.() () ]+$/.test(cleaned)) throw new Error("只可輸入數字同運算符號");
         // eslint-disable-next-line no-new-func
         const v = Function(`"use strict"; return (${cleaned});`)();
         if (!Number.isFinite(v)) throw new Error("計算結果無效");
@@ -1498,7 +1501,7 @@ const maxY = window.innerHeight - panelH - 8;
       // preview helper
       const safeExprForPreview = (s) => {
         let x = (s || "").replace(/\s+/g, "");
-        if (!/^[0-9+\-*/.() ]*$/.test(x)) return "";
+        if (!/^[0-9+\-*/.() () ]*$/.test(x)) return "";
         x = x.replace(/[+\-*/]+$/g, "");
         if (x.endsWith(".")) x += "0";
         return x;
@@ -1982,8 +1985,10 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
             expenses.value = [];
             eventName.value = "";
             form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [] };
+            pool.value = { total: 0, contributions: [], showDetails: false };
           } else {
             expenses.value = [];
+            pool.value = { total: 0, contributions: [], showDetails: false };
           }
           saveData();
           showResetMenu.value = false;
@@ -2235,6 +2240,16 @@ onUnmounted(() => {
         return expenses.value.filter(e => e.day === selectedDayFilter.value);
       });
 
+      // ====== pool merged contributions ======
+      const poolMerged = computed(() => {
+        const map = {};
+        for (const c of pool.value.contributions) {
+          if (!map[c.name]) map[c.name] = 0;
+          map[c.name] += c.amount;
+        }
+        return Object.entries(map).map(([name, amount]) => ({ name, amount }));
+      });
+
       // ====== currency helpers ======
       const toBase = (hkd) => {
         const rate = ratesHKD.value[baseCurrency.value] || 1;
@@ -2285,10 +2300,13 @@ onUnmounted(() => {
       const addPoolContribution = () => {
         const pp = parseFloat(poolForm.value.perPerson);
         if (!poolForm.value.participants.length) { toast('請選擇入錢人', 'error'); return; }
-        if (!pp || pp <= 0) { toast('請輸入每人金額', 'error'); return; }
+        if (!pp || pp === 0) { toast('請輸入金額（可負數扣減）', 'error'); return; }
+        const _cur = poolForm.value.currency || 'HKD';
+        const _rate = ratesHKD.value[_cur] || 1;
+        const _ppHKD = pp * _rate;
         poolForm.value.participants.forEach(name => {
-          pool.value.contributions.push({ name, amount: pp });
-          pool.value.total += pp;
+          pool.value.contributions.push({ name, amount: _ppHKD, origAmount: pp, currency: _cur });
+          pool.value.total += _ppHKD;
         });
         const total = pp * poolForm.value.participants.length;
         poolForm.value = { participants: [...users.value], perPerson: '' };
@@ -2380,7 +2398,7 @@ onUnmounted(() => {
         editingUserIdx, editingUserName, startRenameUser, confirmRenameUser, confirmDeleteId,
         pool, poolForm, showPoolModal, poolSpent, poolRemaining, poolPct, poolLow, addPoolContribution,
         poolTotal, togglePoolParticipant, togglePoolAll,
-        toBase, fmtBase,
+        poolMerged, toBase, fmtBase,
         calcFillable, fillCalcResult,
         selectedDayFilter, allDays, nextDay, lastDay, dayTotal, filteredExpenses, shareDay,
         showFeatureMenu,
