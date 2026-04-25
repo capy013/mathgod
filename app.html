@@ -294,8 +294,8 @@
         <h3 class="text-[10px] font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
           <i class="fas fa-coins"></i> 公數
         </h3>
-        <button @click="showPoolModal = true" class="bg-yellow-500/20 text-yellow-300 px-3 py-1.5 rounded-full text-[10px] font-black hover:bg-yellow-500/30 transition-all btn-press">
-          <i class="fas fa-plus mr-1"></i>補倉
+        <button @click="showPoolModal = true; poolForm.participants = [...users]" class="bg-yellow-500/20 text-yellow-300 px-3 py-1.5 rounded-full text-[10px] font-black hover:bg-yellow-500/30 transition-all btn-press">
+          <i class="fas fa-coins mr-1"></i>入錢
         </button>
       </div>
 
@@ -906,43 +906,64 @@
           <i class="fas fa-coins text-yellow-400"></i>
         </div>
         <div>
-          <h3 class="text-base font-black text-yellow-400">補倉公數</h3>
-          <p class="text-[10px] text-gray-500">加錢入公數</p>
+          <h3 class="text-base font-black text-yellow-400">入錢</h3>
+          <p class="text-[10px] text-gray-500">選擇入錢人及每人金額</p>
         </div>
       </div>
 
-      <div class="space-y-3">
-        <div class="glass-input rounded-2xl flex items-center px-4">
-          <i class="fas fa-user text-xs text-gray-500 mr-2"></i>
-          <input v-model="poolForm.name" @keyup.enter="addPoolContribution"
-            class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30"
-            placeholder="誰入錢...">
+      <!-- participants -->
+      <div class="mb-3">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-[9px] font-bold text-gray-500 uppercase">誰入錢</p>
+          <button @click="togglePoolAll" class="text-[9px] text-yellow-400 font-bold hover:text-yellow-300">全選/取消</button>
         </div>
-        <div class="glass-input rounded-2xl flex items-center px-4">
-          <span class="text-xs font-black text-gray-500 mr-2">$</span>
-          <input v-model="poolForm.amount" type="text" inputmode="decimal"
-            @keyup.enter="addPoolContribution"
-            class="w-full bg-transparent py-3 text-sm font-bold font-num outline-none placeholder-white/30"
-            placeholder="金額 (HKD)">
+        <div class="flex flex-wrap gap-2">
+          <div v-for="u in users" :key="u"
+               @click="togglePoolParticipant(u)"
+               class="px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer transition-all border"
+               :class="poolForm.participants.includes(u)
+                 ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300'
+                 : 'bg-white/5 border-white/10 text-gray-500'">
+            {{ u }}
+          </div>
         </div>
+        <p v-if="users.length === 0" class="text-[10px] text-gray-600 mt-2">請先喺 STEP 1 加入朋友</p>
+      </div>
+
+      <!-- per person amount -->
+      <div class="glass-input rounded-2xl flex items-center px-4 mb-1">
+        <span class="text-xs font-black text-gray-500 mr-2 shrink-0">每人夾 $</span>
+        <input v-model="poolForm.perPerson" type="text" inputmode="decimal"
+          @keyup.enter="addPoolContribution"
+          class="flex-1 bg-transparent py-3 text-sm font-bold font-num outline-none placeholder-white/30 text-center"
+          placeholder="0">
+      </div>
+
+      <!-- total preview -->
+      <div v-if="poolTotal > 0" class="text-center py-2 text-[11px] font-bold text-gray-400">
+        <span class="font-num text-yellow-400 text-sm">${{ poolForm.perPerson }}</span>
+        <span class="mx-1 text-gray-600">×</span>
+        <span class="text-white">{{ poolForm.participants.length }} 人</span>
+        <span class="mx-1 text-gray-600">=</span>
+        <span class="font-num text-yellow-300 text-sm font-black">HKD ${{ poolTotal.toFixed(1) }}</span>
       </div>
 
       <button @click="addPoolContribution"
-        class="w-full bg-yellow-600 hover:bg-yellow-500 py-4 rounded-2xl font-black text-sm btn-press mt-4 shadow-lg shadow-yellow-900/30 transition-all">
-        <i class="fas fa-plus mr-2"></i>確認入數
+        class="w-full bg-yellow-600 hover:bg-yellow-500 py-4 rounded-2xl font-black text-sm btn-press mt-2 shadow-lg shadow-yellow-900/30 transition-all">
+        <i class="fas fa-coins mr-2"></i>確認入錢
       </button>
 
       <div v-if="pool.contributions.length > 0" class="mt-4 pt-4 border-t border-white/5">
-        <p class="text-[9px] font-bold text-gray-500 uppercase mb-2">現有入數</p>
-        <div class="space-y-1.5">
+        <p class="text-[9px] font-bold text-gray-500 uppercase mb-2">現有入數紀錄</p>
+        <div class="space-y-1.5 max-h-32 overflow-y-auto custom-scroll">
           <div v-for="(c,i) in pool.contributions" :key="i" class="flex justify-between text-[11px] font-bold">
             <span class="text-gray-300">{{ c.name }}</span>
-            <span class="font-num text-yellow-300">${{ c.amount.toFixed(1) }}</span>
+            <span class="font-num text-yellow-300">HKD ${{ c.amount.toFixed(1) }}</span>
           </div>
-          <div class="flex justify-between text-[11px] font-bold border-t border-white/5 pt-1">
-            <span class="text-gray-500">合計</span>
-            <span class="font-num text-yellow-400">${{ pool.total.toFixed(1) }}</span>
-          </div>
+        </div>
+        <div class="flex justify-between text-[11px] font-bold border-t border-white/5 pt-2 mt-1">
+          <span class="text-gray-500">總計</span>
+          <span class="font-num text-yellow-400">HKD ${{ pool.total.toFixed(1) }}</span>
         </div>
       </div>
     </div>
@@ -1051,7 +1072,7 @@
       const featurePool = ref(false);
       const pool = ref({ total: 0, contributions: [], showDetails: false });
       const showPoolModal = ref(false);
-      const poolForm = ref({ name: '', amount: '' });
+      const poolForm = ref({ participants: [], perPerson: '' });
       const shareDay = ref('all');
       const featureShares = ref(false);
       const selectedDayFilter = ref('all');
@@ -2160,15 +2181,32 @@ onUnmounted(() => {
       const poolRemaining = computed(() => pool.value.total - poolSpent.value);
       const poolPct = computed(() => pool.value.total > 0 ? Math.max(0, Math.min(100, (poolRemaining.value / pool.value.total) * 100)) : 0);
       const poolLow = computed(() => pool.value.total > 0 && poolRemaining.value / pool.value.total < 0.1);
+      const poolTotal = computed(() => {
+        const pp = parseFloat(poolForm.value.perPerson);
+        return (poolForm.value.participants.length && pp > 0) ? pp * poolForm.value.participants.length : 0;
+      });
+      const togglePoolParticipant = (u) => {
+        const idx = poolForm.value.participants.indexOf(u);
+        if (idx === -1) poolForm.value.participants.push(u);
+        else poolForm.value.participants.splice(idx, 1);
+      };
+      const togglePoolAll = () => {
+        if (poolForm.value.participants.length === users.value.length)
+          poolForm.value.participants = [];
+        else
+          poolForm.value.participants = [...users.value];
+      };
       const addPoolContribution = () => {
-        const name = poolForm.value.name.trim();
-        const amt = parseFloat(poolForm.value.amount);
-        if (!name) { toast('請輸入名字', 'error'); return; }
-        if (!amt || amt <= 0) { toast('請輸入有效金額', 'error'); return; }
-        pool.value.contributions.push({ name, amount: amt });
-        pool.value.total += amt;
-        poolForm.value = { name: '', amount: '' };
-        saveData(); toast('已加入公數 HKD $' + amt.toFixed(1));
+        const pp = parseFloat(poolForm.value.perPerson);
+        if (!poolForm.value.participants.length) { toast('請選擇入錢人', 'error'); return; }
+        if (!pp || pp <= 0) { toast('請輸入每人金額', 'error'); return; }
+        poolForm.value.participants.forEach(name => {
+          pool.value.contributions.push({ name, amount: pp });
+          pool.value.total += pp;
+        });
+        const total = pp * poolForm.value.participants.length;
+        poolForm.value = { participants: [...users.value], perPerson: '' };
+        saveData(); toast('已入數 HKD $' + total.toFixed(1));
         showPoolModal.value = false;
       };
 
@@ -2254,6 +2292,7 @@ onUnmounted(() => {
         featureMultiDay, featureShares, featurePool, saveFeatureFlags, loadFeatureFlags,
         editingUserIdx, editingUserName, startRenameUser, confirmRenameUser,
         pool, poolForm, showPoolModal, poolSpent, poolRemaining, poolPct, poolLow, addPoolContribution,
+        poolTotal, togglePoolParticipant, togglePoolAll,
         selectedDayFilter, allDays, nextDay, dayTotal, filteredExpenses, shareDay,
         showFeatureMenu,
 
