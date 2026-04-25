@@ -181,6 +181,9 @@
         <button @click="showTutorial = true" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs hover:bg-white/20 transition-all">
           <i class="fas fa-question text-white/70"></i>
         </button>
+        <button @click="showFeatureMenu = true" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs hover:bg-white/20 transition-all" title="功能設定">
+          <i class="fas fa-sliders text-white/70"></i>
+        </button>
 
 
         <div v-if="roomId" class="glass px-3 py-1.5 rounded-full flex items-center gap-3 border-emerald-500/30 bg-emerald-900/20">
@@ -441,6 +444,17 @@
         </div>
 
 
+        <!-- Day selector (multi-day mode) -->
+        <div v-if="featureMultiDay" class="glass-input rounded-2xl flex items-center px-4 py-2 gap-3">
+          <i class="fas fa-calendar-day text-emerald-400 text-xs shrink-0"></i>
+          <select v-model="form.day" class="flex-1 bg-transparent text-xs font-bold outline-none appearance-none">
+            <option v-for="d in allDays" :value="d">{{ d }}</option>
+            <option :value="'Day ' + (allDays.length + 1)">＋ Day {{ allDays.length + 1 }}（新一日）</option>
+          </select>
+          <span class="text-[9px] text-gray-500 font-bold shrink-0">消費日期</span>
+          <i class="fas fa-caret-down text-gray-500 text-xs pointer-events-none shrink-0"></i>
+        </div>
+
         <button @click="addExpense" class="w-full py-4 rounded-2xl font-black text-sm shadow-xl btn-press flex items-center justify-center gap-2 transition-all"
                 :class="isEditing ? 'bg-amber-600 shadow-amber-900/40' : 'bg-emerald-600 shadow-emerald-900/40'">
           <i :class="['fas', isEditing ? 'fa-save' : 'fa-plus']"></i>
@@ -455,7 +469,19 @@
 
     <!-- Recent -->
     <section class="pb-10">
-      <h3 class="text-[10px] font-bold text-gray-500 ml-2 mb-3 uppercase tracking-widest">最近紀錄</h3>
+      <div class="flex items-center justify-between ml-2 mb-3 gap-2">
+        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest shrink-0">最近紀錄</h3>
+        <div v-if="featureMultiDay && allDays.length > 0" class="flex items-center gap-1 overflow-x-auto pb-0.5">
+          <button @click="selectedDayFilter = 'all'"
+            class="px-2.5 py-1 rounded-full text-[9px] font-bold transition-all whitespace-nowrap"
+            :class="selectedDayFilter === 'all' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'">全部</button>
+          <button v-for="d in allDays" :key="d" @click="selectedDayFilter = d"
+            class="px-2.5 py-1 rounded-full text-[9px] font-bold transition-all whitespace-nowrap"
+            :class="selectedDayFilter === d ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'">
+            {{ d }} <span class="opacity-60">${{ dayTotal(d).toFixed(0) }}</span>
+          </button>
+        </div>
+      </div>
 
 
       <div v-if="expenses.length === 0" class="text-center py-6 opacity-30">
@@ -465,12 +491,13 @@
 
 
       <div class="space-y-3">
-        <div v-for="(exp, idx) in expenses" :key="exp.id" @click="editExpense(idx)"
+        <div v-for="(exp, idx) in filteredExpenses" :key="exp.id" @click="editExpense(expenses.indexOf(exp))"
      class="glass p-4 rounded-2xl flex justify-between items-center border-l-[3px] transition-all active:scale-[0.99]"
      :class="exp.id === lastAddedId ? 'just-added' : ''"
      :style="{ borderColor: isEditing && editingId === exp.id ? '#f59e0b' : '#10b981' }">
           <div class="flex-1 overflow-hidden pr-3">
-            <div class="flex items-center gap-2 mb-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span v-if="featureMultiDay && exp.day" class="text-[8px] bg-emerald-900/60 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded font-bold">{{ exp.day }}</span>
               <p class="font-bold text-sm truncate text-gray-100">{{ exp.item }}</p>
               <span v-if="exp.origCurrency !== 'HKD'" class="text-[8px] bg-white/10 px-1.5 rounded text-gray-400 font-num">{{ exp.origCurrency }}</span>
             </div>
@@ -796,6 +823,37 @@
   </div>
 
 
+  <!-- Feature Menu Modal -->
+  <div v-if="showFeatureMenu" class="fixed inset-0 z-[150] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showFeatureMenu = false">
+    <div class="glass max-w-sm w-full p-6 rounded-[2rem] relative">
+      <button @click="showFeatureMenu = false" class="absolute top-5 right-5 text-gray-500 hover:text-white">
+        <i class="fas fa-times text-lg"></i>
+      </button>
+      <h3 class="text-base font-black text-emerald-400 mb-1">功能設定</h3>
+      <p class="text-[10px] text-gray-500 font-bold mb-5">可按需要開關進階功能</p>
+      <div class="space-y-3">
+        <div class="flex justify-between items-center bg-black/20 p-4 rounded-2xl border border-white/5">
+          <div>
+            <p class="text-sm font-bold text-white">多日旅行模式</p>
+            <p class="text-[10px] text-gray-500 mt-0.5">為每筆消費標記 Day，可按日篩選記錄</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+            <input type="checkbox" v-model="featureMultiDay" @change="saveFeatureFlags(); if(!featureMultiDay) selectedDayFilter = 'all'" class="sr-only peer">
+            <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        </div>
+        <div class="flex justify-between items-center bg-black/20 p-4 rounded-2xl border border-white/5 opacity-60">
+          <div>
+            <p class="text-sm font-bold text-white">消費份數</p>
+            <p class="text-[10px] text-gray-500 mt-0.5">勾選參與者後可調整份數（0.5、1、1.5...）</p>
+          </div>
+          <span class="text-[10px] text-emerald-400 font-bold bg-emerald-900/40 px-2 py-1 rounded-full shrink-0">恆開</span>
+        </div>
+      </div>
+      <button @click="showFeatureMenu = false" class="w-full bg-white/10 py-3 rounded-xl text-xs font-black mt-5 hover:bg-white/15 btn-press">完成</button>
+    </div>
+  </div>
+
   <!-- Tutorial -->
   <div v-if="showTutorial" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md flex items-center justify-center p-6" @click.self="showTutorial = false">
     <div class="glass max-w-sm w-full p-6 rounded-[2rem] text-center">
@@ -858,7 +916,21 @@
       const showShareModal = ref(false);
       const showResetMenu = ref(false);
       const showTutorial = ref(false);
+      const showFeatureMenu = ref(false);
       const shareSubMenu = ref('none');
+
+      // ── Multi-day mode ──
+      const featureMultiDay = ref(false);
+      const selectedDayFilter = ref('all');
+      const saveFeatureFlags = () => {
+        try { localStorage.setItem('mathGod_features', JSON.stringify({ multiDay: featureMultiDay.value })); } catch(e) {}
+      };
+      const loadFeatureFlags = () => {
+        try {
+          const f = JSON.parse(localStorage.getItem('mathGod_features') || '{}');
+          if (f.multiDay !== undefined) featureMultiDay.value = f.multiDay;
+        } catch(e) {}
+      };
 
 
       const toasts = ref([]);
@@ -869,7 +941,7 @@
       const roomNamesMap = ref({});
 
 
-      const form = ref({ item: "", amount: "", currency: "HKD", payer: "", involved: [], shares: {} });
+      const form = ref({ item: "", amount: "", currency: "HKD", payer: "", involved: [], shares: {}, day: "Day 1" });
       const sanitizeAmount = () => {
   let s = String(form.value.amount ?? "");
 
@@ -1392,6 +1464,7 @@ const maxY = window.innerHeight - panelH - 8;
           payer: form.value.payer,
           involved: [...form.value.involved],
           shares: {...form.value.shares},
+          day: featureMultiDay.value ? (form.value.day || 'Day 1') : null,
           origAmount: amt,
           origCurrency: form.value.currency
         };
@@ -1420,7 +1493,7 @@ toast("已新增一筆消費");
         const e = expenses.value[i];
         editingId.value = e.id;
         isEditing.value = true;
-        form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])], shares: {...(e.shares || {})} };
+        form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])], shares: {...(e.shares || {})}, day: e.day || 'Day 1' };
         handleCurrencyChange();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       };
@@ -1429,7 +1502,7 @@ toast("已新增一筆消費");
       const cancelEdit = () => {
         isEditing.value = false;
         editingId.value = null;
-        form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [...users.value], shares: {} };
+        form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [...users.value], shares: {}, day: nextDay.value };
         currentRate.value = 1;
         errors.value = { item: false, amount: false, payer: false, involved: false };
       };
@@ -1860,6 +1933,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
 
 
    onMounted(() => {
+  loadFeatureFlags();
   // handlers
   window.removeEventListener("keydown", onEsc);
   window.removeEventListener("online", onOnline);
@@ -1918,6 +1992,27 @@ onUnmounted(() => {
   window.removeEventListener("offline", onOffline);
 });
 
+
+      // ====== multi-day helpers ======
+      const allDays = computed(() => {
+        const days = new Set();
+        expenses.value.forEach(e => { if (e.day) days.add(e.day); });
+        return [...days].sort((a, b) => {
+          const na = parseInt(a.replace(/[^0-9]/g,'')) || 0;
+          const nb = parseInt(b.replace(/[^0-9]/g,'')) || 0;
+          return na - nb;
+        });
+      });
+      const nextDay = computed(() => {
+        if (allDays.value.length === 0) return 'Day 1';
+        const nums = allDays.value.map(d => parseInt(d.replace(/[^0-9]/g,'')) || 0);
+        return 'Day ' + Math.max(...nums);
+      });
+      const dayTotal = (day) => expenses.value.filter(e => e.day === day).reduce((s, e) => s + (e.hkd || 0), 0);
+      const filteredExpenses = computed(() => {
+        if (!featureMultiDay.value || selectedDayFilter.value === 'all') return expenses.value;
+        return expenses.value.filter(e => e.day === selectedDayFilter.value);
+      });
 
       // ====== share helpers ======
       const getShare = (u) => {
@@ -1980,6 +2075,9 @@ onUnmounted(() => {
         amountFontClass,
         sanitizeAmount,
         getShare, setShare,
+        featureMultiDay, saveFeatureFlags, loadFeatureFlags,
+        selectedDayFilter, allDays, nextDay, dayTotal, filteredExpenses,
+        showFeatureMenu,
 
 
       };
