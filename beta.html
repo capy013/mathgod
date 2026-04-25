@@ -317,7 +317,7 @@
       </div>
 
       <div v-if="pool.total === 0" class="text-center py-3 text-[11px] text-gray-500 font-bold">
-        <i class="fas fa-arrow-up mr-1 text-yellow-500/60"></i>按「補倉」加入公數
+        <i class="fas fa-arrow-up mr-1 text-yellow-500/60"></i>按「入錢」加入公數
       </div>
 
       <template v-else>
@@ -1984,7 +1984,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
             users.value = [];
             expenses.value = [];
             eventName.value = "";
-            form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [] };
+            form.value = { item: "", amount: "", currency: baseCurrency.value || "HKD", payer: "", involved: [] };
             pool.value = { total: 0, contributions: [], showDetails: false };
           } else {
             expenses.value = [];
@@ -2184,6 +2184,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
     if (local.pool) pool.value = { total: local.pool.total || 0, contributions: local.pool.contributions || [], showDetails: false };
     if (local.baseCurrency) baseCurrency.value = local.baseCurrency;
   }
+  form.value.currency = baseCurrency.value || 'HKD';
   form.value.involved = [...users.value];
 
 
@@ -2238,6 +2239,11 @@ onUnmounted(() => {
       const filteredExpenses = computed(() => {
         if (!featureMultiDay.value || selectedDayFilter.value === 'all') return expenses.value;
         return expenses.value.filter(e => e.day === selectedDayFilter.value);
+      });
+
+      // Watch baseCurrency → update form default currency
+      Vue.watch(baseCurrency, (newVal) => {
+        form.value.currency = newVal;
       });
 
       // ====== pool merged contributions ======
