@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MathGod⚡️夾錢計數小助手</title>
+
+
+  <meta name="description" content="MathGod⚡️夾錢計數小助手 - 專為朋友聚會、旅行設計的同步分帳工具。支援多國匯率轉換，一鍵生成結算單。">
+
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://capy013.github.io/mathgod/">
+  <meta property="og:title" content="MathGod⚡️夾錢計數小助手">
+  <meta property="og:description" content="旅行、食飯、夾錢唔使煩！支援即時同步功能，自動換算匯率，MathGod 幫你計到盡。">
+  <meta property="og:image" content="favicon.svg">
+
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MathGod⚡️夾錢計數小助手">
+  <meta name="twitter:description" content="朋友聚會分帳神器：支援多幣種、雲端同步。">
+  <meta name="twitter:image" content="favicon.svg">
+
+
+  <meta name="theme-color" content="#0a2f23">
+
+
+  <link rel="icon" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+
+
+  <link rel="manifest" href="./manifest.webmanifest">
+
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+
+  <style>
+    :root { --primary: #10b981; --bg: #050505; --card-bg: rgba(30, 30, 30, 0.65); --border: rgba(255, 255, 255, 0.1); }
+    [v-cloak] { display: none !important; }
+    body { background-color: var(--bg); color: #fff; font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+    .glass { background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); }
+    .glass-input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+    .glass-input:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); background: rgba(0,0,0,0.5); }
+    .input-error { border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    .font-num { font-family: 'JetBrains Mono', monospace; }
+    .btn-press { transition: transform 0.1s; }
+    .btn-press:active { transform: scale(0.96); }
+    .footer-gradient { background: linear-gradient(to top, rgba(5,5,5,0.95) 10%, rgba(5,5,5,0.6) 40%, rgba(5,5,5,0) 100%); pointer-events: none; height: 120px; }
+    .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+    .fade-enter-from, .fade-leave-to { opacity: 0; }
+    .toast-enter-active, .toast-leave-active { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-30px) scale(0.9); }
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    .math-check { appearance: none; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; position: relative; transition: all 0.2s; }
+    .math-check:checked { background: var(--primary); border-color: var(--primary); }
+    .math-check:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; font-size: 10px; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    .app-logo { filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3)); }
+
+
+    @keyframes lightningBar {
+      0%   { transform: translateX(-120%); }
+      100% { transform: translateX(420%); }
+    }
+    .animate-lightning-bar { animation: lightningBar 1s infinite linear; }
+
+
+    .capture-mode .truncate { overflow: visible !important; text-overflow: clip !important; }
+    .capture-mode .capture-row, .capture-mode .capture-row span { line-height: 1.6 !important; padding-bottom: 2px !important; }
+  
+  /* calculator open / close animation */
+.calc-enter-active,
+.calc-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+
+.calc-enter-from,
+.calc-leave-to {
+  opacity: 0;
+  transform: scale(0.92) translateY(12px);
+}
+@keyframes addedGlow {
+  0%   { transform: scale(0.995); box-shadow: 0 0 0 rgba(16,185,129,0); }
+  40%  { transform: scale(1.01);  box-shadow: 0 0 24px rgba(16,185,129,0.22); }
+  100% { transform: scale(1);     box-shadow: 0 0 0 rgba(16,185,129,0); }
+}
+.just-added {
+  animation: addedGlow 0.9s ease;
+}
+    /* unified clear button */
+.clear-btn{
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.55);
+  transition: all .15s ease;
+}
+
+
+.clear-btn:hover{
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.90);
+}
+.clear-btn i{ font-size: 11px; line-height: 1; }
+
+
+
+
+.amount-fit{
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+
+
+
+  </style>
+</head>
+
+
+<body>
+<div id="app" v-cloak class="min-h-screen flex flex-col max-w-[500px] mx-auto relative pb-32">
+
+
+  <!-- Loading -->
+  <transition name="fade">
+    <div v-if="isLoading" class="fixed inset-0 z-[200] bg-black flex items-center justify-center">
+      <div class="flex flex-col items-center">
+        <img src="favicon.svg" class="w-16 h-16 rounded-2xl mb-4 animate-pulse shadow-2xl">
+        <p class="text-xs text-gray-500 font-bold tracking-widest uppercase">⚡️ Loading...</p>
+      </div>
+    </div>
+  </transition>
+
+
+  <!-- Toasts -->
+  <div class="fixed top-8 left-0 right-0 z-[999] flex flex-col items-center pointer-events-none px-4">
+    <transition-group name="toast">
+      <div v-for="t in toasts" :key="t.id" class="glass px-6 py-3 rounded-full flex items-center gap-3 mb-2 shadow-2xl pointer-events-auto border-l-4"
+           :class="t.type === 'error' ? 'border-red-500' : 'border-emerald-500'">
+        <i :class="['fas', t.type === 'error' ? 'fa-times-circle text-red-400' : 'fa-check-circle text-emerald-400']"></i>
+        <span class="text-xs font-bold">{{ t.msg }}</span>
+      </div>
+    </transition-group>
+  </div>
+
+
+  <!-- Header -->
+  <header class="p-6 pb-8 rounded-b-[2.5rem] sticky top-0 z-40 transition-all duration-500 shadow-2xl backdrop-blur-xl border-b border-white/5"
+          :class="isEditing ? 'bg-amber-950/80' : 'bg-[#0a2f23]/80'">
+
+
+    <div class="flex justify-between items-start mb-6">
+      <div class="flex items-center gap-3">
+        <img src="favicon.svg" class="h-10 w-10 rounded-xl object-contain shadow-lg border border-white/10 app-logo">
+        <div>
+          <h1 class="text-xl font-black italic tracking-tighter text-white leading-none">MathGod</h1>
+          <p class="text-[9px] font-bold text-emerald-400/80 tracking-[0.1em] uppercase">
+            {{ isEditing ? '正在修改模式' : '朋友夾錢計算器' }}
+          </p>
+        </div>
+      </div>
+
+
+      <div class="flex items-center gap-2">
+        <button @click="showTutorial = true" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs hover:bg-white/20 transition-all">
+          <i class="fas fa-question text-white/70"></i>
+        </button>
+
+
+        <div v-if="roomId" class="glass px-3 py-1.5 rounded-full flex items-center gap-3 border-emerald-500/30 bg-emerald-900/20">
+          <div class="text-right">
+            <p class="text-[8px] font-bold uppercase" :class="isOnline ? 'text-emerald-400' : 'text-gray-400'">
+              {{ isOnline ? 'ONLINE' : 'OFFLINE' }}
+            </p>
+            <p class="text-xs font-num font-bold text-emerald-400 leading-none">#{{ roomId }}</p>
+          </div>
+          <button @click="copyRoomLink" class="w-6 h-6 rounded-full bg-white/10 text-white/70 flex items-center justify-center hover:bg-white/20 transition-all">
+            <i class="fas fa-link text-[10px]"></i>
+          </button>
+          <button @click="logoutRoom" class="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+            <i class="fas fa-power-off text-[10px]"></i>
+          </button>
+        </div>
+
+
+        <button
+          v-else
+          @click="isOnline ? (showSyncModal = true) : toast('目前離線，未能同步', 'error')"
+          class="glass px-4 py-2 rounded-full text-[10px] font-bold border-white/10 transition-all flex items-center gap-2 btn-press"
+          :class="isOnline ? 'hover:border-emerald-500/50' : 'opacity-40 grayscale'">
+          <i :class="['fas', isOnline ? 'fa-cloud' : 'fa-wifi', isOnline ? 'text-emerald-400' : 'text-gray-500']"></i>
+          <span>{{ isOnline ? '同步MODE' : '離線中' }}</span>
+        </button>
+      </div>
+    </div>
+
+
+    <div class="flex gap-3">
+      <div class="flex-1 glass-input rounded-2xl flex items-center px-4 relative">
+        <i class="fas fa-pen text-[10px] text-gray-500 mr-3"></i>
+        <input v-model="eventName" @input="saveData" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/20" placeholder="活動名稱 (例如: 日本 Day1)">
+      </div>
+
+
+      <button @click="openDatePicker" class="w-12 glass-input rounded-2xl flex items-center justify-center hover:border-emerald-500/50 btn-press">
+        <i class="fas fa-calendar-day text-emerald-400 pointer-events-none"></i>
+      </button>
+      <input
+  type="date"
+  id="dateInput"
+  class="absolute -left-[9999px] opacity-0"
+  @change="appendDate"
+/>
+
+
+
+
+    </div>
+
+
+    <div v-if="isSyncing" class="mt-3">
+      <div class="h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div class="h-full w-1/3 bg-emerald-400 animate-lightning-bar"></div>
+      </div>
+      <div class="mt-1 text-[9px] font-bold text-gray-400 tracking-widest uppercase">⚡️ Loading...</div>
+    </div>
+  </header>
+
+
+  <!-- Main -->
+  <main class="p-5 space-y-6 flex-1">
+
+
+    <!-- STEP 1 -->
+    <section class="glass p-5 rounded-[2rem]">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
+        <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-400 font-num">{{ users.length }} 人</span>
+      </div>
+
+
+      <div class="flex gap-2 mb-4">
+        <div class="flex-1 glass-input rounded-xl flex items-center px-4 transition-all"
+             :class="{'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]': users.length === 0}">
+          <i class="fas fa-user-plus text-xs text-gray-500 mr-2"></i>
+          <input v-model="newUser" @keyup.enter="addUser" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30" placeholder="輸入名字...">
+        </div>
+        <button @click="addUser" class="bg-emerald-600 px-5 rounded-xl font-black text-xs btn-press shadow-lg shadow-emerald-900/50">加入</button>
+      </div>
+
+
+      <div class="flex flex-wrap gap-2">
+        <transition-group name="toast">
+          <div v-for="(u, i) in users" :key="u" class="bg-white/5 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 group">
+            {{ u }}
+            <button @click="removeUser(i)" class="text-gray-600 hover:text-red-400 px-1"><i class="fas fa-times"></i></button>
+          </div>
+        </transition-group>
+        <div v-if="users.length === 0" class="w-full text-center py-2 text-[10px] text-emerald-400/70 animate-pulse">
+          <i class="fas fa-arrow-up mr-1"></i> 請先加入參與活動的朋友
+        </div>
+      </div>
+    </section>
+
+
+    <!-- STEP 2 -->
+    <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-visible"
+             :class="{'opacity-50 pointer-events-none grayscale': users.length === 0, 'border-amber-500/50': isEditing}">
+
+
+      <div v-if="users.length === 0" class="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+        <div class="bg-black/80 px-4 py-2 rounded-full text-xs font-bold text-white"><i class="fas fa-lock mr-2"></i>加入朋友後解鎖</div>
+      </div>
+
+
+      <div class="flex justify-between items-center mb-5">
+        <h3 class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2" :class="isEditing ? 'text-amber-500' : 'text-emerald-500'">
+          {{ isEditing ? '正在修改' : 'STEP 2: 新增消費' }}
+        </h3>
+        <button v-if="isEditing" @click="cancelEdit" class="text-[10px] text-gray-400 underline hover:text-white">取消修改</button>
+      </div>
+
+
+      <div class="space-y-4">
+        <div class="glass-input rounded-2xl flex items-center px-4 relative" :class="{'input-error': errors.item}">
+          <input v-model="form.item" @input="errors.item = false" class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30" placeholder="消費項目 (例如: 晚餐)">
+          <button
+  v-if="form.item"
+  type="button"
+  @click.stop.prevent="form.item=''"
+  class="absolute right-3 top-1/2 -translate-y-1/2 clear-btn"
+  aria-label="清除消費項目"
+  title="清除"
+>
+  <i class="fas fa-times"></i>
+</button>
+
+
+        </div>
+
+
+        <!-- currency + amount + calc icon -->
+        <div class="grid grid-cols-12 gap-3">
+          <div class="col-span-3 sm:col-span-4 glass-input rounded-2xl relative">
+            <select v-model="form.currency" @change="handleCurrencyChange" class="w-full h-full bg-transparent px-2 text-[11px] font-black outline-none appearance-none text-center z-10 relative">
+              <option value="HKD">HKD 🇭🇰</option>
+              <option value="CNY">CNY 🇨🇳</option>
+              <option value="JPY">JPY 🇯🇵</option>
+              <option value="TWD">TWD 🇹🇼</option>
+              <option value="THB">THB 🇹🇭</option>
+              <option value="KRW">KRW 🇰🇷</option>
+              <option value="USD">USD 🇺🇸</option>
+              <option value="EUR">EUR 🇪🇺</option>
+              <option value="GBP">GBP 🇬🇧</option>
+            </select>
+            <i class="fas fa-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-gray-500"></i>
+          </div>
+
+
+          <div class="col-span-9 sm:col-span-8 glass-input rounded-2xl flex flex-col justify-center pl-4 pr-1 py-2" :class="{'input-error': errors.amount}">
+            <div class="relative flex items-center w-full">
+  <!-- $：固定寬 -->
+  <span class="text-xs font-black text-gray-500 w-5 shrink-0 text-center">$</span>
+
+
+  <!-- 可置中區：由 $ 到直線之前 -->
+  <div class="flex-1 min-w-0">
+    <input
+      v-model="form.amount"
+      type="text"
+      inputmode="decimal"
+      pattern="[0-9.]*"
+      @input="sanitizeAmount(); errors.amount = false"
+      :class="[
+        'w-full bg-transparent text-center font-num font-black outline-none placeholder-white/10 amount-fit',
+        amountFontClass
+      ]"
+      placeholder="0.0"
+    />
+  </div>
+
+
+  <!-- 工具區：固定寬（X + 直線 + 計數機）-->
+  <div class="flex items-center justify-end gap-2 w-[80px] shrink-0 pl-2">
+    <!-- clear X -->
+    <button
+      v-if="form.amount"
+      type="button"
+      class="clear-btn"
+      @click.stop.prevent="form.amount=''"
+      aria-label="清除金額"
+      title="清除"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+
+
+    <!-- divider -->
+    <span class="h-6 w-px bg-white/10"></span>
+
+
+    <!-- calculator -->
+    <button
+      type="button"
+      @click.stop.prevent="openKeypad()"
+      class="w-9 h-9 flex items-center justify-center rounded-full
+             hover:bg-emerald-500/10 active:bg-emerald-500/20"
+      title="開啟計數機"
+      aria-label="開啟計數機"
+    >
+      <i class="fas fa-calculator text-[13px] text-emerald-400"></i>
+    </button>
+  </div>
+</div>
+
+
+
+
+            <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
+              <div>
+                <span class="text-[9px] font-bold text-emerald-400 font-num">
+                  Rate: {{ currentRate.toFixed(3) }} ≈ HKD ${{ ((Number(form.amount || 0)) * currentRate).toFixed(1) }}
+                </span>
+              </div>
+              <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
+                最後更新時間：{{ formatTs(rateUpdatedAt) }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <p class="text-[9px] font-bold text-gray-500 ml-1">誰付錢</p>
+            <div class="glass-input rounded-xl relative" :class="{'input-error': errors.payer}">
+              <select v-model="form.payer" @change="errors.payer = false" class="w-full bg-transparent p-3 text-xs font-bold outline-none appearance-none">
+                <option value="" disabled>請選擇...</option>
+                <option v-for="u in users" :value="u">{{ u }}</option>
+              </select>
+              <i class="fas fa-caret-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+            </div>
+          </div>
+
+
+          <div class="space-y-1">
+            <div class="flex justify-between px-1">
+              <p class="text-[9px] font-bold text-gray-500" :class="{'text-red-400': errors.involved}">誰有份 ({{ form.involved.length }}) <span v-if="form.involved.some(u => getShare(u) !== 1)" class="text-emerald-400/80">• 份數已調整</span></p>
+              <button @click="toggleSelectAll" class="text-[9px] text-emerald-500 font-bold hover:text-white transition-colors">全選/取消</button>
+            </div>
+            <div class="glass-input rounded-xl p-2 max-h-28 overflow-y-auto custom-scroll space-y-1" :class="{'input-error': errors.involved}">
+              <div v-for="u in users" :key="u" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5">
+                <div @click="toggleInvolved(u)" class="flex items-center gap-2 flex-1 cursor-pointer">
+                  <input type="checkbox" :checked="form.involved.includes(u)" class="math-check pointer-events-none">
+                  <span class="text-[10px] font-bold" :class="form.involved.includes(u) ? 'text-white' : 'text-gray-500'">{{ u }}</span>
+                </div>
+                <div v-if="form.involved.includes(u)" class="flex items-center gap-1 shrink-0" @click.stop>
+                  <button @click.stop="setShare(u, -0.5)" class="w-5 h-5 rounded-full bg-white/10 text-white/60 flex items-center justify-center text-[10px] hover:bg-white/20 leading-none">－</button>
+                  <span class="font-num text-[10px] font-bold text-emerald-400 w-6 text-center">{{ getShare(u) }}</span>
+                  <button @click.stop="setShare(u, 0.5)" class="w-5 h-5 rounded-full bg-white/10 text-white/60 flex items-center justify-center text-[10px] hover:bg-white/20 leading-none">＋</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <button @click="addExpense" class="w-full py-4 rounded-2xl font-black text-sm shadow-xl btn-press flex items-center justify-center gap-2 transition-all"
+                :class="isEditing ? 'bg-amber-600 shadow-amber-900/40' : 'bg-emerald-600 shadow-emerald-900/40'">
+          <i :class="['fas', isEditing ? 'fa-save' : 'fa-plus']"></i>
+          <span>{{ isEditing ? '儲存修改' : '確認入數' }}</span>
+          <span v-if="form.amount" class="font-num bg-black/20 px-2 rounded ml-1 text-xs">
+            HKD ${{ ((Number(form.amount || 0) * currentRate) || 0).toFixed(1) }}
+          </span>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- Recent -->
+    <section class="pb-10">
+      <h3 class="text-[10px] font-bold text-gray-500 ml-2 mb-3 uppercase tracking-widest">最近紀錄</h3>
+
+
+      <div v-if="expenses.length === 0" class="text-center py-6 opacity-30">
+        <i class="fas fa-clipboard-list text-3xl mb-2"></i>
+        <p class="text-xs">暫無消費</p>
+      </div>
+
+
+      <div class="space-y-3">
+        <div v-for="(exp, idx) in expenses" :key="exp.id" @click="editExpense(idx)"
+     class="glass p-4 rounded-2xl flex justify-between items-center border-l-[3px] transition-all active:scale-[0.99]"
+     :class="exp.id === lastAddedId ? 'just-added' : ''"
+     :style="{ borderColor: isEditing && editingId === exp.id ? '#f59e0b' : '#10b981' }">
+          <div class="flex-1 overflow-hidden pr-3">
+            <div class="flex items-center gap-2 mb-1">
+              <p class="font-bold text-sm truncate text-gray-100">{{ exp.item }}</p>
+              <span v-if="exp.origCurrency !== 'HKD'" class="text-[8px] bg-white/10 px-1.5 rounded text-gray-400 font-num">{{ exp.origCurrency }}</span>
+            </div>
+            <p class="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+              <span class="text-emerald-400 font-num">HKD ${{ (exp.hkd || 0).toFixed(1) }}</span>
+              <span class="text-gray-600">|</span>
+              <span>{{ exp.payer }} 付</span>
+            </p>
+          </div>
+
+
+          <button @click.stop="removeExpense(idx)" class="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-red-500/20 hover:text-red-400 transition-colors">
+            <i class="fas fa-trash-alt text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+<!-- ===== Floating Draggable Calculator (Top Layer) ===== -->
+<transition name="calc">
+  <div v-if="showKeypad" class="fixed inset-0 z-[999]">
+
+
+  <!-- click-away overlay -->
+<div
+  class="absolute inset-0 bg-black/40"
+  @pointerdown.prevent="closeKeypad()"
+></div>
+
+
+
+
+
+
+
+
+  <!-- draggable panel -->
+  <div
+  class="absolute glass rounded-2xl w-[320px] max-w-[92vw] p-4 shadow-2xl"
+  :style="{ left: calcPos.x + 'px', top: calcPos.y + 'px' }"
+  @click.stop
+  @touchmove.prevent
+>
+
+
+    <!-- header -->
+<!-- header (drag handle) -->
+<div
+  class="flex items-center justify-between mb-3 cursor-move select-none"
+  @pointerdown.prevent="startDrag"
+>
+  <div class="text-xs font-black text-gray-200">輸入金額（可計數）</div>
+
+
+  <button
+  type="button"
+  class="w-9 h-9 rounded-full bg-red-500/20 text-red-400
+         flex items-center justify-center
+         hover:bg-red-500 hover:text-white transition-all"
+  @pointerdown.prevent.stop="closeKeypad()"
+  aria-label="關閉"
+  title="關閉"
+>
+  <i class="fas fa-times"></i>
+</button>
+
+
+
+
+</div>
+
+
+
+
+
+
+    <!-- display -->
+    <div class="glass-input rounded-2xl px-3 py-3 mb-3">
+      <div class="text-[10px] font-bold text-gray-500 mb-1">Expression</div>
+      <div class="font-num font-black text-2xl text-right break-all text-white">
+        {{ keypadExpr || '0' }}
+      </div>
+
+
+      <div class="mt-2 flex items-center justify-between">
+        <div class="text-[10px] font-bold text-gray-500">Result</div>
+        <div class="font-num font-black text-lg text-right text-gray-300">
+          {{ amountPreviewText }}
+        </div>
+      </div>
+
+
+      <div v-if="keypadHint" class="text-[10px] font-bold text-red-400 mt-1 text-right">
+        {{ keypadHint }}
+      </div>
+    </div>
+
+
+    <!-- keys -->
+    <div class="grid grid-cols-4 gap-2 text-sm font-black select-none">
+      <button class="bg-white/10 rounded-xl py-3 btn-press" @click="kp('C')">C</button>
+
+
+      <button
+        class="bg-white/10 rounded-xl py-3 btn-press"
+        @mousedown.prevent="startBackspaceHold()"
+        @mouseup.prevent="stopBackspaceHold()"
+        @mouseleave.prevent="stopBackspaceHold()"
+        @touchstart.prevent="startBackspaceHold()"
+        @touchend.prevent="stopBackspaceHold()"
+        @touchcancel.prevent="stopBackspaceHold()"
+      >⌫</button>
+
+
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('/')">÷</button>
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('*')">×</button>
+
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('7')">7</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('8')">8</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('9')">9</button>
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('-')">−</button>
+
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('4')">4</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('5')">5</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('6')">6</button>
+      <button class="bg-emerald-700/40 rounded-xl py-3 btn-press" @click="kp('+')">＋</button>
+
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('1')">1</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('2')">2</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('3')">3</button>
+
+
+      <button class="bg-emerald-600 rounded-xl py-3 btn-press row-span-2" @click="kp('=')">
+        =<div class="text-[9px] font-bold opacity-80 mt-1">OK</div>
+      </button>
+
+
+      <button class="bg-white/5 rounded-xl py-3 btn-press col-span-2" @click="kp('0')">0</button>
+      <button class="bg-white/5 rounded-xl py-3 btn-press" @click="kp('.')">.</button>
+    </div>
+  </div>
+</div>
+
+
+</transition>
+
+
+  <div class="fixed bottom-0 left-0 right-0 footer-gradient z-40 pointer-events-none"></div>
+  <div v-if="showResetMenu" @click="showResetMenu = false" class="fixed inset-0 z-40 bg-transparent"></div>
+
+
+  <!-- Footer -->
+  <footer class="fixed bottom-6 left-0 right-0 max-w-[500px] mx-auto px-6 z-50 grid grid-cols-2 gap-4 pointer-events-none">
+    <button @click="showShareModal = true" :disabled="expenses.length === 0"
+            class="pointer-events-auto bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-black text-xs shadow-2xl shadow-emerald-900/40 btn-press disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2 border border-emerald-400/20 backdrop-blur-md text-white">
+      <i class="fas fa-receipt"></i> 結算分享
+    </button>
+
+
+    <div class="relative pointer-events-auto group">
+      <button @click="showResetMenu = !showResetMenu" class="w-full bg-[#151515]/90 border border-white/10 py-4 rounded-2xl font-black text-xs text-gray-400 backdrop-blur-md btn-press hover:bg-white/5 transition-all flex items-center justify-center gap-2 shadow-xl">
+        <i class="fas fa-cog"></i> 重設
+      </button>
+      <div v-if="showResetMenu" class="absolute bottom-full mb-3 left-0 right-0 bg-[#1a1a1a] rounded-2xl border border-white/10 overflow-hidden shadow-2xl z-50">
+        <button @click="resetData('expenses')" class="w-full p-4 text-xs font-bold text-left text-red-300 border-b border-white/5 hover:bg-white/5">
+          <i class="fas fa-eraser mr-2"></i>只清空消費紀錄
+        </button>
+        <button @click="resetData('all')" class="w-full p-4 text-xs font-bold text-left text-red-500 hover:bg-white/5">
+          <i class="fas fa-bomb mr-2"></i>清除所有紀錄 (包括朋友)
+        </button>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- Sync Modal -->
+  <div v-if="showSyncModal" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showSyncModal = false">
+    <div class="glass w-full max-w-sm p-8 rounded-[2.5rem] relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-emerald-900/20 to-transparent pointer-events-none"></div>
+
+
+      <div class="relative z-10 text-center mb-8">
+        <img src="favicon.svg" class="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-white/10 object-contain bg-black/20">
+        <h3 class="text-xl font-black">登入同步房間</h3>
+      </div>
+
+
+      <div class="mb-6 relative group">
+        <input v-model="roomInput" type="number" class="w-full text-center text-4xl font-num font-bold py-4 bg-black/40 rounded-2xl outline-none border border-white/10 focus:border-emerald-500/50 transition-all text-emerald-400 placeholder-white/5 tracking-widest" placeholder="0000">
+        <p class="text-[9px] text-gray-600 text-center mt-2 font-bold uppercase">輸入 4 位數房號</p>
+      </div>
+
+
+      <div class="grid grid-cols-2 gap-3 mb-8">
+        <button @click="joinRoom(roomInput)" class="bg-emerald-600 py-3.5 rounded-xl font-black text-xs btn-press">進入房間</button>
+        <button @click="createRoom" class="bg-white/5 border border-white/10 py-3.5 rounded-xl font-black text-xs btn-press hover:bg-white/10">新開房間</button>
+      </div>
+
+
+      <div v-if="recentRoomsWithNames.length > 0" class="border-t border-white/5 pt-5">
+        <p class="text-[9px] text-gray-500 font-bold uppercase mb-3 px-1">最近瀏覽</p>
+        <div class="space-y-2 max-h-40 overflow-y-auto custom-scroll pr-1">
+          <div v-for="r in recentRoomsWithNames" :key="r.id" class="flex items-center gap-2 group">
+            <button @click="joinRoom(r.id)" class="flex-1 bg-white/5 p-3 rounded-xl flex items-center border border-transparent hover:border-emerald-500/30 transition-all text-left">
+              <span class="font-num text-emerald-500 font-bold mr-3 text-xs">#{{ r.id }}</span>
+              <span class="text-[10px] font-bold text-gray-300 truncate flex-1">{{ r.name }}</span>
+            </button>
+            <button @click="removeHistoryRoom(r.id)" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+              <i class="fas fa-times text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <button @click="showSyncModal = false" class="absolute top-6 right-6 text-gray-500 hover:text-white">
+        <i class="fas fa-times text-lg"></i>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- Share Modal -->
+  <div v-if="showShareModal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col p-4 overflow-y-auto" @click.self="showShareModal = false">
+    <div class="max-w-md mx-auto w-full my-auto">
+      <div id="capture-zone" class="bg-[#e8e8e8] text-black p-6 rounded-lg shadow-2xl mb-6 relative font-mono">
+        <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300 to-transparent opacity-20"></div>
+
+
+        <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
+          <h2 class="font-black text-2xl tracking-tighter uppercase mb-1">過數通知單</h2>
+          <p v-if="eventName" class="text-sm font-bold text-gray-600">{{ eventName }}</p>
+        </div>
+
+
+        <div class="flex justify-between items-end mb-4 px-2">
+          <span class="text-xs font-bold text-gray-600">總支出 (Total)</span>
+          <span class="font-black text-2xl tracking-tight">${{ totalSpent.toFixed(1) }}</span>
+        </div>
+
+
+        <div class="bg-white p-3 rounded border border-gray-300 mb-4">
+          <p class="text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-200 pb-1">過數指南 (Payment Guide)</p>
+          <div v-if="settlements.length === 0" class="text-center text-gray-400 text-xs py-2">沒有人需要夾錢</div>
+          <div v-for="s in settlements" class="flex justify-between items-center py-1 text-sm font-bold">
+            <div class="flex items-center gap-2">
+              <span class="text-red-600">{{ s.from }}</span>
+              <i class="fas fa-arrow-right-long text-gray-400 mx-2"></i>
+              <span class="text-emerald-600">{{ s.to }}</span>
+            </div>
+            <span>${{ s.amount.toFixed(1) }}</span>
+          </div>
+        </div>
+
+
+        <div v-if="shareOptions.showList" class="mt-4 pt-2 border-t-2 border-dashed border-gray-400">
+          <p class="text-[10px] font-bold text-gray-500 mb-2 text-center uppercase">-- 消費紀錄 (Details) --</p>
+          <div v-for="e in expenses" class="capture-row flex justify-between text-[10px] leading-[1.4] py-1.5 border-b border-gray-300 last:border-0">
+            <span class="truncate pr-2 font-medium">{{ e.item }} <span class="text-gray-400">({{ e.payer }})</span></span>
+            <span class="whitespace-nowrap font-bold">${{ e.hkd.toFixed(1) }}</span>
+          </div>
+        </div>
+
+
+        <div class="mt-6 text-center">
+          <p class="text-[10px] font-bold text-gray-500">Generated by ⚡️MathGod</p>
+          <div class="h-2 opacity-0">.</div>
+        </div>
+      </div>
+
+
+      <div class="glass p-6 rounded-[2rem] space-y-4">
+        <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+          <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" v-model="shareOptions.showList" class="sr-only peer">
+            <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        </div>
+
+
+        <div v-if="shareSubMenu === 'none'" class="grid grid-cols-2 gap-3">
+          <button @click="shareSubMenu = 'text'" class="bg-gray-700 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
+            <i class="fas fa-file-alt text-lg"></i> 分享文字
+          </button>
+          <button @click="shareSubMenu = 'image'" class="bg-emerald-600 py-4 rounded-xl font-black text-xs btn-press flex flex-col items-center gap-2">
+            <i class="fas fa-image text-lg"></i> 分享圖片
+          </button>
+        </div>
+
+
+        <div v-if="shareSubMenu === 'text'" class="space-y-3">
+          <button @click="copyText" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
+            <i class="fas fa-copy mr-2"></i> 複製文字
+          </button>
+          <button @click="shareViaApp('text')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
+            <i class="fas fa-share mr-2"></i> 分享到APP
+          </button>
+          <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
+        </div>
+
+
+        <div v-if="shareSubMenu === 'image'" class="space-y-3">
+          <button @click="generateImage" class="w-full bg-white/10 py-4 rounded-xl font-bold text-xs btn-press border border-white/10">
+            <i class="fas fa-download mr-2"></i> 下載圖片
+          </button>
+          <button @click="shareViaApp('image')" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-xs btn-press">
+            <i class="fas fa-share-nodes mr-2"></i> 分享到APP
+          </button>
+          <button @click="shareSubMenu = 'none'" class="w-full py-1 text-[10px] text-gray-500 font-bold">返回</button>
+        </div>
+      </div>
+
+
+      <button @click="showShareModal = false; shareSubMenu = 'none'"
+              class="w-full bg-white/10 py-3 rounded-xl text-xs font-black mt-4 border border-white/10 hover:bg-white/15 btn-press">
+        關閉
+      </button>
+    </div>
+  </div>
+
+
+  <!-- Tutorial -->
+  <div v-if="showTutorial" class="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md flex items-center justify-center p-6" @click.self="showTutorial = false">
+    <div class="glass max-w-sm w-full p-6 rounded-[2rem] text-center">
+      <h3 class="text-lg font-black text-emerald-400 mb-4">使用教學</h3>
+      <ul class="text-left text-xs space-y-3 text-gray-300 mb-6 font-bold">
+        <li>1. 先在 <span class="text-white border border-white/20 px-1 rounded">朋友</span> 區輸入名字並加入。</li>
+        <li>2. 在 <span class="text-white border border-white/20 px-1 rounded">新增消費</span> 填寫金額，選擇誰付錢。</li>
+        <li>3. 系統會自動計算誰需要給誰錢。</li>
+        <li>4. 按下 <span class="text-emerald-400 border border-emerald-400/30 px-1 rounded">結算分享</span> 即可產生報表。</li>
+        <li>5. 點擊 <span class="text-emerald-400 border border-emerald-400/30 px-1 rounded">同步MODE</span> 可與朋友即時連線。</li>
+      </ul>
+      <button @click="showTutorial = false" class="bg-white/10 w-full py-3 rounded-xl text-xs font-black">明白</button>
+    </div>
+  </div>
+
+
+</div>
+
+
+<script>
+  const firebaseConfig = {
+    apiKey: "yFDRUSUFAFnZf6AGdsEA9LxSyLcZF75oIFfib5At",
+    databaseURL: "https://mathgod2-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "mathgod2"
+  };
+
+
+  try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+  const db = firebase.database();
+
+
+  const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+
+
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: '/mathgod/' })
+        .then(() => console.log('SW registered'))
+        .catch(err => console.log('SW failed', err));
+    });
+  }
+
+
+  createApp({
+    setup() {
+      const isLoading = ref(false);
+      const isSyncing = ref(false);
+      const eventName = ref("");
+      const users = ref([]);
+      const expenses = ref([]);
+      const lastAddedId = ref(null);
+      const newUser = ref("");
+      const isEditing = ref(false);
+      const editingId = ref(null);
+
+
+      const showSyncModal = ref(false);
+      const showShareModal = ref(false);
+      const showResetMenu = ref(false);
+      const showTutorial = ref(false);
+      const shareSubMenu = ref('none');
+
+
+      const toasts = ref([]);
+      const roomId = ref(null);
+      const isOnline = ref(navigator.onLine);
+      const roomInput = ref("");
+      const recentRooms = ref([]);
+      const roomNamesMap = ref({});
+
+
+      const form = ref({ item: "", amount: "", currency: "HKD", payer: "", involved: [], shares: {} });
+      const sanitizeAmount = () => {
+  let s = String(form.value.amount ?? "");
+
+
+  // 1) 只保留數字同 .
+  s = s.replace(/[^\d.]/g, "");
+
+
+  // 2) 只保留第一個小數點
+  const dot = s.indexOf(".");
+  if (dot !== -1) {
+    s = s.slice(0, dot + 1) + s.slice(dot + 1).replace(/\./g, "");
+  }
+
+
+  // 3) 避免前面一堆 0（保留 "0." 例外）
+  if (s.length > 1 && s[0] === "0" && s[1] !== ".") {
+    s = s.replace(/^0+/, "");
+    if (s === "") s = "0";
+  }
+
+
+  form.value.amount = s;
+};
+
+
+      const errors = ref({ item: false, amount: false, payer: false, involved: false });
+      const shareOptions = ref({ showList: true });
+
+
+      const toast = (msg, type='success') => {
+        const id = Date.now();
+        toasts.value.push({id, msg, type});
+        setTimeout(() => toasts.value = toasts.value.filter(t=>t.id!==id), 3000);
+      };
+
+
+      const pad2 = (n) => String(n).padStart(2, "0");
+      const formatTs = (ts) => {
+        const d = new Date(ts);
+        return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+      };
+const amountFontClass = computed(() => {
+  const s = String(form.value.amount ?? "").replace(/[^\d.]/g, "");
+  const len = s.replace(".", "").length;
+
+
+  if (len <= 5) return "text-2xl";      // 12345
+  if (len <= 6) return "text-xl";       // 123456
+  if (len <= 8) return "text-lg";       // 12345678
+  if (len <= 10) return "text-base";    // 1234567890
+  return "text-sm";                     // 11+ digits
+});
+
+
+
+
+      const openDatePicker = () => {
+  const el = document.getElementById('dateInput');
+  if (!el) return;
+
+
+  // iOS/Safari：先 focus，再下一個 tick 觸發 picker 會穩啲
+  el.focus();
+
+
+  setTimeout(() => {
+    if (typeof el.showPicker === 'function') el.showPicker();
+    else el.click();
+  }, 0);
+};
+
+
+
+
+
+
+
+
+      const appendDate = (e) => {
+        if (e.target.value) {
+          const dateStr = `(${e.target.value})`;
+          const regex = /\(\d{4}-\d{2}-\d{2}\)$/;
+          if (regex.test(eventName.value)) eventName.value = eventName.value.replace(regex, dateStr);
+          else eventName.value = eventName.value ? `${eventName.value} ${dateStr}` : dateStr;
+          saveData();
+        }
+      };
+
+
+      const saveData = () => {
+        const data = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value };
+        localStorage.setItem('mathGod_localData', JSON.stringify(data));
+
+
+        if (roomId.value) {
+          db.ref('rooms/' + roomId.value).set(data).catch(()=>toast("同步失敗，已存本地", "error"));
+          let names = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
+          names[roomId.value] = eventName.value || '未命名活動';
+          localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
+          roomNamesMap.value = names;
+        }
+      };
+
+
+      // ====== rates ======
+      const ratesHKD = ref({ HKD: 1 });
+      const rateUpdatedAt = ref(null);
+      const currentRate = ref(1);
+
+
+      const SUPPORTED = ["HKD","CNY","JPY","TWD","THB","KRW","USD","EUR","GBP"];
+      const RATES_CACHE_KEY = "mathGod_rates_to_HKD_v1";
+      const RATES_TTL_MS = 6 * 60 * 60 * 1000;
+
+
+      const loadRatesCache = () => {
+        const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+        if (cached?.rates && cached?.updatedAt) {
+          ratesHKD.value = cached.rates;
+          rateUpdatedAt.value = cached.updatedAt;
+        }
+      };
+
+
+      const saveRatesCache = (rates, updatedAt) => {
+        localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ rates, updatedAt }));
+        ratesHKD.value = rates;
+        rateUpdatedAt.value = updatedAt;
+      };
+
+
+      const refreshRatesSilently = async (force=false) => {
+        if (!navigator.onLine) return;
+
+
+        const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || "null");
+        const freshEnough = cached?.updatedAt && (Date.now() - cached.updatedAt < RATES_TTL_MS);
+        if (!force && freshEnough) return;
+
+
+        try {
+          const res = await fetch(`https://open.er-api.com/v6/latest/USD`, { cache: "no-store" });
+          const data = await res.json();
+          const r = data?.rates;
+          if (!r?.HKD) return;
+
+
+          const toHKD = { HKD: 1 };
+          SUPPORTED.forEach(code => {
+            if (code === "HKD") return;
+            if (r[code]) toHKD[code] = r.HKD / r[code];
+          });
+
+
+          saveRatesCache(toHKD, Date.now());
+        } catch (e) {}
+      };
+
+
+      const handleCurrencyChange = async () => {
+        if (form.value.currency === "HKD") {
+          currentRate.value = 1;
+          return;
+        }
+        const cachedRate = ratesHKD.value?.[form.value.currency];
+        currentRate.value = cachedRate || 1;
+
+
+        await refreshRatesSilently(false);
+
+
+        const newRate = ratesHKD.value?.[form.value.currency];
+        if (newRate) currentRate.value = newRate;
+
+
+        if (!navigator.onLine && !newRate) toast("離線且未有匯率快取（可先上線開一次App）", "error");
+      };
+
+
+            // ====== keypad ======
+      const showKeypad = ref(false);
+const onEsc = (e) => {
+  if (showKeypad.value && e.key === "Escape") closeKeypad();
+};
+
+
+const onOnline = () => { isOnline.value = true; toast("已連線（Online）"); };
+const onOffline = () => { isOnline.value = false; toast("離線模式（Offline）", "error"); };
+
+
+
+
+  
+
+
+      const keypadExpr = ref("");
+      const keypadHint = ref("");
+      const calcPos = ref({ x: 20, y: 220 });
+let dragging = false;
+let dragOffset = { x: 0, y: 0 };
+
+
+
+
+
+
+      const openKeypad = () => {
+  if (showKeypad.value) return;
+
+
+  errors.value.amount = false;
+  keypadHint.value = "";
+
+
+  const base = form.value.amount;
+  keypadExpr.value = (base === null || base === undefined || base === "") ? "" : String(base);
+
+
+  // open in center
+  calcPos.value = {
+    x: Math.max(8, Math.round(window.innerWidth / 2 - 160)),
+    y: Math.max(8, Math.round(window.innerHeight / 2 - 260))
+  };
+        
+document.body.style.overflow = 'hidden';
+showKeypad.value = true;
+
+
+};
+
+
+
+
+
+
+      const startDrag = (e) => {
+  dragging = true;
+
+
+  const p = (e.touches && e.touches[0]) ? e.touches[0] : e;
+  dragOffset.x = p.clientX - calcPos.value.x;
+  dragOffset.y = p.clientY - calcPos.value.y;
+
+
+  const move = (ev) => {
+    if (!dragging) return;
+
+
+    const m = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
+
+
+ const panelW = 320;
+const panelH = 420;
+
+
+const maxX = window.innerWidth - panelW - 8;
+const maxY = window.innerHeight - panelH - 8;
+
+
+
+
+    let nx = m.clientX - dragOffset.x;
+    let ny = m.clientY - dragOffset.y;
+
+
+    nx = Math.min(Math.max(8, nx), maxX);
+    ny = Math.min(Math.max(8, ny), maxY);
+
+
+    calcPos.value = { x: nx, y: ny };
+  };
+
+
+  const end = () => {
+    dragging = false;
+
+
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', end);
+    window.removeEventListener('pointercancel', end);
+
+
+    window.removeEventListener('mousemove', move);
+    window.removeEventListener('mouseup', end);
+
+
+    window.removeEventListener('touchmove', move);
+    window.removeEventListener('touchend', end);
+    window.removeEventListener('touchcancel', end);
+  };
+
+
+  // ✅ Pointer events（Android / 新 browser 最穩）
+  window.addEventListener('pointermove', move, { passive: false });
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+
+
+  // ✅ 保底：舊 browser
+  window.addEventListener('mousemove', move, { passive: false });
+  window.addEventListener('mouseup', end);
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('touchend', end);
+  window.addEventListener('touchcancel', end);
+};
+
+
+
+
+
+
+      const closeKeypad = () => {
+  showKeypad.value = false;
+  keypadHint.value = "";
+  stopBackspaceHold();
+  document.body.style.overflow = '';
+};
+
+
+
+
+      // only allow: digits + - * / .
+      const evalExpr = (expr) => {
+        const cleaned = (expr || "").replace(/\s+/g, "");
+        if (!cleaned) return null;
+        if (!/^[0-9+\-*/.]+$/.test(cleaned)) throw new Error("只可輸入數字同 + − × ÷ 及 .");
+        // eslint-disable-next-line no-new-func
+        const v = Function(`"use strict"; return (${cleaned});`)();
+        if (!Number.isFinite(v)) throw new Error("計算結果無效");
+        return v;
+      };
+
+
+      // preview helper
+      const safeExprForPreview = (s) => {
+        let x = (s || "").replace(/\s+/g, "");
+        if (!/^[0-9+\-*/.]*$/.test(x)) return "";
+        x = x.replace(/[+\-*/]+$/g, "");
+        if (x.endsWith(".")) x += "0";
+        return x;
+      };
+
+
+      // preview result: when keypad closed, just show current amount (not expression)
+      const amountPreview = computed(() => {
+        if (!showKeypad.value) return Number(form.value.amount || 0);
+        const cleaned = safeExprForPreview(keypadExpr.value);
+        if (!cleaned) return 0;
+        try {
+          // eslint-disable-next-line no-new-func
+          const v = Function(`"use strict"; return (${cleaned});`)();
+          return Number.isFinite(v) ? v : 0;
+        } catch (e) {
+          return 0;
+        }
+      });
+
+
+      const amountPreviewText = computed(() => {
+        return (Math.round((amountPreview.value || 0) * 100) / 100).toFixed(2);
+      });
+
+
+      // long-press backspace (hold 1s then repeat)
+      let backspaceTimer = null;
+      let backspaceHoldDelayTimer = null;
+
+
+      const backspaceOnce = () => {
+        keypadExpr.value = keypadExpr.value.slice(0, -1);
+      };
+
+
+      const startBackspaceHold = () => {
+        keypadHint.value = "";
+        if (!keypadExpr.value) return;
+
+
+        // delete once immediately
+        backspaceOnce();
+        stopBackspaceHold();
+
+
+        // after 1s, start repeating
+        backspaceHoldDelayTimer = setTimeout(() => {
+          backspaceTimer = setInterval(() => {
+            if (!showKeypad.value) return stopBackspaceHold();
+            if (!keypadExpr.value) return stopBackspaceHold();
+            backspaceOnce();
+          }, 70);
+        }, 1000);
+      };
+
+
+      const stopBackspaceHold = () => {
+        if (backspaceHoldDelayTimer) {
+          clearTimeout(backspaceHoldDelayTimer);
+          backspaceHoldDelayTimer = null;
+        }
+        if (backspaceTimer) {
+          clearInterval(backspaceTimer);
+          backspaceTimer = null;
+        }
+      };
+
+
+      const kp = (key) => {
+        keypadHint.value = "";
+
+
+        if (key === "C") {
+          keypadExpr.value = "";
+          return;
+        }
+        if (key === "⌫") {
+          backspaceOnce();
+          return;
+        }
+
+
+        if (key === "=") {
+          try {
+            const v = evalExpr(keypadExpr.value);
+            const val = (v === null) ? null : Math.round(v * 100) / 100;
+
+
+            if (val === null || !Number.isFinite(val) || val <= 0) {
+              keypadHint.value = "請輸入有效金額（需大於 0）";
+              return;
+            }
+
+
+            form.value.amount = val;
+            closeKeypad();
+          } catch (e) {
+            keypadHint.value = e?.message || "計算錯誤";
+          }
+          return;
+        }
+
+
+        const last = keypadExpr.value.slice(-1);
+        const isOp = (c) => ["+","-","*","/"].includes(c);
+
+
+        // operators: cannot start; replace consecutive operator
+        if (isOp(key)) {
+          if (!keypadExpr.value) return;
+          if (isOp(last)) {
+            keypadExpr.value = keypadExpr.value.slice(0, -1) + key;
+            return;
+          }
+        }
+
+
+        // decimal point: only one in current number segment
+        if (key === ".") {
+          const parts = keypadExpr.value.split(/[+\-*/]/);
+          const current = parts[parts.length - 1] || "";
+          if (current.includes(".")) return;
+          if (current === "") keypadExpr.value += "0";
+        }
+
+
+        keypadExpr.value += key;
+      };
+
+
+      // ====== users / involved ======
+      const addUser = () => {
+        const n = newUser.value.trim();
+        if (!n) return;
+        if (users.value.includes(n)) { toast("朋友已存在", "error"); return; }
+        users.value.push(n);
+        form.value.involved.push(n);
+        newUser.value = "";
+        saveData();
+      };
+
+
+      const toggleSelectAll = () => {
+        form.value.involved = (form.value.involved.length === users.value.length) ? [] : [...users.value];
+      };
+
+
+      const toggleInvolved = (u) => {
+        const idx = form.value.involved.indexOf(u);
+        if (idx > -1) form.value.involved.splice(idx, 1);
+        else form.value.involved.push(u);
+      };
+
+
+      // ====== expenses ======
+      const addExpense = () => {
+        if (showKeypad.value) closeKeypad();
+
+
+        const amt = Number(form.value.amount);
+
+
+        errors.value = {
+          item: !form.value.item,
+          amount: !(Number.isFinite(amt) && amt > 0),
+          payer: !form.value.payer,
+          involved: form.value.involved.length === 0
+        };
+
+
+        if (Object.values(errors.value).some(v => v)) {
+          toast("請填妥紅色欄位", "error");
+          return;
+        }
+
+
+        const exp = {
+          id: isEditing.value ? editingId.value : Date.now(),
+          item: form.value.item,
+          hkd: (amt * currentRate.value) || 0,
+          payer: form.value.payer,
+          involved: [...form.value.involved],
+          shares: {...form.value.shares},
+          origAmount: amt,
+          origCurrency: form.value.currency
+        };
+
+
+        if (isEditing.value) {
+          const i = expenses.value.findIndex(e => e.id === editingId.value);
+          if (i > -1) expenses.value[i] = exp;
+          toast("修改成功");
+        } else {
+          expenses.value.unshift(exp);
+lastAddedId.value = exp.id;
+setTimeout(() => { if (lastAddedId.value === exp.id) lastAddedId.value = null; }, 1000);
+toast("已新增一筆消費");
+
+
+        }
+
+
+        cancelEdit();
+        saveData();
+      };
+
+
+      const editExpense = (i) => {
+        const e = expenses.value[i];
+        editingId.value = e.id;
+        isEditing.value = true;
+        form.value = { item: e.item, amount: e.origAmount, currency: e.origCurrency, payer: e.payer, involved: [...(e.involved || [])], shares: {...(e.shares || {})} };
+        handleCurrencyChange();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+
+      const cancelEdit = () => {
+        isEditing.value = false;
+        editingId.value = null;
+        form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [...users.value], shares: {} };
+        currentRate.value = 1;
+        errors.value = { item: false, amount: false, payer: false, involved: false };
+      };
+
+
+      const removeExpense = (i) => {
+        if (confirm("確定刪除紀錄？")) {
+          expenses.value.splice(i, 1);
+          saveData();
+        }
+      };
+
+
+      const removeUser = (i) => {
+        const name = users.value[i];
+        if (!name) return;
+
+
+        if (!confirm("確定刪除此人？（會同時移除相關消費關聯）")) return;
+
+
+        users.value.splice(i, 1);
+
+
+        form.value.involved = (form.value.involved || []).filter(u => u !== name);
+        if (form.value.payer === name) form.value.payer = "";
+
+
+        expenses.value = (expenses.value || [])
+          .map(e => ({
+            ...e,
+            payer: e.payer === name ? "" : e.payer,
+            involved: (e.involved || []).filter(u => u !== name),
+            hkd: Number(e.hkd || 0),
+          }))
+          .filter(e => e.payer && Array.isArray(e.involved) && e.involved.length > 0);
+
+
+        if (users.value.length === 0) {
+          form.value.involved = [];
+          form.value.payer = "";
+        }
+
+
+        saveData();
+        toast("已刪除朋友並清理相關紀錄");
+      };
+
+
+      // ====== settlements ======
+      const settlements = computed(() => {
+        let bal = {};
+        users.value.forEach(u => bal[u] = 0);
+
+
+        expenses.value.forEach(e => {
+          if (!e || !e.payer || !Array.isArray(e.involved) || e.involved.length === 0) return;
+          if (!(e.payer in bal)) return;
+
+
+          const h = Number(e.hkd || 0);
+          bal[e.payer] += h;
+
+
+          const sharesMap = e.shares || {};
+          const totalShares = e.involved.reduce((sum, u) => sum + (Number(sharesMap[u]) || 1), 0);
+          e.involved.forEach(u => {
+            if (u in bal) {
+              const userShare = Number(sharesMap[u]) || 1;
+              bal[u] -= h * (userShare / totalShares);
+            }
+          });
+        });
+
+
+        let d = [], c = [], res = [];
+        for (let u in bal) {
+          if (bal[u] < -0.01) d.push({ n: u, a: Math.abs(bal[u]) });
+          else if (bal[u] > 0.01) c.push({ n: u, a: bal[u] });
+        }
+
+
+        d.sort((a, b) => b.a - a.a);
+        c.sort((a, b) => b.a - a.a);
+
+
+        let i = 0, j = 0;
+        while (i < d.length && j < c.length) {
+          let m = Math.min(d[i].a, c[j].a);
+          res.push({ from: d[i].n, to: c[j].n, amount: m });
+          d[i].a -= m;
+          c[j].a -= m;
+          if (d[i].a < 0.01) i++;
+          if (c[j].a < 0.01) j++;
+        }
+        return res;
+      });
+
+
+      // ====== sync room helpers ======
+      const updateHistory = (rid) => {
+        let h = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
+        h = [rid, ...h.filter(x => x !== rid)].slice(0, 10);
+        recentRooms.value = h;
+        localStorage.setItem('mathGod_history', JSON.stringify(h));
+      };
+
+
+      const getRoomLink = (rid) => {
+        const base = window.location.origin + window.location.pathname;
+        const url = new URL(base);
+        url.searchParams.set("room", rid);
+        return url.toString();
+      };
+
+
+      const getRoomInviteText = (rid) => {
+        const link = getRoomLink(rid);
+        const name = (eventName.value || "").trim();
+        return `我開咗個記數頁面！🧮
+幫手記低大家消費，最後自動計數每人要畀幾錢！
+
+
+${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
+⚡️ ${link}`.trim();
+      };
+
+
+      const copyRoomLink = async () => {
+        if (!roomId.value) { toast("未連線房間", "error"); return; }
+        const text = getRoomInviteText(roomId.value);
+        try {
+          await navigator.clipboard.writeText(text);
+          toast("已複製邀請訊息");
+        } catch (e) {
+          window.prompt("複製以下訊息分享比朋友：", text);
+        }
+      };
+
+
+      const joinRoom = async (rid, options = {}) => {
+  const { silent = false, showRejoinToast = false } = options;
+
+
+
+
+        if (!navigator.onLine) {
+          toast("離線模式，無法連線房間（已使用本地資料）", "error");
+          isSyncing.value = false;
+          return;
+        }
+        if (!rid) return;
+        rid = rid.toString();
+
+
+        isSyncing.value = true;
+        let handled = false;
+
+
+        try {
+          const snap = await db.ref('rooms/' + rid).once('value');
+          if (snap.exists()) {
+            roomId.value = rid;
+            roomInput.value = rid;
+            localStorage.setItem('mathGod_roomId', rid);
+
+
+            db.ref('rooms/' + rid).off();
+            db.ref('rooms/' + rid).on('value', s => {
+              const v = s.val();
+              if (v) {
+                users.value = v.users || [];
+                expenses.value = v.expenses || [];
+                eventName.value = v.eventName || "";
+                if (!isEditing.value) form.value.involved = [...users.value];
+              }
+            });
+
+
+            updateHistory(rid);
+            showSyncModal.value = false;
+
+
+            handled = true;
+            setTimeout(() => {
+  isSyncing.value = false;
+
+
+  if (!silent) toast(`成功加入房間 #${rid}`);
+  if (showRejoinToast) toast(`已回到上次房間 #${rid}`);
+
+
+  history.replaceState(null, "", window.location.pathname);
+}, 600);
+
+
+          } else {
+            toast("房間不存在", "error");
+          }
+        } catch (e) {
+          console.error(e);
+          toast("連線錯誤", "error");
+        } finally {
+          if (!handled) isSyncing.value = false;
+        }
+      };
+
+
+      const createRoom = async () => {
+        const rid = Math.floor(1000 + Math.random() * 9000).toString();
+        const initialData = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value || "" };
+        try {
+          await db.ref('rooms/' + rid).set(initialData);
+          joinRoom(rid);
+        } catch (e) {
+          console.error(e);
+          isSyncing.value = false;
+          toast("連線錯誤", "error");
+        }
+      };
+
+
+      const logoutRoom = () => {
+        if (!roomId.value) return;
+        isSyncing.value = true;
+
+
+        setTimeout(() => {
+          db.ref('rooms/' + roomId.value).off();
+          roomId.value = null;
+          roomInput.value = "";
+          localStorage.removeItem('mathGod_roomId');
+          resetData('all', false);
+          isSyncing.value = false;
+          toast("已登出房間");
+        }, 800);
+      };
+
+
+      const removeHistoryRoom = (rid) => {
+        if (confirm("從最近紀錄中刪除此房間？")) {
+          let h = recentRooms.value.filter(x => x !== rid);
+          recentRooms.value = h;
+          localStorage.setItem('mathGod_history', JSON.stringify(h));
+
+
+          let names = { ...(roomNamesMap.value || {}) };
+          delete names[rid];
+          localStorage.setItem('mathGod_roomNames', JSON.stringify(names));
+          roomNamesMap.value = names;
+        }
+      };
+
+
+      // ====== reset ======
+      const resetData = (t, ask = true) => {
+        const doReset = () => {
+          if (t === 'all') {
+            users.value = [];
+            expenses.value = [];
+            eventName.value = "";
+            form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [] };
+          } else {
+            expenses.value = [];
+          }
+          saveData();
+          showResetMenu.value = false;
+        };
+
+
+        if (ask) {
+          if (confirm(t === 'all' ? "確定清除所有紀錄（包括朋友）嗎？" : "確定只清空消費紀錄嗎？")) {
+            doReset();
+            toast("資料已重置");
+          }
+        } else {
+          doReset();
+        }
+      };
+
+
+      // ====== share ======
+      const getShareText = () => {
+        let msg = `夾錢通知 (Payment Notice)\n`;
+        if (eventName.value) msg += `活動: ${eventName.value}\n`;
+        msg += `------------------------------\n`;
+        msg += `請跟隨以下列表過數 (Transfer List):\n`;
+        if (settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
+        settlements.value.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
+
+
+        if (shareOptions.value.showList) {
+          msg += `\n📋 詳細消費紀錄:\n`;
+          expenses.value.forEach((e, idx) => {
+            msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+          });
+        }
+        msg += `\n------------------------------\nGenerated by ⚡️MathGod`;
+        return msg;
+      };
+
+
+      const copyText = () => {
+        navigator.clipboard.writeText(getShareText())
+          .then(() => toast("已複製"))
+          .catch(() => toast("複製失敗", "error"));
+      };
+
+
+      const shareViaApp = async (type) => {
+        try {
+          if (type === 'text') {
+            if (navigator.share) await navigator.share({ title: 'MathGod 結算', text: getShareText() });
+            else copyText();
+            return;
+          }
+
+
+          if (type === 'image') {
+            toast("正在製作圖片...");
+            const zone = document.getElementById('capture-zone');
+            if (!zone) return;
+
+
+            const originalShadow = zone.style.boxShadow;
+            const originalPaddingBottom = zone.style.paddingBottom;
+            const originalTransform = zone.style.transform;
+
+
+            zone.classList.add('capture-mode');
+            zone.style.boxShadow = 'none';
+            zone.style.paddingBottom = '16px';
+            zone.style.transform = 'translateZ(0)';
+
+
+            const canvas = await html2canvas(zone, {
+              backgroundColor: '#e8e8e8',
+              scale: 2,
+              useCORS: true
+            });
+
+
+            canvas.toBlob(async (blob) => {
+  zone.classList.remove('capture-mode');
+  zone.style.boxShadow = originalShadow;
+  zone.style.paddingBottom = originalPaddingBottom;
+  zone.style.transform = originalTransform;
+
+
+  // ✅ Safari/部分瀏覽器有機會 blob 係 null
+  if (!blob) {
+    toast("此瀏覽器無法生成圖片，已改為下載", "error");
+    const link = document.createElement('a');
+    link.download = `MathGod_${Date.now()}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    return;
+  }
+
+
+  const file = new File([blob], "mathgod_share.png", { type: "image/png" });
+
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    await navigator.share({ files: [file], title: 'MathGod 結算圖' });
+  } else {
+    const link = document.createElement('a');
+    link.download = `MathGod_${Date.now()}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    toast("系統不支援直接圖片分享，已為你下載");
+  }
+}, "image/png");
+
+
+          }
+        } catch (err) {
+          console.error(err);
+          toast("分享失敗", "error");
+        }
+      };
+
+
+      const generateImage = async () => {
+        const zone = document.getElementById('capture-zone');
+        if (!zone) return;
+
+
+        const originalShadow = zone.style.boxShadow;
+        const originalPaddingBottom = zone.style.paddingBottom;
+        const originalTransform = zone.style.transform;
+
+
+        zone.classList.add('capture-mode');
+        zone.style.boxShadow = 'none';
+        zone.style.paddingBottom = '16px';
+        zone.style.transform = 'translateZ(0)';
+
+
+        try {
+          const canvas = await html2canvas(zone, {
+            backgroundColor: '#e8e8e8',
+            scale: 2,
+            useCORS: true
+          });
+
+
+          const link = document.createElement('a');
+          link.download = `MathGod_${Date.now()}.png`;
+          link.href = canvas.toDataURL();
+          link.click();
+        } finally {
+          zone.classList.remove('capture-mode');
+          zone.style.boxShadow = originalShadow;
+          zone.style.paddingBottom = originalPaddingBottom;
+          zone.style.transform = originalTransform;
+        }
+      };
+
+
+      // ====== computed ======
+      const recentRoomsWithNames = computed(() =>
+        recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))
+      );
+      const totalSpent = computed(() =>
+        expenses.value.reduce((s, e) => s + Number(e?.hkd || 0), 0)
+      );
+
+
+   onMounted(() => {
+  // handlers
+  window.removeEventListener("keydown", onEsc);
+  window.removeEventListener("online", onOnline);
+  window.removeEventListener("offline", onOffline);
+
+
+  window.addEventListener("keydown", onEsc);
+  window.addEventListener("online", onOnline);
+  window.addEventListener("offline", onOffline);
+
+
+  loadRatesCache();
+  refreshRatesSilently(false);
+
+
+  if (form.value.currency !== "HKD") handleCurrencyChange();
+
+
+  // load local
+  const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
+  if (local.users) {
+    users.value = local.users;
+    expenses.value = local.expenses || [];
+    eventName.value = local.eventName || "";
+  }
+  form.value.involved = [...users.value];
+
+
+  // history
+  recentRooms.value = JSON.parse(localStorage.getItem('mathGod_history') || '[]');
+  roomNamesMap.value = JSON.parse(localStorage.getItem('mathGod_roomNames') || '{}');
+
+
+  // URL room auto-join
+  const roomFromUrl = new URLSearchParams(window.location.search).get("room");
+  if (roomFromUrl && /^\d{4}$/.test(roomFromUrl)) {
+    if (navigator.onLine) joinRoom(roomFromUrl);
+    else toast("偵測到房間連結，但你現正離線", "error");
+  } else {
+    const savedRoom = localStorage.getItem('mathGod_roomId');
+    if (savedRoom && navigator.onLine) {
+      joinRoom(savedRoom, { silent: true, showRejoinToast: true });
+    } else {
+      isLoading.value = false;
+    }
+  }
+
+
+  if (!navigator.onLine) onOffline();
+});
+
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", onEsc);
+  window.removeEventListener("online", onOnline);
+  window.removeEventListener("offline", onOffline);
+});
+
+
+      // ====== share helpers ======
+      const getShare = (u) => {
+        const v = Number(form.value.shares[u]);
+        return (Number.isFinite(v) && v > 0) ? v : 1;
+      };
+      const setShare = (u, delta) => {
+        const current = getShare(u);
+        const next = Math.round((current + delta) * 10) / 10;
+        if (next < 0.5) return;
+        form.value.shares[u] = next;
+      };
+
+      // ====== return ======
+      return {
+        // state
+        isLoading, isSyncing, isOnline,
+        shareSubMenu,
+        eventName, users, expenses, newUser,
+        form, isEditing, editingId,
+        showSyncModal, showShareModal, showResetMenu, showTutorial,
+        toasts, roomId, roomInput,
+
+
+        // rates
+        currentRate, rateUpdatedAt, formatTs,
+
+
+        // share / validation
+        shareOptions, errors,
+
+
+        // keypad
+        showKeypad, keypadExpr, keypadHint,
+        amountPreview, amountPreviewText,
+        openKeypad, closeKeypad, kp,
+        startBackspaceHold, stopBackspaceHold,
+
+
+        // computed
+        recentRoomsWithNames, totalSpent, settlements,
+
+
+        // actions
+        openDatePicker, appendDate,
+        addUser, addExpense, editExpense, cancelEdit,
+        removeUser, removeExpense,
+        toggleSelectAll, toggleInvolved,
+        handleCurrencyChange,
+        saveData,
+        joinRoom, createRoom, logoutRoom,
+        resetData, removeHistoryRoom,
+        copyRoomLink,
+        copyText, shareViaApp, generateImage,
+
+
+        calcPos,
+        startDrag,
+        lastAddedId,
+        amountFontClass,
+        sanitizeAmount,
+        getShare, setShare,
+
+
+      };
+    }
+  }).mount('#app');
+</script>
+
+
+</body>
+</html>
