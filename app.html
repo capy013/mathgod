@@ -249,6 +249,23 @@
 
     <!-- STEP 1 -->
     <section class="glass p-5 rounded-[2rem]">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-coins text-yellow-400 text-xs"></i>
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">主貨幣</span>
+        </div>
+        <select v-model="baseCurrency" @change="saveData()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-black text-yellow-400 outline-none cursor-pointer">
+          <option value="HKD">HKD 🇭🇰</option>
+          <option value="JPY">JPY 🇯🇵</option>
+          <option value="CNY">CNY 🇨🇳</option>
+          <option value="TWD">TWD 🇹🇼</option>
+          <option value="THB">THB 🇹🇭</option>
+          <option value="KRW">KRW 🇰🇷</option>
+          <option value="USD">USD 🇺🇸</option>
+          <option value="EUR">EUR 🇪🇺</option>
+          <option value="GBP">GBP 🇬🇧</option>
+        </select>
+      </div>
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">STEP 1: 朋友</h3>
         <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-gray-400 font-num">{{ users.length }} 人</span>
@@ -294,7 +311,7 @@
         <h3 class="text-[10px] font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
           <i class="fas fa-coins"></i> 公數
         </h3>
-        <button @click="showPoolModal = true; poolForm.participants = [...users]; poolForm.perPerson = ''; poolForm.currency = 'HKD'" class="bg-yellow-500/20 text-yellow-300 px-3 py-1.5 rounded-full text-[10px] font-black hover:bg-yellow-500/30 transition-all btn-press">
+        <button @click="showPoolModal = true; poolForm.participants = [...users]; poolForm.perPerson = ''; poolForm.currency = baseCurrency" class="bg-yellow-500/20 text-yellow-300 px-3 py-1.5 rounded-full text-[10px] font-black hover:bg-yellow-500/30 transition-all btn-press">
           <i class="fas fa-coins mr-1"></i>入錢
         </button>
       </div>
@@ -573,7 +590,10 @@
               <span v-if="exp.origCurrency !== 'HKD'" class="text-[8px] bg-white/10 px-1.5 rounded text-gray-400 font-num">{{ exp.origCurrency }}</span>
             </div>
             <p class="text-[10px] text-gray-400 font-bold flex items-center gap-1">
-              <span class="text-emerald-400 font-num">HKD ${{ (exp.hkd || 0).toFixed(1) }}</span>
+              <span class="text-emerald-400 font-num">
+                <template v-if="baseCurrency === 'HKD'">HKD ${{ (exp.hkd||0).toFixed(1) }}</template>
+                <template v-else>{{ fmtBase(exp.hkd) }} {{ baseCurrency }}<span class="text-gray-500 text-[9px] ml-1"> ≈HKD${{ (exp.hkd||0).toFixed(1) }}</span></template>
+              </span>
               <span class="text-gray-600">|</span>
               <span :class="exp.payer === '__pool__' ? 'text-yellow-400 font-black' : ''">{{ exp.payer === '__pool__' ? '💰 公數' : exp.payer }} 付</span>
             </p>
@@ -837,7 +857,10 @@
               <i class="fas fa-arrow-right-long text-gray-400 mx-2"></i>
               <span class="text-emerald-600">{{ s.to }}</span>
             </div>
-            <span>${{ s.amount.toFixed(1) }}</span>
+            <span class="text-right leading-tight">
+              <template v-if="baseCurrency === 'HKD'"><span class="font-num">HKD ${{ s.amount.toFixed(1) }}</span></template>
+              <template v-else><span class="font-num">{{ fmtBase(s.amount) }} {{ baseCurrency }}</span><br><span class="text-[9px] text-gray-500">≈HKD ${{ s.amount.toFixed(1) }}</span></template>
+            </span>
           </div>
         </div>
 
@@ -950,23 +973,46 @@
         <input v-model="poolForm.perPerson" type="text" inputmode="decimal" @keyup.enter="addPoolContribution"
           class="flex-1 bg-transparent py-3 text-sm font-bold font-num outline-none placeholder-white/30 text-center" placeholder="0">
         <select v-model="poolForm.currency" class="bg-transparent text-xs font-black text-emerald-400 outline-none shrink-0 py-3 pr-1">
-          <option v-for="c in currencies" :key="c.code" :value="c.code">{{ c.code }}</option>
+          <option value="HKD">HKD</option>
+          <option value="JPY">JPY</option>
+          <option value="TWD">TWD</option>
+          <option value="CNY">CNY</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="KRW">KRW</option>
+          <option value="MOP">MOP</option>
+          <option value="SGD">SGD</option>
         </select>
       </div>
 
       <!-- total preview -->
-      <div v-if="poolTotal > 0" class="text-center py-2 text-[11px] font-bold text-gray-400">
-        <span class="font-num text-yellow-400 text-sm">${{ poolForm.perPerson }}</span>
-        <span class="mx-1 text-gray-600">×</span>
-        <span class="text-white">{{ poolForm.participants.length }} 人</span>
-        <span class="mx-1 text-gray-600">=</span>
-        <span class="font-num text-yellow-300 text-sm font-black">HKD ${{ poolTotal.toFixed(1) }}</span>
+      <!-- preview + confirm -->
+      <div class="mt-3 rounded-2xl overflow-hidden">
+        <div v-if="poolTotal > 0" class="bg-yellow-900/20 border border-yellow-500/20 rounded-t-2xl px-4 py-3 text-center">
+          <p class="text-[11px] font-bold text-gray-400 mb-1">
+            每人
+            <span class="font-num text-yellow-300">${{ poolForm.perPerson }} {{ poolForm.currency }}</span>
+            <span class="text-gray-600 mx-1">×</span>
+            <span class="text-white">{{ poolForm.participants.length }} 人</span>
+          </p>
+        </div>
+        <!-- Preview line -->
+        <div v-if="poolTotal > 0 && poolForm.participants.length > 0" class="text-center text-[11px] font-bold text-gray-400 py-2">
+          每人 ${{ poolForm.perPerson }} {{ poolForm.currency }} × {{ poolForm.participants.length }}人
+        </div>
+        <button @click="addPoolContribution"
+          class="w-full py-4 font-black text-sm btn-press shadow-lg transition-all"
+          :class="poolTotal > 0 ? 'bg-yellow-600 hover:bg-yellow-500 rounded-b-2xl shadow-yellow-900/30' : 'bg-yellow-600/50 hover:bg-yellow-600 rounded-2xl mt-2'">
+          <i class="fas fa-coins mr-2"></i>
+          <span v-if="poolTotal > 0">
+            確認入錢
+            <template v-if="baseCurrency === 'HKD'"> HKD ${{ poolTotal.toFixed(1) }}</template>
+            <template v-else> {{ fmtBase(poolTotal) }} {{ baseCurrency }}</template>
+          </span>
+          <span v-else>確認入錢</span>
+        </button>
       </div>
-
-      <button @click="addPoolContribution"
-        class="w-full bg-yellow-600 hover:bg-yellow-500 py-4 rounded-2xl font-black text-sm btn-press mt-2 shadow-lg shadow-yellow-900/30 transition-all">
-        <i class="fas fa-coins mr-2"></i>確認入錢
-      </button>
 
       <div v-if="pool.contributions.length > 0" class="mt-4 pt-4 border-t border-white/5">
         <p class="text-[9px] font-bold text-gray-500 uppercase mb-2">現有入數紀錄</p>
@@ -1084,6 +1130,7 @@
       const editingUserIdx = ref(-1);
       const confirmDeleteId = ref(null);
       const editingUserName = ref('');
+      const baseCurrency = ref('HKD');
       const featureMultiDay = ref(false);
       const featurePool = ref(false);
       const pool = ref({ total: 0, contributions: [], showDetails: false });
@@ -1205,7 +1252,7 @@ const amountFontClass = computed(() => {
 
 
       const saveData = () => {
-        const data = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value, pool: { total: pool.value.total, contributions: [...pool.value.contributions] } };
+        const data = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value, pool: { total: pool.value.total, contributions: [...pool.value.contributions] }, baseCurrency: baseCurrency.value };
         localStorage.setItem('mathGod_localData', JSON.stringify(data));
 
 
@@ -1440,7 +1487,7 @@ const maxY = window.innerHeight - panelH - 8;
       const evalExpr = (expr) => {
         const cleaned = (expr || "").replace(/\s+/g, "");
         if (!cleaned) return null;
-        if (!/^[0-9+\-*/.]+$/.test(cleaned)) throw new Error("只可輸入數字同 + − × ÷ 及 .");
+        if (!/^[0-9+\-*/.() ]+$/.test(cleaned)) throw new Error("只可輸入數字同運算符號");
         // eslint-disable-next-line no-new-func
         const v = Function(`"use strict"; return (${cleaned});`)();
         if (!Number.isFinite(v)) throw new Error("計算結果無效");
@@ -1451,7 +1498,7 @@ const maxY = window.innerHeight - panelH - 8;
       // preview helper
       const safeExprForPreview = (s) => {
         let x = (s || "").replace(/\s+/g, "");
-        if (!/^[0-9+\-*/.]*$/.test(x)) return "";
+        if (!/^[0-9+\-*/.() ]*$/.test(x)) return "";
         x = x.replace(/[+\-*/]+$/g, "");
         if (x.endsWith(".")) x += "0";
         return x;
@@ -1674,7 +1721,7 @@ toast("已新增一筆消費");
       const cancelEdit = () => {
         isEditing.value = false;
         editingId.value = null;
-        form.value = { item: "", amount: "", currency: "HKD", payer: "", involved: [...users.value], shares: {}, day: lastDay.value };
+        form.value = { item: "", amount: "", currency: baseCurrency.value || "HKD", payer: "", involved: [...users.value], shares: {}, day: lastDay.value };
         currentRate.value = 1;
         errors.value = { item: false, amount: false, payer: false, involved: false };
       };
@@ -1846,6 +1893,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
                 expenses.value = v.expenses || [];
                 eventName.value = v.eventName || "";
                 if (v.pool) pool.value = { total: v.pool.total || 0, contributions: v.pool.contributions || [], showDetails: false };
+                if (v.baseCurrency) baseCurrency.value = v.baseCurrency;
                 if (!isEditing.value) form.value.involved = [...users.value];
               }
             });
@@ -2129,6 +2177,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
     expenses.value = local.expenses || [];
     eventName.value = local.eventName || "";
     if (local.pool) pool.value = { total: local.pool.total || 0, contributions: local.pool.contributions || [], showDetails: false };
+    if (local.baseCurrency) baseCurrency.value = local.baseCurrency;
   }
   form.value.involved = [...users.value];
 
@@ -2185,6 +2234,17 @@ onUnmounted(() => {
         if (!featureMultiDay.value || selectedDayFilter.value === 'all') return expenses.value;
         return expenses.value.filter(e => e.day === selectedDayFilter.value);
       });
+
+      // ====== currency helpers ======
+      const toBase = (hkd) => {
+        const rate = ratesHKD.value[baseCurrency.value] || 1;
+        return hkd / rate;
+      };
+      const fmtBase = (hkd) => {
+        const v = toBase(hkd);
+        const sym = { HKD:'$', JPY:'¥', CNY:'¥', TWD:'$', THB:'฿', KRW:'₩', USD:'$', EUR:'€', GBP:'£' }[baseCurrency.value] || '$';
+        return sym + (baseCurrency.value === 'JPY' || baseCurrency.value === 'KRW' ? Math.round(v) : v.toFixed(1));
+      };
 
       // ====== calc fill-in ======
       const calcFillable = computed(() => {
@@ -2315,10 +2375,12 @@ onUnmounted(() => {
         amountFontClass,
         sanitizeAmount,
         getShare, setShare,
+        baseCurrency,
         featureMultiDay, featureShares, featurePool, saveFeatureFlags, loadFeatureFlags,
         editingUserIdx, editingUserName, startRenameUser, confirmRenameUser, confirmDeleteId,
         pool, poolForm, showPoolModal, poolSpent, poolRemaining, poolPct, poolLow, addPoolContribution,
         poolTotal, togglePoolParticipant, togglePoolAll,
+        toBase, fmtBase,
         calcFillable, fillCalcResult,
         selectedDayFilter, allDays, nextDay, lastDay, dayTotal, filteredExpenses, shareDay,
         showFeatureMenu,
