@@ -287,6 +287,68 @@
     </section>
 
 
+
+    <!-- POOL CARD -->
+    <section v-if="featurePool" class="glass p-5 rounded-[2rem] border border-yellow-500/20 bg-yellow-900/10">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-[10px] font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
+          <i class="fas fa-coins"></i> 公數
+        </h3>
+        <button @click="showPoolModal = true" class="bg-yellow-500/20 text-yellow-300 px-3 py-1.5 rounded-full text-[10px] font-black hover:bg-yellow-500/30 transition-all btn-press">
+          <i class="fas fa-plus mr-1"></i>補倉
+        </button>
+      </div>
+
+      <div v-if="pool.total === 0" class="text-center py-3 text-[11px] text-gray-500 font-bold">
+        <i class="fas fa-arrow-up mr-1 text-yellow-500/60"></i>按「補倉」加入公數
+      </div>
+
+      <template v-else>
+        <!-- amounts -->
+        <div class="flex justify-between items-end mb-2">
+          <div>
+            <p class="text-[9px] font-bold text-gray-500 mb-0.5">剩餘 / 總額</p>
+            <p class="font-num font-black text-lg leading-none" :class="poolLow ? 'text-red-400 animate-pulse' : 'text-yellow-300'">
+              ${{ poolRemaining.toFixed(1) }}
+              <span class="text-[11px] text-gray-500 font-bold"> / ${{ pool.total.toFixed(1) }}</span>
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-[9px] font-bold" :class="poolLow ? 'text-red-400' : 'text-gray-500'">
+              {{ poolLow ? '⚠️ 公數不足！' : poolPct.toFixed(0) + '%' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- progress bar -->
+        <div class="h-2 bg-white/10 rounded-full overflow-hidden mb-3">
+          <div class="h-full rounded-full transition-all duration-500"
+               :class="poolLow ? 'bg-red-500' : 'bg-yellow-400'"
+               :style="{ width: poolPct + '%' }"></div>
+        </div>
+
+        <!-- contributions toggle -->
+        <button @click="pool.showDetails = !pool.showDetails"
+          class="w-full flex items-center justify-between text-[10px] font-bold text-gray-500 hover:text-gray-300 transition-colors py-1">
+          <span><i class="fas fa-receipt mr-1.5"></i>入數紀錄 ({{ pool.contributions.length }} 筆)</span>
+          <i :class="['fas', pool.showDetails ? 'fa-chevron-up' : 'fa-chevron-down', 'text-[9px]']"></i>
+        </button>
+        <div v-if="pool.showDetails" class="mt-2 space-y-1.5 border-t border-white/5 pt-2">
+          <div v-for="(c, i) in pool.contributions" :key="i"
+               class="flex justify-between items-center text-[11px] font-bold">
+            <span class="text-gray-300 flex items-center gap-1.5">
+              <i class="fas fa-user text-[8px] text-yellow-500/60"></i>{{ c.name }}
+            </span>
+            <span class="font-num text-yellow-300">HKD ${{ c.amount.toFixed(1) }}</span>
+          </div>
+          <div class="flex justify-between items-center text-[11px] font-bold border-t border-white/5 pt-1.5 mt-1">
+            <span class="text-gray-500">已使用</span>
+            <span class="font-num text-red-400">－ HKD ${{ poolSpent.toFixed(1) }}</span>
+          </div>
+        </div>
+      </template>
+    </section>
+
     <!-- STEP 2 -->
     <section class="glass p-6 rounded-[2rem] transition-all duration-300 relative overflow-visible"
              :class="{'opacity-50 pointer-events-none grayscale': users.length === 0, 'border-amber-500/50': isEditing}">
@@ -420,6 +482,7 @@
             <div class="glass-input rounded-xl relative" :class="{'input-error': errors.payer}">
               <select v-model="form.payer" @change="errors.payer = false" class="w-full bg-transparent p-3 text-xs font-bold outline-none appearance-none">
                 <option value="" disabled>請選擇...</option>
+                <option v-if="featurePool" value="__pool__">💰 公數</option>
                 <option v-for="u in users" :value="u">{{ u }}</option>
               </select>
               <i class="fas fa-caret-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
@@ -509,7 +572,7 @@
             <p class="text-[10px] text-gray-400 font-bold flex items-center gap-1">
               <span class="text-emerald-400 font-num">HKD ${{ (exp.hkd || 0).toFixed(1) }}</span>
               <span class="text-gray-600">|</span>
-              <span>{{ exp.payer }} 付</span>
+              <span :class="exp.payer === '__pool__' ? 'text-yellow-400 font-black' : ''">{{ exp.payer === '__pool__' ? '💰 公數' : exp.payer }} 付</span>
             </p>
           </div>
 
@@ -831,6 +894,60 @@
   </div>
 
 
+
+  <!-- Pool Modal -->
+  <div v-if="showPoolModal" class="fixed inset-0 z-[150] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showPoolModal = false">
+    <div class="glass max-w-sm w-full p-6 rounded-[2rem] relative">
+      <button @click="showPoolModal = false" class="absolute top-5 right-5 text-gray-500 hover:text-white">
+        <i class="fas fa-times text-lg"></i>
+      </button>
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
+          <i class="fas fa-coins text-yellow-400"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-yellow-400">補倉公數</h3>
+          <p class="text-[10px] text-gray-500">加錢入公數</p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="glass-input rounded-2xl flex items-center px-4">
+          <i class="fas fa-user text-xs text-gray-500 mr-2"></i>
+          <input v-model="poolForm.name" @keyup.enter="addPoolContribution"
+            class="w-full bg-transparent py-3 text-sm font-bold outline-none placeholder-white/30"
+            placeholder="誰入錢...">
+        </div>
+        <div class="glass-input rounded-2xl flex items-center px-4">
+          <span class="text-xs font-black text-gray-500 mr-2">$</span>
+          <input v-model="poolForm.amount" type="text" inputmode="decimal"
+            @keyup.enter="addPoolContribution"
+            class="w-full bg-transparent py-3 text-sm font-bold font-num outline-none placeholder-white/30"
+            placeholder="金額 (HKD)">
+        </div>
+      </div>
+
+      <button @click="addPoolContribution"
+        class="w-full bg-yellow-600 hover:bg-yellow-500 py-4 rounded-2xl font-black text-sm btn-press mt-4 shadow-lg shadow-yellow-900/30 transition-all">
+        <i class="fas fa-plus mr-2"></i>確認入數
+      </button>
+
+      <div v-if="pool.contributions.length > 0" class="mt-4 pt-4 border-t border-white/5">
+        <p class="text-[9px] font-bold text-gray-500 uppercase mb-2">現有入數</p>
+        <div class="space-y-1.5">
+          <div v-for="(c,i) in pool.contributions" :key="i" class="flex justify-between text-[11px] font-bold">
+            <span class="text-gray-300">{{ c.name }}</span>
+            <span class="font-num text-yellow-300">${{ c.amount.toFixed(1) }}</span>
+          </div>
+          <div class="flex justify-between text-[11px] font-bold border-t border-white/5 pt-1">
+            <span class="text-gray-500">合計</span>
+            <span class="font-num text-yellow-400">${{ pool.total.toFixed(1) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Feature Menu Modal -->
   <div v-if="showFeatureMenu" class="fixed inset-0 z-[150] bg-black/90 backdrop-blur-md flex items-center justify-center p-6" @click.self="showFeatureMenu = false">
     <div class="glass max-w-sm w-full p-6 rounded-[2rem] relative">
@@ -847,6 +964,16 @@
           </div>
           <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
             <input type="checkbox" v-model="featureMultiDay" @change="saveFeatureFlags(); if(!featureMultiDay) selectedDayFilter = 'all'" class="sr-only peer">
+            <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        </div>
+        <div class="flex justify-between items-center bg-black/20 p-4 rounded-2xl border border-white/5">
+          <div>
+            <p class="text-sm font-bold text-white">公數模式</p>
+            <p class="text-[10px] text-gray-500 mt-0.5">夾一個公數，自動追蹤剩餘金額</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+            <input type="checkbox" v-model="featurePool" @change="saveFeatureFlags()" class="sr-only peer">
             <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
           </label>
         </div>
@@ -921,17 +1048,22 @@
       const editingUserIdx = ref(-1);
       const editingUserName = ref('');
       const featureMultiDay = ref(false);
+      const featurePool = ref(false);
+      const pool = ref({ total: 0, contributions: [], showDetails: false });
+      const showPoolModal = ref(false);
+      const poolForm = ref({ name: '', amount: '' });
       const shareDay = ref('all');
       const featureShares = ref(false);
       const selectedDayFilter = ref('all');
       const saveFeatureFlags = () => {
-        try { localStorage.setItem('mathGod_features', JSON.stringify({ multiDay: featureMultiDay.value, shares: featureShares.value })); } catch(e) {}
+        try { localStorage.setItem('mathGod_features', JSON.stringify({ multiDay: featureMultiDay.value, shares: featureShares.value, pool: featurePool.value })); } catch(e) {}
       };
       const loadFeatureFlags = () => {
         try {
           const f = JSON.parse(localStorage.getItem('mathGod_features') || '{}');
           if (f.multiDay !== undefined) featureMultiDay.value = f.multiDay;
           if (f.shares !== undefined) featureShares.value = f.shares;
+          if (f.pool !== undefined) featurePool.value = f.pool;
         } catch(e) {}
       };
 
@@ -1036,7 +1168,7 @@ const amountFontClass = computed(() => {
 
 
       const saveData = () => {
-        const data = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value };
+        const data = { users: [...users.value], expenses: [...expenses.value], eventName: eventName.value, pool: { total: pool.value.total, contributions: [...pool.value.contributions] } };
         localStorage.setItem('mathGod_localData', JSON.stringify(data));
 
 
@@ -1681,6 +1813,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
                 users.value = v.users || [];
                 expenses.value = v.expenses || [];
                 eventName.value = v.eventName || "";
+                if (v.pool) pool.value = { total: v.pool.total || 0, contributions: v.pool.contributions || [], showDetails: false };
                 if (!isEditing.value) form.value.involved = [...users.value];
               }
             });
@@ -1963,6 +2096,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
     users.value = local.users;
     expenses.value = local.expenses || [];
     eventName.value = local.eventName || "";
+    if (local.pool) pool.value = { total: local.pool.total || 0, contributions: local.pool.contributions || [], showDetails: false };
   }
   form.value.involved = [...users.value];
 
@@ -2018,6 +2152,25 @@ onUnmounted(() => {
         if (!featureMultiDay.value || selectedDayFilter.value === 'all') return expenses.value;
         return expenses.value.filter(e => e.day === selectedDayFilter.value);
       });
+
+      // ====== pool helpers ======
+      const poolSpent = computed(() =>
+        expenses.value.filter(e => e.payer === '__pool__').reduce((s, e) => s + Number(e.hkd || 0), 0)
+      );
+      const poolRemaining = computed(() => pool.value.total - poolSpent.value);
+      const poolPct = computed(() => pool.value.total > 0 ? Math.max(0, Math.min(100, (poolRemaining.value / pool.value.total) * 100)) : 0);
+      const poolLow = computed(() => pool.value.total > 0 && poolRemaining.value / pool.value.total < 0.1);
+      const addPoolContribution = () => {
+        const name = poolForm.value.name.trim();
+        const amt = parseFloat(poolForm.value.amount);
+        if (!name) { toast('請輸入名字', 'error'); return; }
+        if (!amt || amt <= 0) { toast('請輸入有效金額', 'error'); return; }
+        pool.value.contributions.push({ name, amount: amt });
+        pool.value.total += amt;
+        poolForm.value = { name: '', amount: '' };
+        saveData(); toast('已加入公數 HKD $' + amt.toFixed(1));
+        showPoolModal.value = false;
+      };
 
       // ====== rename user ======
       const startRenameUser = (i) => {
@@ -2098,8 +2251,9 @@ onUnmounted(() => {
         amountFontClass,
         sanitizeAmount,
         getShare, setShare,
-        featureMultiDay, featureShares, saveFeatureFlags, loadFeatureFlags,
+        featureMultiDay, featureShares, featurePool, saveFeatureFlags, loadFeatureFlags,
         editingUserIdx, editingUserName, startRenameUser, confirmRenameUser,
+        pool, poolForm, showPoolModal, poolSpent, poolRemaining, poolPct, poolLow, addPoolContribution,
         selectedDayFilter, allDays, nextDay, dayTotal, filteredExpenses, shareDay,
         showFeatureMenu,
 
