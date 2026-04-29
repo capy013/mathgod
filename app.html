@@ -2463,7 +2463,8 @@ onUnmounted(() => {
         pool.value.total += _totalHKD;
         const total = pp * poolForm.value.participants.length;
         poolForm.value = { participants: [...users.value], perPerson: '' };
-        saveData(); toast('已入數 HKD $' + total.toFixed(1));
+        const _displayTotal = (['JPY','KRW'].includes(_cur) ? Math.round(pp * poolForm.value.participants.length) : (pp * poolForm.value.participants.length).toFixed(1));
+        saveData(); toast(`已入數 ${_cur} ${_displayTotal}`);
         showPoolModal.value = false;
       };
 
