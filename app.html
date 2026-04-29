@@ -2443,13 +2443,17 @@ onUnmounted(() => {
         const pp = parseFloat(poolForm.value.perPerson);
         if (!poolForm.value.participants.length) { toast('請選擇入錢人', 'error'); return; }
         if (!pp || pp === 0) { toast('請輸入金額（可負數扣減）', 'error'); return; }
-        const _cur = poolForm.value.currency || 'HKD';
-        const _rate = ratesHKD.value[_cur] || 1;
-        const _ppHKD = pp * _rate;
-        poolForm.value.participants.forEach(name => {
-          pool.value.contributions.push({ name, amount: _ppHKD, origAmount: pp, currency: _cur });
-          pool.value.total += _ppHKD;
-        });
+       const _cur = poolForm.value.currency || 'HKD';
+const _rate = ratesHKD.value[_cur] || 1;
+const _ppHKD = pp * _rate;
+const _totalHKD = _ppHKD * poolForm.value.participants.length;
+pool.value.contributions.push({
+  names: [...poolForm.value.participants],
+  perPerson: pp,
+  currency: _cur,
+  amount: _totalHKD
+});
+pool.value.total += _totalHKD;
         const total = pp * poolForm.value.participants.length;
         poolForm.value = { participants: [...users.value], perPerson: '' };
         saveData(); toast('已入數 HKD $' + total.toFixed(1));
