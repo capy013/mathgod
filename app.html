@@ -664,7 +664,7 @@
                       <template v-else>{{ fmtBase(exp.hkd) }} <span class="text-gray-500 text-[9px] ml-1">HKD {{ (exp.hkd||0).toFixed(1) }}</span></template>
                     </span>
                     <span class="text-gray-600">·</span>
-                    <span :class="exp.payer === 'pool' ? 'text-yellow-400 font-black' : ''">{{ exp.payer === 'pool' ? '公數' : exp.payer }}</span>
+                    <span :class="exp.payer === '__pool__' ? 'text-yellow-400 font-black' : ''">{{ exp.payer === '__pool__' ? '💰 公數' : exp.payer }}</span>
                   </p>
                 </div>
                 <template v-if="confirmDeleteId === exp.id">
@@ -929,85 +929,139 @@
           :class="shareDay === d ? 'bg-emerald-600 text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'">{{ d }}</button>
       </div>
 
-      <div id="capture-zone" class="bg-[#e8e8e8] text-black p-6 rounded-lg shadow-2xl mb-6 relative font-mono">
+      <div id="capture-zone" class="bg-[#f0f0ed] text-black p-5 rounded-lg shadow-2xl mb-6 relative font-mono">
         <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-gray-300 to-transparent opacity-20"></div>
 
-
-        <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
+        <!-- HEADER -->
+        <div class="text-center border-b-2 border-dashed border-gray-400 pb-3 mb-4">
           <h2 class="font-black text-2xl tracking-tighter uppercase mb-1">過數通知單</h2>
           <p v-if="eventName" class="text-sm font-bold text-gray-600">{{ eventName }}</p>
-          <p v-if="featureMultiDay && shareDay !== 'all'" class="text-xs font-bold text-gray-500 mt-1">{{ shareDay }}</p>
+          <p v-if="featureMultiDay && shareDay !== 'all'" class="text-xs font-bold text-gray-500 mt-0.5">{{ shareDay }}</p>
+          <p class="text-[10px] font-bold text-gray-400 mt-1.5">主貨幣 Base Currency：<span class="font-black text-gray-700">{{ baseCurrency }}</span></p>
         </div>
 
-
-        <div class="flex justify-between items-end mb-4 px-2">
-          <span class="text-xs font-bold text-gray-600">總支出 (Total)</span>
-          <span class="font-black text-2xl tracking-tight">${{ totalSpent.toFixed(1) }}</span>
-        </div>
-
-
-        <div class="bg-white p-3 rounded border border-gray-300 mb-4">
-          <p class="text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-200 pb-1">過數指南 (Payment Guide)</p>
-          <div v-if="settlements.length === 0" class="text-center py-4">
-            <div v-if="users.length < 2" class="text-[11px] text-gray-500 font-bold"><i class="fas fa-users text-gray-600 mb-2 text-lg block"></i>請先喺 STEP 1 加入最少 2 位朋友</div>
-            <div v-else-if="expenses.length === 0" class="text-[11px] text-gray-500 font-bold"><i class="fas fa-receipt text-gray-600 mb-2 text-lg block"></i>未有消費紀錄，去 STEP 2 新增消費</div>
-            <div v-else class="text-[11px] text-emerald-400/80 font-bold"><i class="fas fa-check-circle text-emerald-500 mb-2 text-lg block"></i>大家已平賬，唔需要找數！</div>
+        <!-- TOTAL -->
+        <div class="flex justify-between items-center mb-4 px-1">
+          <span class="text-xs font-bold text-gray-500">總支出 (Total)</span>
+          <div class="text-right">
+            <div class="font-black text-2xl tracking-tight font-num leading-none">
+              <template v-if="baseCurrency === 'HKD'">HKD ${{ (shareOptions.showPool ? totalSpent : nonPoolSpent).toFixed(1) }}</template>
+              <template v-else>{{ fmtBase(shareOptions.showPool ? totalSpent : nonPoolSpent) }}&nbsp;{{ baseCurrency }}</template>
+            </div>
+            <div v-if="baseCurrency !== 'HKD'" class="text-[10px] text-gray-400 font-num mt-0.5">≈ HKD ${{ (shareOptions.showPool ? totalSpent : nonPoolSpent).toFixed(1) }}</div>
           </div>
-          <div v-for="s in settlements" class="flex justify-between items-center py-1 text-sm font-bold">
-            <div class="flex items-center gap-2">
+        </div>
+
+        <!-- SETTLEMENT -->
+        <div class="bg-white p-3 rounded border border-gray-300 mb-4">
+          <p class="text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-200 pb-1">💸 過數指南 (Payment Guide)</p>
+          <div v-if="settlements.length === 0" class="text-center py-3">
+            <div v-if="users.length < 2" class="text-[11px] text-gray-500 font-bold">請先喺 STEP 1 加入最少 2 位朋友</div>
+            <div v-else-if="expenses.length === 0" class="text-[11px] text-gray-500 font-bold">未有消費紀錄</div>
+            <div v-else class="text-[11px] text-emerald-600 font-bold">✅ 大家已平賬，唔需要找數！</div>
+          </div>
+          <div v-for="s in settlements" class="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-0">
+            <div class="flex items-center gap-1.5 text-sm font-bold">
               <span class="text-red-600">{{ s.from }}</span>
-              <i class="fas fa-arrow-right-long text-gray-400 mx-2"></i>
+              <span class="text-gray-400 text-xs">→</span>
               <span class="text-emerald-600">{{ s.to }}</span>
             </div>
-            <span class="text-right leading-tight">
-              <template v-if="baseCurrency === 'HKD'"><span class="font-num">HKD ${{ s.amount.toFixed(1) }}</span></template>
-              <template v-else><span class="font-num">{{ fmtBase(s.amount) }} {{ baseCurrency }}</span><br><span class="text-[9px] text-gray-500">≈HKD ${{ s.amount.toFixed(1) }}</span></template>
-            </span>
+            <div class="text-right">
+              <div class="font-num font-bold text-sm">
+                <template v-if="baseCurrency === 'HKD'">HKD ${{ s.amount.toFixed(1) }}</template>
+                <template v-else>{{ fmtBase(s.amount) }}&nbsp;{{ baseCurrency }}</template>
+              </div>
+              <div v-if="baseCurrency !== 'HKD'" class="text-[9px] text-gray-400 font-num">≈ HKD ${{ s.amount.toFixed(1) }}</div>
+            </div>
           </div>
         </div>
 
-
-        <div v-if="shareOptions.showList" class="mt-4 pt-2 border-t-2 border-dashed border-gray-400">
+        <!-- EXPENSE DETAILS -->
+        <div v-if="shareOptions.showList" class="border-t-2 border-dashed border-gray-400 pt-3">
           <p class="text-[10px] font-bold text-gray-500 mb-2 text-center uppercase">-- 消費紀錄 (Details) --</p>
-          <!-- flat list when single day selected -->
+
+          <!-- single day / no multiday -->
           <template v-if="!featureMultiDay || shareDay !== 'all'">
-            <div v-for="e in (featureMultiDay && shareDay !== 'all' ? expenses.filter(x => x.day === shareDay) : expenses)"
-              class="capture-row flex justify-between text-[10px] leading-[1.4] py-1.5 border-b border-gray-300 last:border-0">
-              <span class="truncate pr-2 font-medium">{{ e.item }} <span class="text-gray-400">({{ e.payer === '__pool__' ? '💰 公數' : e.payer }})</span></span>
-              <span class="whitespace-nowrap font-bold">${{ e.hkd.toFixed(1) }}</span>
-            </div>
+            <template v-for="e in (featureMultiDay && shareDay !== 'all' ? expenses.filter(x => x.day === shareDay) : expenses)">
+              <div v-if="shareOptions.showPool || e.payer !== '__pool__'"
+                class="capture-row flex items-center justify-between text-[10px] leading-[1.6] py-1 border-b border-gray-200 last:border-0 gap-1">
+                <div class="flex items-center gap-1 flex-1 min-w-0">
+                  <span class="font-bold text-gray-800 shrink-0 truncate" style="max-width:72px">{{ e.item }}：</span>
+                  <span class="inline-flex items-center gap-0.5 text-[9px] bg-emerald-100 text-emerald-700 px-1 py-0.5 rounded font-bold shrink-0">
+                    <i class="fas fa-credit-card" style="font-size:6px"></i>&nbsp;{{ e.payer === '__pool__' ? '💰 公數' : e.payer }}
+                  </span>
+                  <span class="text-gray-300 text-[9px] shrink-0 px-0.5">|</span>
+                  <span class="inline-flex items-center gap-0.5 text-[9px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded font-bold shrink-0 truncate" style="max-width:88px">
+                    <i class="fas fa-users" style="font-size:6px"></i>&nbsp;<template v-if="e.payer === '__pool__'">全體</template><template v-else>{{ (e.involved && e.involved.length ? e.involved : [e.payer]).join('、') }}</template>
+                  </span>
+                </div>
+                <span class="whitespace-nowrap font-bold font-num text-gray-800 shrink-0 pl-1">
+                  <template v-if="baseCurrency === 'HKD'">${{ (e.hkd||0).toFixed(1) }}</template>
+                  <template v-else>{{ fmtBase(e.hkd) }}</template>
+                </span>
+              </div>
+            </template>
           </template>
-          <!-- grouped by day when showing all -->
+
+          <!-- grouped by day -->
           <template v-else>
-            <div v-for="d in allDays" :key="'sd-'+d">
-              <div class="flex justify-between items-center py-0.5 mt-2 border-b-2 border-dashed border-gray-300">
-                <span class="text-[9px] font-bold text-gray-500 uppercase tracking-wide">{{ d }}</span>
-                <span class="text-[9px] font-bold text-gray-500">${{ dayTotal(d).toFixed(1) }}</span>
+            <div v-for="d in allDays" :key="'sd-'+d" class="mb-2">
+              <div class="flex justify-between items-center py-0.5 mt-1 border-b-2 border-dashed border-gray-300 mb-1">
+                <span class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">{{ d }}</span>
+                <span class="text-[9px] font-bold text-gray-600 font-num">
+                  <template v-if="baseCurrency === 'HKD'">${{ dayTotalFiltered(d).toFixed(1) }}</template>
+                  <template v-else>{{ fmtBase(dayTotalFiltered(d)) }}</template>
+                </span>
               </div>
-              <div v-for="e in expenses.filter(x => x.day === d)" :key="e.id"
-                class="capture-row flex justify-between text-[10px] leading-[1.4] py-1 border-b border-gray-200 last:border-0 pl-3">
-                <span class="truncate pr-2 font-medium">{{ e.item }} <span class="text-gray-400">({{ e.payer === '__pool__' ? '💰 公數' : e.payer }})</span></span>
-                <span class="whitespace-nowrap font-bold">${{ e.hkd.toFixed(1) }}</span>
-              </div>
+              <template v-for="e in expenses.filter(x => x.day === d)">
+                <div v-if="shareOptions.showPool || e.payer !== '__pool__'"
+                  class="capture-row flex items-center justify-between text-[10px] leading-[1.6] py-0.5 border-b border-gray-100 last:border-0 pl-2 gap-1">
+                  <div class="flex items-center gap-1 flex-1 min-w-0">
+                    <span class="font-bold text-gray-800 shrink-0 truncate" style="max-width:66px">{{ e.item }}：</span>
+                    <span class="inline-flex items-center gap-0.5 text-[9px] bg-emerald-100 text-emerald-700 px-1 py-0.5 rounded font-bold shrink-0">
+                      <i class="fas fa-credit-card" style="font-size:6px"></i>&nbsp;{{ e.payer === '__pool__' ? '💰 公數' : e.payer }}
+                    </span>
+                    <span class="text-gray-300 text-[9px] shrink-0 px-0.5">|</span>
+                    <span class="inline-flex items-center gap-0.5 text-[9px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded font-bold shrink-0 truncate" style="max-width:82px">
+                      <i class="fas fa-users" style="font-size:6px"></i>&nbsp;<template v-if="e.payer === '__pool__'">全體</template><template v-else>{{ (e.involved && e.involved.length ? e.involved : [e.payer]).join('、') }}</template>
+                    </span>
+                  </div>
+                  <span class="whitespace-nowrap font-bold font-num text-gray-800 shrink-0 pl-1">
+                    <template v-if="baseCurrency === 'HKD'">${{ (e.hkd||0).toFixed(1) }}</template>
+                    <template v-else>{{ fmtBase(e.hkd) }}</template>
+                  </span>
+                </div>
+              </template>
             </div>
           </template>
         </div>
 
-
-        <div class="mt-6 text-center">
-          <p class="text-[10px] font-bold text-gray-500">Generated by ⚡️MathGod</p>
+        <div class="mt-5 text-center">
+          <p class="text-[10px] font-bold text-gray-400">Generated by ⚡️MathGod</p>
           <div class="h-2 opacity-0">.</div>
         </div>
       </div>
 
 
       <div class="glass p-6 rounded-[2rem] space-y-4">
-        <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-          <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" v-model="shareOptions.showList" class="sr-only peer">
-            <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-          </label>
+        <div class="space-y-2">
+          <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+            <span class="text-xs font-bold text-gray-300">列出消費紀錄</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="shareOptions.showList" class="sr-only peer">
+              <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+          <div v-if="shareOptions.showList && featurePool" class="flex justify-between items-center bg-yellow-500/5 border border-yellow-500/20 p-3 rounded-xl">
+            <div>
+              <span class="text-xs font-bold text-yellow-300">💰 包含公數項目</span>
+              <p class="text-[10px] text-gray-500 mt-0.5">剔選後顯示公數消費紀錄</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="shareOptions.showPool" class="sr-only peer">
+              <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+            </label>
+          </div>
         </div>
 
 
@@ -1317,7 +1371,7 @@
 
 
       const errors = ref({ item: false, amount: false, payer: false, involved: false });
-      const shareOptions = ref({ showList: true });
+      const shareOptions = ref({ showList: true, showPool: false });
 
 
       const toast = (msg, type='success') => {
@@ -2141,18 +2195,31 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
 
       // ====== share ======
       const getShareText = () => {
-        let msg = `夾錢通知 (Payment Notice)\n`;
-        if (eventName.value) msg += `活動: ${eventName.value}\n`;
+        const sym = { HKD:'HKD $', JPY:'¥', CNY:'¥', TWD:'$', THB:'฿', KRW:'₩', USD:'USD $', EUR:'€', GBP:'£' }[baseCurrency.value] || '$';
+        const fmtAmt = (hkd) => {
+          const rate = ratesHKD.value[baseCurrency.value] || 1;
+          const v = hkd / rate;
+          const rounded = (baseCurrency.value === 'JPY' || baseCurrency.value === 'KRW') ? Math.round(v) : v.toFixed(1);
+          return sym + rounded + (baseCurrency.value !== 'HKD' ? ` ${baseCurrency.value} (≈HKD $${Number(hkd).toFixed(1)})` : '');
+        };
+        let msg = `過數通知單\n`;
+        if (eventName.value) msg += `活動：${eventName.value}\n`;
+        msg += `主貨幣：${baseCurrency.value}\n`;
         msg += `------------------------------\n`;
-        msg += `請跟隨以下列表過數 (Transfer List):\n`;
-        if (settlements.value.length === 0) msg += `(沒有人需要夾錢)\n`;
-        settlements.value.forEach(s => msg += `${s.from} ➜ ${s.to}: $${s.amount.toFixed(1)}\n`);
-
-
+        const spent = shareOptions.value.showPool ? totalSpent.value : nonPoolSpent.value;
+        msg += `總支出：${fmtAmt(spent)}\n`;
+        msg += `\n💸 過數指南：\n`;
+        if (settlements.value.length === 0) msg += `(大家已平賬，唔需要找數)\n`;
+        settlements.value.forEach(s => {
+          msg += `${s.from} ➜ ${s.to}：${fmtAmt(s.amount)}\n`;
+        });
         if (shareOptions.value.showList) {
-          msg += `\n📋 詳細消費紀錄:\n`;
-          expenses.value.forEach((e, idx) => {
-            msg += `${idx + 1}. ${e.item} (${e.payer}付): $${Number(e.hkd || 0).toFixed(1)}\n`;
+          msg += `\n📋 消費紀錄：\n`;
+          const expList = expenses.value.filter(e => shareOptions.value.showPool || e.payer !== '__pool__');
+          expList.forEach((e, idx) => {
+            const payer = e.payer === '__pool__' ? '💰 公數' : e.payer;
+            const inv = e.payer === '__pool__' ? '全體' : (e.involved && e.involved.length ? e.involved.join('、') : e.payer);
+            msg += `${idx + 1}. ${e.item}：💳${payer} | 👥${inv}  ${fmtAmt(e.hkd || 0)}\n`;
           });
         }
         msg += `\n------------------------------\nGenerated by ⚡️MathGod`;
@@ -2282,6 +2349,17 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
       const recentRoomsWithNames = computed(() =>
         recentRooms.value.map(id => ({ id, name: roomNamesMap.value[id] || '未命名活動' }))
       );
+      const nonPoolSpent = computed(() => {
+        const exp = (featureMultiDay.value && shareDay.value !== 'all') ? expenses.value.filter(e => e.day === shareDay.value) : expenses.value;
+        return exp.filter(e => e.payer !== '__pool__').reduce((s, e) => s + (e.hkd || 0), 0);
+      });
+
+      const dayTotalFiltered = (day) => {
+        const base = expenses.value.filter(e => e.day === day);
+        const filtered = shareOptions.value.showPool ? base : base.filter(e => e.payer !== '__pool__');
+        return filtered.reduce((s, e) => s + (e.hkd || 0), 0);
+      };
+
       const totalSpent = computed(() => {
         const exp = (featureMultiDay.value && shareDay.value !== 'all') ? expenses.value.filter(e => e.day === shareDay.value) : expenses.value;
         return exp.reduce((s, e) => s + Number(e?.hkd || 0), 0);
@@ -2551,7 +2629,7 @@ onUnmounted(() => {
         editingUserIdx, editingUserName, startRenameUser, confirmRenameUser, confirmDeleteId,
         pool, poolForm, showPoolModal, poolSpent, poolRemaining, poolPct, poolLow, addPoolContribution,
         poolTotal, togglePoolParticipant, togglePoolAll,
-        poolMerged, toBase, fmtBase,
+        poolMerged, toBase, fmtBase, nonPoolSpent, dayTotalFiltered,
         calcFillable, fillCalcResult,
         selectedDayFilter, allDays, nextDay, lastDay, dayTotal, dayTotalHKD, filteredExpenses, shareDay,
         showFeatureMenu,
