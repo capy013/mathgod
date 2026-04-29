@@ -326,8 +326,12 @@
           <div>
             <p class="text-[9px] font-bold text-gray-500 mb-0.5">剩餘 / 總額</p>
             <p class="font-num font-black text-lg leading-none" :class="poolLow ? 'text-red-400 animate-pulse' : 'text-yellow-300'">
-              ${{ poolRemaining.toFixed(1) }}
-              <span class="text-[11px] text-gray-500 font-bold"> / ${{ pool.total.toFixed(1) }}</span>
+              <template v-if="baseCurrency === 'HKD'">HKD ${{ poolRemaining.toFixed(1) }}</template>
+              <template v-else>{{ fmtBase(poolRemaining) }}</template>
+              <span class="text-[11px] text-gray-500 font-bold"> /
+                <template v-if="baseCurrency === 'HKD'">${{ pool.total.toFixed(1) }}</template>
+                <template v-else>{{ fmtBase(pool.total) }}</template>
+              </span>
             </p>
           </div>
           <div class="text-right">
@@ -352,14 +356,15 @@
         </button>
         <div v-if="pool.showDetails" class="mt-2 space-y-1.5 border-t border-white/5 pt-2">
           <div v-for="(contrib, ci) in pool.contributions" :key="ci"
-               class="flex justify-between items-center text-[11px] font-bold">
-            <span class="text-gray-300 flex items-center gap-1.5">
-              <span class="text-[8px] bg-yellow-500/20 text-yellow-400 font-black px-1.5 py-0.5 rounded-full font-num">第{{ ci+1 }}次</span>
-              <i class="fas fa-user text-[8px] text-yellow-500/60"></i>{{ contrib.name }}
+               class="flex justify-between items-center text-[11px] font-bold gap-2">
+            <span class="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
+              <span class="text-[8px] bg-yellow-500/20 text-yellow-400 font-black px-1.5 py-0.5 rounded-full font-num shrink-0">第{{ ci+1 }}次</span>
+              <span class="text-[8px] bg-white/10 text-gray-400 font-bold px-1.5 py-0.5 rounded-full shrink-0">{{ (contrib.names || [contrib.name]).length }}人</span>
+              <span class="truncate text-gray-500 text-[9px]">{{ (contrib.names || [contrib.name]).join('、') }}</span>
             </span>
-            <span class="font-num text-yellow-300">
+            <span class="font-num text-yellow-300 shrink-0">
               <template v-if="baseCurrency === 'HKD'">HKD ${{ contrib.amount.toFixed(1) }}</template>
-              <template v-else>{{ fmtBase(contrib.amount) }} <span class="text-[9px] text-gray-500 ml-1">HKD {{ contrib.amount.toFixed(1) }}</span></template>
+              <template v-else>{{ fmtBase(contrib.amount) }} <span class="text-[9px] text-gray-500">HKD {{ contrib.amount.toFixed(1) }}</span></template>
             </span>
           </div>
           <div class="flex justify-between items-center text-[11px] font-bold border-t border-white/5 pt-1.5 mt-1">
@@ -1133,14 +1138,15 @@
       <div v-if="pool.contributions.length > 0" class="mt-4 pt-4 border-t border-white/5">
         <p class="text-[9px] font-bold text-gray-500 uppercase mb-2">入數紀錄 ({{ pool.contributions.length }} 筆)</p>
         <div class="space-y-1.5 max-h-36 overflow-y-auto custom-scroll">
-          <div v-for="(contrib, ci) in pool.contributions" :key="ci" class="flex justify-between items-center text-[11px] font-bold">
-            <span class="text-gray-300 flex items-center gap-1.5">
+          <div v-for="(contrib, ci) in pool.contributions" :key="ci" class="flex justify-between items-center text-[11px] font-bold gap-2 py-0.5">
+            <span class="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
               <span class="text-[8px] bg-yellow-500/20 text-yellow-400 font-black px-1.5 py-0.5 rounded-full font-num shrink-0">第{{ ci+1 }}次</span>
-              <i class="fas fa-user text-[8px] text-yellow-500/60 shrink-0"></i>{{ contrib.name }}
+              <span class="text-[8px] bg-white/10 text-gray-400 font-bold px-1.5 py-0.5 rounded-full shrink-0">{{ (contrib.names || [contrib.name]).length }}人</span>
+              <span class="truncate text-gray-500 text-[9px]">{{ (contrib.names || [contrib.name]).join('、') }}</span>
             </span>
-            <span class="font-num" :class="contrib.amount >= 0 ? 'text-yellow-300' : 'text-red-400'">
+            <span class="font-num shrink-0" :class="contrib.amount >= 0 ? 'text-yellow-300' : 'text-red-400'">
               <template v-if="baseCurrency === 'HKD'">HKD ${{ contrib.amount.toFixed(1) }}</template>
-              <template v-else>{{ fmtBase(contrib.amount) }}<span class="text-[9px] text-gray-500 ml-1"> ≈HKD${{ contrib.amount.toFixed(1) }}</span></template>
+              <template v-else>{{ fmtBase(contrib.amount) }}<span class="text-[9px] text-gray-500 ml-1">≈HKD${{ contrib.amount.toFixed(1) }}</span></template>
             </span>
           </div>
         </div>
@@ -2380,18 +2386,19 @@ onUnmounted(() => {
       });
 
       // ====== pool merged contributions ======
-   const poolMerged = computed(() => {
-  const map = {};
-  for (const contrib of pool.value.contributions) {
-    const names = contrib.names || [contrib.name];
-    const perName = contrib.amount / names.length;
-    for (const name of names) {
-      if (!map[name]) map[name] = 0;
-      map[name] += perName;
-    }
-  }
-  return Object.entries(map).map(([name, amount]) => ({ name, amount }));
-});
+      const poolMerged = computed(() => {
+        const map = {};
+        for (const contrib of pool.value.contributions) {
+          const names = contrib.names || [contrib.name];
+          const perName = contrib.amount / names.length;
+          for (const name of names) {
+            if (!map[name]) map[name] = 0;
+            map[name] += perName;
+          }
+        }
+        return Object.entries(map).map(([name, amount]) => ({ name, amount }));
+      });
+
       // ====== currency helpers ======
       const toBase = (hkd) => {
         const rate = ratesHKD.value[baseCurrency.value] || 1;
@@ -2443,20 +2450,21 @@ onUnmounted(() => {
         const pp = parseFloat(poolForm.value.perPerson);
         if (!poolForm.value.participants.length) { toast('請選擇入錢人', 'error'); return; }
         if (!pp || pp === 0) { toast('請輸入金額（可負數扣減）', 'error'); return; }
-       const _cur = poolForm.value.currency || 'HKD';
-const _rate = ratesHKD.value[_cur] || 1;
-const _ppHKD = pp * _rate;
-const _totalHKD = _ppHKD * poolForm.value.participants.length;
-pool.value.contributions.push({
-  names: [...poolForm.value.participants],
-  perPerson: pp,
-  currency: _cur,
-  amount: _totalHKD
-});
-pool.value.total += _totalHKD;
+        const _cur = poolForm.value.currency || 'HKD';
+        const _rate = ratesHKD.value[_cur] || 1;
+        const _ppHKD = pp * _rate;
+        const _totalHKD = _ppHKD * poolForm.value.participants.length;
+        pool.value.contributions.push({
+          names: [...poolForm.value.participants],
+          perPerson: pp,
+          currency: _cur,
+          amount: _totalHKD
+        });
+        pool.value.total += _totalHKD;
         const total = pp * poolForm.value.participants.length;
         poolForm.value = { participants: [...users.value], perPerson: '' };
-        saveData(); toast('已入數 HKD $' + total.toFixed(1));
+        const _displayTotal = (['JPY','KRW'].includes(_cur) ? Math.round(pp * poolForm.value.participants.length) : (pp * poolForm.value.participants.length).toFixed(1));
+        saveData(); toast(`已入數 ${_cur} ${_displayTotal}`);
         showPoolModal.value = false;
       };
 
