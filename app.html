@@ -494,7 +494,7 @@
             <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
               <div>
                 <span class="text-[9px] font-bold text-emerald-400 font-num">
-                  Rate: {{ currentRate.toFixed(3) }} ≈ HKD ${{ ((Number(form.amount || 0)) * currentRate).toFixed(1) }}
+                  Rate: {{ currentRate.toFixed(3) }} ≈ {{ baseCurrency }} {{ fmtBase((Number(form.amount || 0)) * currentRate) }}
                 </span>
               </div>
               <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
@@ -562,7 +562,7 @@
             {{ form.day }} 已記
             <span class="text-emerald-400">
               <template v-if="baseCurrency === 'HKD'">HK${{ (dayTotal(form.day)||0).toFixed(1) }}</template>
-              <template v-else>{{ fmtBase(dayTotalHKD(form.day)) }} · HK${{ (dayTotal(form.day)||0).toFixed(1) }}</template>
+              <template v-else>{{ fmtBase(dayTotal(form.day)) }} · HK${{ (dayTotal(form.day)||0).toFixed(1) }}</template>
             </span>
           </div>
         </div>
@@ -572,7 +572,7 @@
           <i :class="['fas', isEditing ? 'fa-save' : 'fa-plus']"></i>
           <span>{{ isEditing ? '儲存修改' : '確認入數' }}</span>
           <span v-if="form.amount" class="font-num bg-black/20 px-2 rounded ml-1 text-xs">
-            HKD ${{ ((Number(form.amount || 0) * currentRate) || 0).toFixed(1) }}
+            {{ baseCurrency }} {{ fmtBase((Number(form.amount || 0) * currentRate) || 0) }}
           </span>
         </button>
       </div>
@@ -595,7 +595,7 @@
             {{ d }}
             <span class="opacity-60 font-num">
               <template v-if="baseCurrency === 'HKD'">${{ dayTotal(d).toFixed(0) }}</template>
-              <template v-else>{{ fmtBase(dayTotalHKD(d)) }}</template>
+              <template v-else>{{ fmtBase(dayTotal(d)) }}</template>
             </span>
           </button>
         </div>
@@ -635,7 +635,7 @@
                 </span>
                 <span class="text-[9px] font-bold text-gray-500 font-num">
                   <template v-if="baseCurrency === 'HKD'">HK${{ dayTotal(d).toFixed(1) }}</template>
-                  <template v-else>{{ fmtBase(dayTotalHKD(d)) }} · HK${{ dayTotal(d).toFixed(1) }}</template>
+                  <template v-else>{{ fmtBase(dayTotal(d)) }} · HK${{ dayTotal(d).toFixed(1) }}</template>
                 </span>
               </div>
               <div v-for="exp in expenses.filter(x => x.day === d)" :key="exp.id"
@@ -1400,7 +1400,7 @@ const amountFontClass = computed(() => {
       const currentRate = ref(1);
 
 
-      const SUPPORTED = ["HKD","CNY","JPY","TWD","THB","KRW","USD","EUR","GBP"];
+      const SUPPORTED = ["HKD","CNY","JPY","TWD","THB","KRW","USD","EUR","GBP","MOP","SGD"];
       const RATES_CACHE_KEY = "mathGod_rates_to_HKD_v1";
       const RATES_TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -2406,7 +2406,7 @@ onUnmounted(() => {
       };
       const fmtBase = (hkd) => {
         const v = toBase(hkd);
-        const sym = { HKD:'$', JPY:'¥', CNY:'¥', TWD:'$', THB:'฿', KRW:'₩', USD:'$', EUR:'€', GBP:'£' }[baseCurrency.value] || '$';
+        const sym = { HKD:'$', JPY:'¥', CNY:'¥', TWD:'$', THB:'฿', KRW:'₩', USD:'$', EUR:'€', GBP:'£', MOP:'P', SGD:'$' }[baseCurrency.value] || '$';
         return sym + (baseCurrency.value === 'JPY' || baseCurrency.value === 'KRW' ? Math.round(v) : v.toFixed(1));
       };
 
@@ -2434,7 +2434,7 @@ onUnmounted(() => {
       const poolRemaining = computed(() => pool.value.total - poolSpent.value);
       const poolPct = computed(() => pool.value.total > 0 ? Math.max(0, Math.min(100, (poolRemaining.value / pool.value.total) * 100)) : 0);
       const poolLow = computed(() => pool.value.total > 0 && poolRemaining.value / pool.value.total < 0.1);
-      const poolTotal = computed(() => { const pp = parseFloat(poolForm.value.perPerson); if (!poolForm.value.participants.length || !(pp > 0)) return 0; const cur = poolForm.value.currency || 'HKD'; const rate = currencies.find(c => c.code === cur)?.rate || 1; return pp * rate * poolForm.value.participants.length; });
+      const poolTotal = computed(() => { const pp = parseFloat(poolForm.value.perPerson); if (!poolForm.value.participants.length || !(pp > 0)) return 0; const cur = poolForm.value.currency || 'HKD'; const rate = ratesHKD.value[cur] || 1; return pp * rate * poolForm.value.participants.length; });
       const togglePoolParticipant = (u) => {
         const idx = poolForm.value.participants.indexOf(u);
         if (idx === -1) poolForm.value.participants.push(u);
