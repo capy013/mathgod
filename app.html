@@ -2380,15 +2380,18 @@ onUnmounted(() => {
       });
 
       // ====== pool merged contributions ======
-      const poolMerged = computed(() => {
-        const map = {};
-        for (const c of pool.value.contributions) {
-          if (!map[c.name]) map[c.name] = 0;
-          map[c.name] += c.amount;
-        }
-        return Object.entries(map).map(([name, amount]) => ({ name, amount }));
-      });
-
+   const poolMerged = computed(() => {
+  const map = {};
+  for (const contrib of pool.value.contributions) {
+    const names = contrib.names || [contrib.name];
+    const perName = contrib.amount / names.length;
+    for (const name of names) {
+      if (!map[name]) map[name] = 0;
+      map[name] += perName;
+    }
+  }
+  return Object.entries(map).map(([name, amount]) => ({ name, amount }));
+});
       // ====== currency helpers ======
       const toBase = (hkd) => {
         const rate = ratesHKD.value[baseCurrency.value] || 1;
