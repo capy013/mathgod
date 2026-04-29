@@ -75,7 +75,9 @@
 
 
     .capture-mode .truncate { overflow: visible !important; text-overflow: clip !important; }
-    .capture-mode .capture-row, .capture-mode .capture-row span { line-height: 1.6 !important; padding-bottom: 2px !important; }
+    .capture-mode .capture-row { line-height: 1.35 !important; align-items: center !important; }
+    .capture-mode .capture-row span { line-height: 1.2 !important; padding-bottom: 0 !important; }
+    .capture-mode .capture-row > div, .capture-mode .capture-row > span { display: flex !important; align-items: center !important; min-height: 18px; }
   
   /* calculator open / close animation */
 .calc-enter-active,
@@ -324,28 +326,50 @@
         <!-- amounts -->
         <div class="flex justify-between items-end mb-2">
           <div>
-            <p class="text-[9px] font-bold text-gray-500 mb-0.5">剩餘 / 總額</p>
-            <p class="font-num font-black text-lg leading-none" :class="poolLow ? 'text-red-400 animate-pulse' : 'text-yellow-300'">
-              <template v-if="baseCurrency === 'HKD'">HKD ${{ poolRemaining.toFixed(1) }}</template>
-              <template v-else>{{ fmtBase(poolRemaining) }}</template>
-              <span class="text-[11px] text-gray-500 font-bold"> /
-                <template v-if="baseCurrency === 'HKD'">${{ pool.total.toFixed(1) }}</template>
-                <template v-else>{{ fmtBase(pool.total) }}</template>
+            <p class="text-[9px] font-bold text-gray-500 mb-0.5">
+              {{ poolStatus === 'deficit' ? '財赤 / 已用' : '剩餘 / 總額' }}
+            </p>
+            <p class="font-num font-black text-lg leading-none" :class="poolStatus === 'deficit' ? 'text-red-400 animate-pulse' : (poolLow ? 'text-orange-300' : 'text-yellow-300')">
+              <template v-if="poolStatus === 'deficit'">
+                <template v-if="baseCurrency === 'HKD'">HKD ${{ poolDeficit.toFixed(1) }}</template>
+                <template v-else>{{ fmtBase(poolDeficit) }}</template>
+                <span class="text-[11px] text-gray-500 font-bold"> /
+                  <template v-if="baseCurrency === 'HKD'">已用 ${{ poolSpent.toFixed(1) }}</template>
+                  <template v-else>已用 {{ fmtBase(poolSpent) }}</template>
+                </span>
+              </template>
+              <template v-else>
+                <template v-if="baseCurrency === 'HKD'">HKD ${{ poolRemaining.toFixed(1) }}</template>
+                <template v-else>{{ fmtBase(poolRemaining) }}</template>
+                <span class="text-[11px] text-gray-500 font-bold"> /
+                  <template v-if="baseCurrency === 'HKD'">${{ pool.total.toFixed(1) }}</template>
+                  <template v-else>{{ fmtBase(pool.total) }}</template>
+                </span>
+              </template>
+            </p>
+            <p v-if="poolStatus === 'deficit' && users.length > 0" class="text-[9px] text-gray-400 font-bold mt-1">
+              {{ users.length }} 人平分，每人
+              <span class="text-red-300 font-num">
+                <template v-if="baseCurrency === 'HKD'">HKD ${{ poolDeficitPerUser.toFixed(1) }}</template>
+                <template v-else>{{ fmtBase(poolDeficitPerUser) }}</template>
               </span>
             </p>
           </div>
           <div class="text-right">
-            <p class="text-[9px] font-bold" :class="poolLow ? 'text-red-400' : 'text-gray-500'">
-              {{ poolLow ? '⚠️ 公數不足！' : poolPct.toFixed(0) + '%' }}
+            <p class="text-[9px] font-bold" :class="poolStatus === 'deficit' ? 'text-red-400' : (poolLow ? 'text-orange-300' : 'text-gray-500')">
+              {{ poolStatus === 'deficit' ? '超支 ' + (baseCurrency === 'HKD' ? ('HKD $' + poolDeficit.toFixed(1)) : fmtBase(poolDeficit)) : (poolLow ? '⚠️ 即將見底' : poolPct.toFixed(0) + '%') }}
             </p>
           </div>
         </div>
 
         <!-- progress bar -->
-        <div class="h-2 bg-white/10 rounded-full overflow-hidden mb-3">
+        <div class="h-2.5 bg-white/10 rounded-full overflow-hidden mb-3 relative">
           <div class="h-full rounded-full transition-all duration-500"
-               :class="poolLow ? 'bg-red-500' : 'bg-yellow-400'"
-               :style="{ width: poolPct + '%' }"></div>
+               :class="poolStatus === 'deficit' ? 'bg-red-500' : (poolLow ? 'bg-orange-400' : 'bg-yellow-400')"
+               :style="{ width: (poolStatus === 'deficit' ? 100 : poolPct) + '%' }"></div>
+          <div v-if="poolStatus === 'deficit'" class="absolute inset-y-0 right-0 bg-red-200/30 border-l border-red-200/50"
+               style="background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.22) 0 6px, rgba(255,255,255,0.05) 6px 12px);"
+               :style="{ width: Math.max(12, poolDeficitPct) + '%' }"></div>
         </div>
 
         <!-- contributions toggle -->
@@ -955,7 +979,7 @@
         <!-- SETTLEMENT -->
         <div class="bg-white p-3 rounded border border-gray-300 mb-4">
           <p class="text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-200 pb-1">💸 過數指南 (Payment Guide)</p>
-          <div v-if="settlements.length === 0" class="text-center py-3">
+          <div v-if="settlements.length === 0 && poolStatus !== 'deficit'" class="text-center py-3">
             <div v-if="users.length < 2" class="text-[11px] text-gray-500 font-bold">請先喺 STEP 1 加入最少 2 位朋友</div>
             <div v-else-if="expenses.length === 0" class="text-[11px] text-gray-500 font-bold">未有消費紀錄</div>
             <div v-else class="text-[11px] text-emerald-600 font-bold">✅ 大家已平賬，唔需要找數！</div>
@@ -973,6 +997,13 @@
               </div>
               <div v-if="baseCurrency !== 'HKD'" class="text-[9px] text-gray-400 font-num">≈ HKD ${{ s.amount.toFixed(1) }}</div>
             </div>
+          </div>
+          <div v-if="poolStatus === 'deficit'" class="mt-2 pt-2 border-t border-red-200 text-center">
+            <p class="text-[11px] font-bold text-red-500">⚠️ 公數財赤</p>
+            <p class="text-[15px] font-black text-red-600 font-num mt-1">
+              <template v-if="baseCurrency === 'HKD'">超支 HKD ${{ poolDeficit.toFixed(1) }}</template>
+              <template v-else>超支 {{ fmtBase(poolDeficit) }}</template>
+            </p>
           </div>
         </div>
 
@@ -2513,8 +2544,22 @@ onUnmounted(() => {
         expenses.value.filter(e => e.payer === '__pool__').reduce((s, e) => s + Number(e.hkd || 0), 0)
       );
       const poolRemaining = computed(() => pool.value.total - poolSpent.value);
+      const poolDeficit = computed(() => Math.max(0, -poolRemaining.value));
+      const poolStatus = computed(() => {
+        if (pool.value.total <= 0) return 'empty';
+        if (poolRemaining.value < 0) return 'deficit';
+        if (poolRemaining.value === 0) return 'usedup';
+        if (poolRemaining.value / pool.value.total < 0.1) return 'low';
+        return 'normal';
+      });
       const poolPct = computed(() => pool.value.total > 0 ? Math.max(0, Math.min(100, (poolRemaining.value / pool.value.total) * 100)) : 0);
-      const poolLow = computed(() => pool.value.total > 0 && poolRemaining.value / pool.value.total < 0.1);
+      const poolUsedPct = computed(() => pool.value.total > 0 ? Math.max(0, Math.min(100, (poolSpent.value / pool.value.total) * 100)) : 0);
+      const poolDeficitPct = computed(() => pool.value.total > 0 ? Math.max(0, Math.min(100, (poolDeficit.value / pool.value.total) * 100)) : 0);
+      const poolLow = computed(() => poolStatus.value === 'low');
+      const poolDeficitPerUser = computed(() => {
+        const count = users.value.length || 0;
+        return count > 0 ? poolDeficit.value / count : 0;
+      });
       const poolTotal = computed(() => { const pp = parseFloat(poolForm.value.perPerson); if (!poolForm.value.participants.length || !(pp > 0)) return 0; const cur = poolForm.value.currency || 'HKD'; const rate = ratesHKD.value[cur] || 1; return pp * rate * poolForm.value.participants.length; });
       const togglePoolParticipant = (u) => {
         const idx = poolForm.value.participants.indexOf(u);
@@ -2632,7 +2677,7 @@ onUnmounted(() => {
         baseCurrency,
         featureMultiDay, featureShares, featurePool, saveFeatureFlags, loadFeatureFlags,
         editingUserIdx, editingUserName, startRenameUser, confirmRenameUser, confirmDeleteId,
-        pool, poolForm, showPoolModal, poolSpent, poolRemaining, poolPct, poolLow, addPoolContribution,
+        pool, poolForm, showPoolModal, poolSpent, poolRemaining, poolDeficit, poolStatus, poolPct, poolUsedPct, poolDeficitPct, poolLow, poolDeficitPerUser, addPoolContribution,
         poolTotal, togglePoolParticipant, togglePoolAll,
         poolMerged, toBase, fmtBase, nonPoolSpent, dayTotalFiltered,
         calcFillable, fillCalcResult,
