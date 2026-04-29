@@ -2305,9 +2305,6 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
   refreshRatesSilently(false);
 
 
-  if (form.value.currency !== "HKD") handleCurrencyChange();
-
-
   // load local
   const local = JSON.parse(localStorage.getItem('mathGod_localData') || '{}');
   if (local.users) {
@@ -2320,6 +2317,8 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
   }
   form.value.currency = baseCurrency.value || 'HKD';
   form.value.involved = [...users.value];
+  // 確保 currentRate 跟隨主貨幣（修復重新整理後匯率未更新問題）
+  if (form.value.currency !== 'HKD') handleCurrencyChange();
 
 
   // history
