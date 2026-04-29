@@ -357,13 +357,11 @@
         <div v-if="pool.showDetails" class="mt-2 space-y-1.5 border-t border-white/5 pt-2">
           <div v-for="(contrib, ci) in pool.contributions" :key="ci"
                class="flex justify-between items-start py-2 border-b border-white/5 last:border-0 gap-2">
-            <!-- Left: badges + names -->
             <div class="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
               <span class="text-[10px] bg-yellow-500/25 text-yellow-400 font-black px-2 py-0.5 rounded-full font-num shrink-0 leading-tight">第{{ ci+1 }}次</span>
               <span class="text-[10px] bg-white/10 text-gray-400 font-bold px-2 py-0.5 rounded-full shrink-0 leading-tight">{{ (contrib.names || [contrib.name]).length }}人</span>
               <span class="text-[11px] font-bold text-gray-300 truncate">{{ (contrib.names || [contrib.name]).join('、') }}</span>
             </div>
-            <!-- Right: amount -->
             <div class="text-right shrink-0">
               <template v-if="baseCurrency === 'HKD'">
                 <span class="font-num font-black text-yellow-300 text-[13px]">HKD {{ contrib.amount.toFixed(1) }}</span>
@@ -506,7 +504,7 @@
             <div v-if="form.currency !== 'HKD'" class="text-right border-t border-white/5 mt-1 pt-1 space-y-1">
               <div>
                 <span class="text-[9px] font-bold text-emerald-400 font-num">
-                  Rate: {{ currentRate.toFixed(3) }} ≈ {{ baseCurrency }} {{ fmtBase((Number(form.amount || 0)) * currentRate) }}
+                  1 {{ form.currency }} ≈ HK${{ currentRate.toFixed(4) }}　合計 {{ baseCurrency }} {{ fmtBase((Number(form.amount || 0)) * currentRate) }}
                 </span>
               </div>
               <div v-if="rateUpdatedAt" class="text-[9px] font-bold text-gray-500 font-num">
@@ -1467,9 +1465,7 @@ const amountFontClass = computed(() => {
         const cachedRate = ratesHKD.value?.[form.value.currency];
         currentRate.value = cachedRate || 1;
 
-
-        await refreshRatesSilently(false);
-
+        await refreshRatesSilently(!cachedRate); // force fetch if no cache
 
         const newRate = ratesHKD.value?.[form.value.currency];
         if (newRate) currentRate.value = newRate;
