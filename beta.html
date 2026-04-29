@@ -254,7 +254,7 @@
           <i class="fas fa-coins text-yellow-400 text-xs"></i>
           <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">主貨幣</span>
         </div>
-        <select v-model="baseCurrency" @change="saveData()" class="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-black text-yellow-400 outline-none cursor-pointer">
+        <select v-model="baseCurrency" @change="baseCurrencyChanged" class="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-black text-yellow-400 outline-none cursor-pointer">
           <option value="HKD">HKD 🇭🇰</option>
           <option value="JPY">JPY 🇯🇵</option>
           <option value="CNY">CNY 🇨🇳</option>
@@ -1324,6 +1324,13 @@ const amountFontClass = computed(() => {
       };
 
 
+      const baseCurrencyChanged = () => {
+        // 主貨幣改變 → 同步 form.currency → 重新拉匯率
+        form.value.currency = baseCurrency.value;
+        handleCurrencyChange();
+        saveData();
+      };
+
       const handleCurrencyChange = async () => {
         if (form.value.currency === "HKD") {
           currentRate.value = 1;
@@ -2183,6 +2190,7 @@ ${name ? `【${name}】\n` : ""}出過錢嘅，記得入去mark數啦：
     eventName.value = local.eventName || "";
     if (local.pool) pool.value = { total: local.pool.total || 0, contributions: local.pool.contributions || [], showDetails: false };
     if (local.baseCurrency) baseCurrency.value = local.baseCurrency;
+    form.value.currency = baseCurrency.value;
   }
   form.value.currency = baseCurrency.value || 'HKD';
   form.value.involved = [...users.value];
@@ -2363,6 +2371,7 @@ onUnmounted(() => {
 
         // rates
         currentRate, rateUpdatedAt, formatTs,
+        baseCurrencyChanged,
 
 
         // share / validation
