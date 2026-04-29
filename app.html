@@ -557,12 +557,12 @@
         <div v-if="featureMultiDay" class="space-y-1.5">
           <div class="flex items-center gap-1.5 flex-wrap">
             <i class="fas fa-calendar-day text-emerald-400 text-xs shrink-0"></i>
-            <button v-for="d in allDays" :key="d" type="button" @click="form.day = d"
+            <button v-for="d in allDays" :key="d" type="button" @click="form.day = d; if (form.currency !== 'HKD') handleCurrencyChange()"
               class="px-3 py-1.5 rounded-full text-[10px] font-bold transition-all btn-press"
               :class="form.day === d ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40' : 'bg-white/10 text-gray-400 hover:bg-white/20'">
               {{ d }}
             </button>
-            <button type="button" @click="form.day = 'Day ' + (allDays.length + 1)"
+            <button type="button" @click="form.day = 'Day ' + (allDays.length + 1); if (form.currency !== 'HKD') handleCurrencyChange()"
               class="px-3 py-1.5 rounded-full text-[10px] font-bold transition-all btn-press border border-dashed"
               :class="form.day === 'Day ' + (allDays.length + 1) ? 'bg-emerald-600 text-white border-emerald-500' : 'border-white/20 text-gray-500 hover:border-emerald-500/50 hover:text-emerald-400'">
               ＋ Day {{ allDays.length + 1 }}
@@ -572,7 +572,7 @@
             {{ form.day }} 已記
             <span class="text-emerald-400">
               <template v-if="baseCurrency === 'HKD'">HK${{ (dayTotal(form.day)||0).toFixed(1) }}</template>
-              <template v-else>{{ fmtBase(dayTotal(form.day)) }} · HK${{ (dayTotal(form.day)||0).toFixed(1) }}</template>
+              <template v-else>{{ fmtBase(dayTotal(form.day)) }}</template>
             </span>
           </div>
         </div>
@@ -582,7 +582,7 @@
           <i :class="['fas', isEditing ? 'fa-save' : 'fa-plus']"></i>
           <span>{{ isEditing ? '儲存修改' : '確認入數' }}</span>
           <span v-if="form.amount" class="font-num bg-black/20 px-2 rounded ml-1 text-xs">
-            {{ baseCurrency }} {{ fmtBase((Number(form.amount || 0) * currentRate) || 0) }}
+            {{ fmtBase((Number(form.amount || 0) * currentRate) || 0) }}
           </span>
         </button>
       </div>
@@ -645,7 +645,7 @@
                 </span>
                 <span class="text-[9px] font-bold text-gray-500 font-num">
                   <template v-if="baseCurrency === 'HKD'">HK${{ dayTotal(d).toFixed(1) }}</template>
-                  <template v-else>{{ fmtBase(dayTotal(d)) }} · HK${{ dayTotal(d).toFixed(1) }}</template>
+                  <template v-else>{{ fmtBase(dayTotal(d)) }}</template>
                 </span>
               </div>
               <div v-for="exp in expenses.filter(x => x.day === d)" :key="exp.id"
@@ -1166,7 +1166,7 @@
         <div v-if="poolTotal > 0" class="bg-yellow-900/20 border border-yellow-500/20 rounded-t-2xl px-4 py-3 text-center">
           <p class="text-[11px] font-bold text-gray-400 mb-1">
             每人
-            <span class="font-num text-yellow-300">${{ poolForm.perPerson }} {{ poolForm.currency }}</span>
+            <span class="font-num text-yellow-300">{{ poolForm.currency === 'HKD' ? ('HKD $' + (parseFloat(poolForm.perPerson)||0).toFixed(1)) : (poolForm.currency + " " + (poolForm.currency === 'JPY' || poolForm.currency === 'KRW' ? Math.round(parseFloat(poolForm.perPerson)||0) : (parseFloat(poolForm.perPerson)||0).toFixed(1))) }}</span>
             <span class="text-gray-600 mx-1">×</span>
             <span class="text-white">{{ poolForm.participants.length }} 人</span>
           </p>
@@ -1179,8 +1179,8 @@
           <span v-if="poolTotal > 0">
             確認入數
             <template v-if="poolForm.currency !== 'HKD'">
-              <span class="font-num bg-black/20 px-2 rounded ml-1 text-yellow-200">共 {{ Math.round((parseFloat(poolForm.perPerson)||0) * poolForm.participants.length) }} {{ poolForm.currency }}</span>
-              <span class="text-[10px] opacity-70 ml-1">≈HKD${{ poolTotal.toFixed(1) }}</span>
+              <span class="font-num bg-black/20 px-2 rounded ml-1 text-yellow-200">共 {{ poolForm.currency }} {{ poolForm.currency === 'JPY' || poolForm.currency === 'KRW' ? Math.round((parseFloat(poolForm.perPerson)||0) * poolForm.participants.length) : ((parseFloat(poolForm.perPerson)||0) * poolForm.participants.length).toFixed(1) }}</span>
+              <span class="text-[10px] opacity-70 ml-1">≈ HKD ${{ poolTotal.toFixed(1) }}</span>
             </template>
             <template v-else>
               <span class="font-num bg-black/20 px-2 rounded ml-1 text-yellow-200">共 HKD ${{ poolTotal.toFixed(1) }}</span>
@@ -1512,20 +1512,23 @@ const amountFontClass = computed(() => {
       };
 
       const handleCurrencyChange = async () => {
-        if (form.value.currency === "HKD") {
+        const cur = form.value.currency;
+        if (cur === "HKD") {
           currentRate.value = 1;
           return;
         }
-        const cachedRate = ratesHKD.value?.[form.value.currency];
-        currentRate.value = cachedRate || 1;
+        const cachedRate = ratesHKD.value?.[cur];
+        if (cachedRate) currentRate.value = cachedRate;
 
-        await refreshRatesSilently(!cachedRate); // force fetch if no cache
+        await refreshRatesSilently(true);
 
-        const newRate = ratesHKD.value?.[form.value.currency];
-        if (newRate) currentRate.value = newRate;
-
-
-        if (!navigator.onLine && !newRate) toast("離線且未有匯率快取（可先上線開一次App）", "error");
+        const freshRate = ratesHKD.value?.[form.value.currency];
+        if (freshRate) {
+          currentRate.value = freshRate;
+        } else if (!cachedRate) {
+          currentRate.value = 1;
+          if (!navigator.onLine) toast("離線且未有匯率快取（可先上線開一次App）", "error");
+        }
       };
 
 
@@ -2447,7 +2450,7 @@ onUnmounted(() => {
         return 'Day ' + Math.max(...nums);
       });
       const dayTotal = (day) => expenses.value.filter(e => e.day === day).reduce((s, e) => s + (e.hkd || 0), 0);
-      const dayTotalHKD = (day) => {
+      const dayTotalBase = (day) => {
         const rate = ratesHKD.value[baseCurrency.value] || 1;
         return dayTotal(day) / rate;
       };
@@ -2456,9 +2459,11 @@ onUnmounted(() => {
         return expenses.value.filter(e => e.day === selectedDayFilter.value);
       });
 
-      // Watch baseCurrency → update form default currency
+      // Watch baseCurrency → update form default currency and rate
       Vue.watch(baseCurrency, (newVal) => {
         form.value.currency = newVal;
+        if (newVal !== 'HKD') handleCurrencyChange();
+        else currentRate.value = 1;
       });
 
       // ====== pool merged contributions ======
@@ -2631,7 +2636,7 @@ onUnmounted(() => {
         poolTotal, togglePoolParticipant, togglePoolAll,
         poolMerged, toBase, fmtBase, nonPoolSpent, dayTotalFiltered,
         calcFillable, fillCalcResult,
-        selectedDayFilter, allDays, nextDay, lastDay, dayTotal, dayTotalHKD, filteredExpenses, shareDay,
+        selectedDayFilter, allDays, nextDay, lastDay, dayTotal, dayTotalBase, filteredExpenses, shareDay,
         showFeatureMenu,
 
 
