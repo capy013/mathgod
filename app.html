@@ -351,28 +351,40 @@
         <!-- contributions toggle -->
         <button @click="pool.showDetails = !pool.showDetails"
           class="w-full flex items-center justify-between text-[10px] font-bold text-gray-500 hover:text-gray-300 transition-colors py-1">
-          <span><i class="fas fa-receipt mr-1.5"></i>入數紀錄 ({{ pool.contributions.length }} 筆)</span>
+          <span><i class="fas fa-list-ul mr-1.5"></i>入數紀錄 ({{ pool.contributions.length }} 筆)</span>
           <i :class="['fas', pool.showDetails ? 'fa-chevron-up' : 'fa-chevron-down', 'text-[9px]']"></i>
         </button>
         <div v-if="pool.showDetails" class="mt-2 space-y-1.5 border-t border-white/5 pt-2">
           <div v-for="(contrib, ci) in pool.contributions" :key="ci"
-               class="flex justify-between items-center text-[11px] font-bold gap-2">
-            <span class="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
-              <span class="text-[8px] bg-yellow-500/20 text-yellow-400 font-black px-1.5 py-0.5 rounded-full font-num shrink-0">第{{ ci+1 }}次</span>
-              <span class="text-[8px] bg-white/10 text-gray-400 font-bold px-1.5 py-0.5 rounded-full shrink-0">{{ (contrib.names || [contrib.name]).length }}人</span>
-              <span class="truncate text-gray-500 text-[9px]">{{ (contrib.names || [contrib.name]).join('、') }}</span>
-            </span>
-            <span class="font-num text-yellow-300 shrink-0">
-              <template v-if="baseCurrency === 'HKD'">HKD ${{ contrib.amount.toFixed(1) }}</template>
-              <template v-else>{{ fmtBase(contrib.amount) }} <span class="text-[9px] text-gray-500">HKD {{ contrib.amount.toFixed(1) }}</span></template>
-            </span>
+               class="flex justify-between items-start py-2 border-b border-white/5 last:border-0 gap-2">
+            <!-- Left: badges + names -->
+            <div class="flex items-center gap-1.5 flex-1 min-w-0 flex-wrap">
+              <span class="text-[10px] bg-yellow-500/25 text-yellow-400 font-black px-2 py-0.5 rounded-full font-num shrink-0 leading-tight">第{{ ci+1 }}次</span>
+              <span class="text-[10px] bg-white/10 text-gray-400 font-bold px-2 py-0.5 rounded-full shrink-0 leading-tight">{{ (contrib.names || [contrib.name]).length }}人</span>
+              <span class="text-[11px] font-bold text-gray-300 truncate">{{ (contrib.names || [contrib.name]).join('、') }}</span>
+            </div>
+            <!-- Right: amount -->
+            <div class="text-right shrink-0">
+              <template v-if="baseCurrency === 'HKD'">
+                <span class="font-num font-black text-yellow-300 text-[13px]">HKD {{ contrib.amount.toFixed(1) }}</span>
+              </template>
+              <template v-else>
+                <span class="font-num font-black text-yellow-300 text-[13px]">{{ fmtBase(contrib.amount) }}</span>
+                <span class="font-num text-gray-500 text-[10px] ml-1">HKD {{ contrib.amount.toFixed(1) }}</span>
+              </template>
+            </div>
           </div>
-          <div class="flex justify-between items-center text-[11px] font-bold border-t border-white/5 pt-1.5 mt-1">
-            <span class="text-gray-500">已使用</span>
-            <span class="font-num text-red-400">
-              <template v-if="baseCurrency === 'HKD'">－ HKD ${{ poolSpent.toFixed(1) }}</template>
-              <template v-else>－ {{ fmtBase(poolSpent) }} <span class="text-[9px] text-gray-500 ml-1">HKD {{ poolSpent.toFixed(1) }}</span></template>
-            </span>
+          <div class="flex justify-between items-center text-[11px] font-bold border-t border-white/5 pt-2 mt-1">
+            <span class="text-gray-400 font-bold">已使用</span>
+            <div class="text-right">
+              <template v-if="baseCurrency === 'HKD'">
+                <span class="font-num text-red-400 text-[13px]">－ HKD {{ poolSpent.toFixed(1) }}</span>
+              </template>
+              <template v-else>
+                <span class="font-num text-red-400 text-[13px]">－ {{ fmtBase(poolSpent) }}</span>
+                <span class="font-num text-gray-500 text-[10px] ml-1">HKD {{ poolSpent.toFixed(1) }}</span>
+              </template>
+            </div>
           </div>
         </div>
       </template>
@@ -1107,16 +1119,7 @@
             <span class="text-white">{{ poolForm.participants.length }} 人</span>
           </p>
         </div>
-        <!-- Preview line -->
-        <div v-if="parseFloat(poolForm.perPerson) !== 0 && !isNaN(parseFloat(poolForm.perPerson)) && poolForm.participants.length > 0" class="bg-white/5 rounded-2xl px-4 py-3 text-center mb-1">
-          <span class="text-[11px] font-bold text-gray-400">每人</span>
-          <span class="text-[13px] font-black text-yellow-300 font-num mx-1">{{ poolForm.perPerson }} {{ poolForm.currency }}</span>
-          <span class="text-[11px] font-bold text-gray-400">×</span>
-          <span class="text-[13px] font-black text-white font-num mx-1">{{ poolForm.participants.length }}</span>
-          <span class="text-[11px] font-bold text-gray-400">人 ＝ 總共</span>
-          <span class="text-[13px] font-black text-emerald-400 font-num ml-1">{{ Math.round((parseFloat(poolForm.perPerson)||0) * poolForm.participants.length) }} {{ poolForm.currency }}</span>
-          <template v-if="poolForm.currency !== 'HKD'"><br><span class="text-[9px] text-gray-500 font-num">≈ HKD ${{ poolTotal.toFixed(1) }}</span></template>
-        </div>
+
         <button @click="addPoolContribution"
           class="w-full py-4 font-black text-sm btn-press shadow-lg transition-all"
           :class="poolTotal > 0 ? 'bg-yellow-600 hover:bg-yellow-500 rounded-b-2xl shadow-yellow-900/30' : 'bg-yellow-600/50 hover:bg-yellow-600 rounded-2xl mt-2'">
@@ -1124,11 +1127,11 @@
           <span v-if="poolTotal > 0">
             確認入數
             <template v-if="poolForm.currency !== 'HKD'">
-              <span class="font-num bg-black/20 px-2 rounded ml-1">{{ Math.round((parseFloat(poolForm.perPerson)||0) * poolForm.participants.length) }} {{ poolForm.currency }}</span>
+              <span class="font-num bg-black/20 px-2 rounded ml-1 text-yellow-200">共 {{ Math.round((parseFloat(poolForm.perPerson)||0) * poolForm.participants.length) }} {{ poolForm.currency }}</span>
               <span class="text-[10px] opacity-70 ml-1">≈HKD${{ poolTotal.toFixed(1) }}</span>
             </template>
             <template v-else>
-              <span class="font-num bg-black/20 px-2 rounded ml-1">HKD ${{ poolTotal.toFixed(1) }}</span>
+              <span class="font-num bg-black/20 px-2 rounded ml-1 text-yellow-200">共 HKD ${{ poolTotal.toFixed(1) }}</span>
             </template>
           </span>
           <span v-else>確認入數</span>
